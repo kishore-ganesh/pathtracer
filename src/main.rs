@@ -1,4 +1,9 @@
 mod sphere;
+mod color;
+mod lights;
+mod materials;
+mod sampler;
+mod scene;
 use sphere::{Sphere, Ray, Point};
 fn main() {
     let x: Sphere = Sphere{r: 10};

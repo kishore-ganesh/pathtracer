@@ -1,5 +1,7 @@
 //use std::f32;
 //TODO: Implement Disp trait
+//
+//Implement cube
 use std::ops;
 #[derive(Copy, Clone, Debug)]
 pub struct Point {
@@ -57,6 +59,7 @@ impl Sphere {
             let res: f32 =  ((b*b - 4*a*c) as f32).sqrt();
             let r1: f32 = (-b as f32 + res)/((2*a) as f32);
             let r2: f32 = (-b as f32 - res) /((2*a) as f32); //Find better way to do this
+            //Check which one is closer
             println!("r1: {}, r2: {}", r1, r2)
             // We now know x, y, z Use it to find theta and phi.
             // z = rcostheta, use to find theta 
