@@ -45,20 +45,36 @@ pub struct Ray {
      pub origin: Point,
      pub direction: Point,
 }
+
+pub struct RayIntersection {
+    pub t: f32
+}
+
+//TODO: implement CMP for rayintersection
 // derive debug?
 impl Sphere {
-    pub fn intersection(&self, r: Ray) -> bool {
+    pub fn intersection(&self, r: Ray) -> Option<RayIntersection> {
         //This is wrong, fix this
         let a = r.direction.square_sum();
         let b = 2 * pointwise_mul_sum(r.origin, r.direction); 
         let c = r.origin.square_sum() - self.r*self.r;
+        //TODO:  improve precision
         if(b*b < 4*a*c){
-            return false
+            return None;
         }
         else{
             let res: f32 =  ((b*b - 4*a*c) as f32).sqrt();
             let r1: f32 = (-b as f32 + res)/((2*a) as f32);
             let r2: f32 = (-b as f32 - res) /((2*a) as f32); //Find better way to do this
+            if r1 < 0.0 {
+                return None;
+            }
+            if r2 >= 0.0 {
+                return Some(RayIntersection{t:r2}) 
+            }
+            else {
+                return Some(RayIntersection{t: r1})
+            }
             //Check which one is closer
             println!("r1: {}, r2: {}", r1, r2)
             // We now know x, y, z Use it to find theta and phi.
@@ -66,6 +82,6 @@ impl Sphere {
             // x = rsinthetacosphi, use to find phi 
 
         }
-        return true;
+        return Some(RayIntersection{t: 1.0});
     }
 }
