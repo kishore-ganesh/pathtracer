@@ -4,6 +4,7 @@ mod lights;
 mod materials;
 mod sampler;
 mod scene;
+mod pathtracer;
 use sphere::{Sphere, Ray, Point};
 fn main() {
     let x: Sphere = Sphere{r: 10};
