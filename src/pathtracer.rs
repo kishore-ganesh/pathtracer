@@ -7,12 +7,13 @@ struct PathTracer{
     xres: i32,
     yres: i32,
     n_samples: i32,
-    grid: [[RGB; yres]; xres],
+    grid: Vec<Vec<RGB>>,
     roulette_threshold: f32,
 }
 
 impl PathTracer{
     //Should generate RGB grid 
+    fn create(xres) {}
     fn generate(&mut self){
         let mut rng = rand::thread_rng();
         for x in 0..self.xres {
