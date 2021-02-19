@@ -13,7 +13,9 @@ pub struct RGB{
 //For light accumulation: +, for rest, multiply?
 impl RGB {
     
-
+    pub fn create(r: f32, g: f32, b: f32) -> Self{
+        return RGB{r: r, g: g, b: b};
+    }
     pub fn black() -> Self {
         return RGB{r: 0.0, g: 0.0,b: 0.0};
     }
@@ -24,17 +26,22 @@ impl RGB {
 pub fn write_ppm(v: Vec<Vec<RGB>>,s: String) -> Result<String, Error>{
     //P6 width height 255 \n 
     //R G B 
+    //TODO: better error handling
     let path = Path::new(&s);
     let mut file = File::create(&path)?;
-    let header = format!("P6 {} {} 255 \n", v[0].len(), s.len());
+    let header = format!("P6 {} {} 255\n", v[0].len(), v.len());
     file.write_all(header.as_bytes())?;
     for row in v {
         let mut col_str = String::from("");
         for col in row {
-            col_str += format!("{} {} {} ", col.r as i32, col.g as i32, col.b as i32).as_str();
+            file.write_all(&[col.r as u8]);
+            //file.write_all(" ".as_bytes());
+            file.write_all(&[col.g as u8]);
+            //file.write_all(" ".as_bytes());
+            file.write_all(&[col.b as u8]);
+            //file.write_all(" ".as_bytes());
         }
-        col_str += "\n";
-        file.write_all(col_str.as_bytes())?;
+        //file.write_all("\n".as_bytes());
     }
     Ok("Successful".to_string())
 }

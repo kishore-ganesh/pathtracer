@@ -16,7 +16,7 @@ fn main() {
     let y = 240;
     for i in 0..y {
         
-        v.push(vec![RGB::black(); x])
+        v.push(vec![RGB::create(255.0,0.0,0.0); x]);
     }
 
     color::write_ppm(v, "test.ppm".to_string());
