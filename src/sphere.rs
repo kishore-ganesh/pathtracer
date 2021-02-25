@@ -3,14 +3,23 @@
 //
 //Implement cube
 use std::ops;
+use glm::{TMat4, TVec3, make_mat4x4, make_vec3,inverse};
 #[derive(Copy, Clone, Debug)]
+//Should be vector representation?
 pub struct Point {
     pub x: i32,
     pub y: i32,
     pub z: i32,
+
 }
 
 impl Point {
+    pub fn create(x: i32, y: i32, z: i32) -> Self {
+        return Point{x: x, y:y, z:z};
+    }
+    pub fn vector(&self) -> TVec3<f32> {
+        return make_vec3(&[self.x as f32, self.y as f32, self.z as f32]);
+    }
     fn square_sum(&self) -> i32 {
         let (x, y, z) = (self.x, self.y, self.z);
         return x*x + y*y + z*z;
@@ -38,6 +47,8 @@ fn pointwise_mul_sum(p1: Point, p2: Point) -> i32 {
 }
 pub struct Sphere {
     pub r: i32,
+    pub object_to_world: TMat4<f32>,
+    pub world_to_object: TMat4<f32>
 
 }
 
@@ -52,7 +63,26 @@ pub struct RayIntersection {
 
 //TODO: implement CMP for rayintersection
 // derive debug?
+// Sphere should know where it is in world space. 
+// Sphere axes: by default oriented w.r.t Origin, just translated
+/* ObjectToWorld: 1 0 0 0
+ *                0 1 0 0 
+ *                0 0 1 0 
+ *                cx cy cz 1 
+ *WorldToObject: Inverse(ObjectToWorld)
+ * For rays, we should ObjectToWorld(r.origin), ObjectToWorld(r.direction), but in case of
+ * direction, should not translate (meaningless)
+ * */
 impl Sphere {
+    pub fn create(radius: i32, centre: Point) -> Self{
+        let object_to_world = make_mat4x4(&[1.0, 0.0, 0.0, 
+                                        centre.x as f32, 0.0, 1.0,
+                                        0.0, centre.y as f32, 0.0,
+                                        0.0, 1.0, centre.z as f32,
+                                        0.0, 0.0, 0.0,1.0]);
+        //println!("{:?} {:?}", object_to_world, inverse(&object_to_world));
+        return Sphere{r: radius, object_to_world: object_to_world, world_to_object: inverse(&object_to_world)}
+    }
     pub fn intersection(&self, r: Ray) -> Option<RayIntersection> {
         //This is wrong, fix this
         let a = r.direction.square_sum();
