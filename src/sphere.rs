@@ -3,50 +3,10 @@
 //
 //Implement cube
 use std::ops;
-use glm::{TMat4, TVec3, make_mat4x4, make_vec3,inverse};
-#[derive(Copy, Clone, Debug)]
-//Should be vector representation?
-pub struct Point {
-    pub x: i32,
-    pub y: i32,
-    pub z: i32,
-
-}
-
-impl Point {
-    pub fn create(x: i32, y: i32, z: i32) -> Self {
-        return Point{x: x, y:y, z:z};
-    }
-    pub fn vector(&self) -> TVec3<f32> {
-        return make_vec3(&[self.x as f32, self.y as f32, self.z as f32]);
-    }
-    fn square_sum(&self) -> i32 {
-        let (x, y, z) = (self.x, self.y, self.z);
-        return x*x + y*y + z*z;
-    }
-   
-}
-impl ops::Mul<i32> for Point {
-    type Output = Self;
-    fn mul(self, rhs: i32) -> Self{
-        let (x, y, z) = (self.x * rhs, self.y * rhs, self.z * rhs);
-        return Self{x, y, z};
-        
-    }
-}
-
-impl ops::Add<Point> for Point {
-    type Output = Self;
-    fn add(self, rhs: Self) -> Self {
-        let (x, y, z) = (self.x + rhs.x, self.y + rhs.y, self.z + rhs.z);
-        return Self{x, y, z};
-    }
-}
-fn pointwise_mul_sum(p1: Point, p2: Point) -> i32 {
-     return p1.x * p2.x + p1.y * p2.y + p1.z * p2.z;
-}
+use glm::{TMat4, TVec3, make_mat4x4, make_vec3,inverse, length2, matrix_comp_mult, comp_add};
+use crate::primitives::{Point, pointwise_mul_sum,transform, transform_vec};
 pub struct Sphere {
-    pub r: i32,
+    pub r: f32,
     pub object_to_world: TMat4<f32>,
     pub world_to_object: TMat4<f32>
 
@@ -54,7 +14,7 @@ pub struct Sphere {
 
 pub struct Ray {
      pub origin: Point,
-     pub direction: Point,
+     pub direction: TVec3<f32>,
 }
 
 pub struct RayIntersection {
@@ -74,7 +34,7 @@ pub struct RayIntersection {
  * direction, should not translate (meaningless)
  * */
 impl Sphere {
-    pub fn create(radius: i32, centre: Point) -> Self{
+    pub fn create(radius: f32, centre: Point) -> Self{
         let object_to_world = make_mat4x4(&[1.0, 0.0, 0.0, 
                                         centre.x as f32, 0.0, 1.0,
                                         0.0, centre.y as f32, 0.0,
@@ -85,17 +45,22 @@ impl Sphere {
     }
     pub fn intersection(&self, r: Ray) -> Option<RayIntersection> {
         //This is wrong, fix this
-        let a = r.direction.square_sum();
-        let b = 2 * pointwise_mul_sum(r.origin, r.direction); 
-        let c = r.origin.square_sum() - self.r*self.r;
+        
+        let t_origin = transform(&self.world_to_object, &r.origin);
+        let t_direction = transform_vec(&self.world_to_object, &r.direction);
+        
+
+        let a = length2(&t_direction);
+        let b = 2.0 * comp_add(&(matrix_comp_mult(&r.origin.vector(), &t_direction))); 
+        let c = t_origin.square_sum() - self.r*self.r;
         //TODO:  improve precision
-        if(b*b < 4*a*c){
+        if(b*b < 4.0*a*c){
             return None;
         }
         else{
-            let res: f32 =  ((b*b - 4*a*c) as f32).sqrt();
-            let r1: f32 = (-b as f32 + res)/((2*a) as f32);
-            let r2: f32 = (-b as f32 - res) /((2*a) as f32); //Find better way to do this
+            let res: f32 =  ((b*b - 4.0*a*c) as f32).sqrt();
+            let r1: f32 = (-b as f32 + res)/((2.0*a) as f32);
+            let r2: f32 = (-b as f32 - res) /((2.0*a) as f32); //Find better way to do this
             if r1 < 0.0 {
                 return None;
             }

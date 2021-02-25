@@ -1,5 +1,7 @@
-use crate::sphere::Point;
-use glm::{TMat4, make_mat4x4, inverse, cross, normalize};
+use glm::{TMat4, make_mat4x4, inverse, cross, normalize, transpose, vec3_to_vec4, mat4_to_mat3, TVec3};
+
+use crate::sphere::Ray;
+use crate::primitives::{Point, scale, translate, transform, transform_vec};
 struct Camera {
     from: Point,
     camera_to_world: TMat4<f32>,
@@ -25,25 +27,10 @@ impl Camera {
 }*/
 
 //NOTE: glm already has functions, we are reimplementing some for learning purposes
-fn scale(scalex: f32, scaley: f32, scalez: f32) -> TMat4<f32> {
-    return make_mat4x4(&[scalex, 0.0,0.0,0.0,
-                       0.0,scaley,0.0,0.0,
-                       0.0,0.0,scalez,0.0,
-                       0.0,0.0,0.0,1.0]);
-}
-
-fn translate(tx: f32, ty: f32, tz: f32) -> TMat4<f32> {
-    return make_mat4x4(&[
-                       1.0,0.0,0.0,tx,
-                       0.0,1.0,0.0,ty,
-                       0.0,0.0,1.0,tz,
-                       0.0,0.0,0.0,1.0
-    ])
-}
 impl Camera {
     fn LookAt(from: Point, to: Point, f: f32, n: f32) -> Self{
         let z = normalize(&(to.vector()-from.vector()));
-        let up = Point::create(0,1,0).vector();
+        let up = Point::create(0.0,1.0,0.0).vector();
         let x = cross(&z,  &up);
         let n_up = cross(&x, &z);
         let camera_to_world = make_mat4x4(&[x.x, up.x, z.x, from.x as f32, 
@@ -94,5 +81,17 @@ impl Camera {
         //TODO: check matrix
         //TODO: check screen space. 
     }
+    //TODO: make sample a type
+    fn generate_ray(&self, sample: [f32; 2]) -> Ray{
+        //sample gives raster screen position, ray from world(camera_origin) to world(sample_pos)
+       let raster_point = Point::create(sample[0], sample[1], 0.0);
+       let transformed_point = transform(&self.raster_to_world, &raster_point);
+       let transformed_origin = transform(&self.camera_to_world, &Point::create(0.0,0.0,0.0));
+       let direction = normalize(&(transformed_point.vector() - transformed_origin.vector()));
+                                         
+        //TODO: improve performance here
+
+       return Ray{origin: transformed_origin, direction: direction}; 
+    } 
 
 }
