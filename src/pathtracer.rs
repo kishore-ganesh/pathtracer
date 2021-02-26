@@ -5,7 +5,7 @@ use crate::scene::Scene;
 use crate::sphere::{RayIntersection, Ray, Object};
 use rand::Rng;
 //TODO: make rng part of pathtracer. 
-struct PathTracer{
+pub struct PathTracer{
     xres: i32,
     yres: i32,
     n_samples: i32,
@@ -18,7 +18,7 @@ struct PathTracer{
 
 impl PathTracer{
     //Should generate RGB grid 
-    fn create(xres: i32, yres: i32, n_samples: i32, roulette_threshold: f32, scene: Scene, camera: Camera) -> Self{
+    pub fn create(xres: i32, yres: i32, n_samples: i32, roulette_threshold: f32, scene: Scene, camera: Camera) -> Self{
         let grid = vec![vec![RGB::black(); yres as usize]; xres as usize];
         return PathTracer{
             xres: xres,
@@ -31,7 +31,7 @@ impl PathTracer{
         };
 
     }
-    fn generate(&mut self){
+    pub fn generate(&mut self) -> Vec<Vec<RGB>>{
         let mut rng = rand::thread_rng();
         for x in 0..self.xres {
             for y in 0..self.yres {
@@ -53,15 +53,19 @@ impl PathTracer{
                 self.grid[x as usize][y as usize] = radiance;
             }
         }
+        return self.grid.clone();
     } 
     //TODO: Special value for infinite intersection?
     //Mult by angle for first
     fn li(&mut self, r: Ray, rand: &impl Rng) -> RGB{
+        //println!("Calculating Li");
         let mut min_intersection: Option<RayIntersection> = None;//compare None, o = o
         //let min_object: Option<Object> = None;
         for object in &self.scene.objects {
+            //println!("Before ray object intersection test");
+
             let intersection = object.intersection(&r);
-            
+            println!("{:?}", intersection);
             //TODO: Add generic object type later 
             //Closest
             match intersection {

@@ -1,5 +1,16 @@
+use std::fmt::Display;
 use std::ops;
 use glm::{transpose, mat4_to_mat3, make_mat4x4, make_vec3, vec3_to_vec4, TVec3, TMat4};
+/*impl Display for TMat4<f32> {
+
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+
+        for i in self{
+            write!(f, )
+        }
+    }
+}
+*/
 #[derive(Copy, Clone, Debug)]
 //Should be vector representation?
 //TODO: refactor out Point
@@ -67,10 +78,11 @@ pub fn translate(tx: f32, ty: f32, tz: f32) -> TMat4<f32> {
 pub fn transform(transform: &TMat4<f32>, p: &Point) -> Point{
     let mut v = vec3_to_vec4(&p.vector());
     v[3] = 1.0;
+    //println!("{:?} {:?}", transform, v);
     let transformed = transpose(&v) * transform;
     //TODO: check for divide by zero
     
-    if transform[3] == 0.0{
+    if transformed[3] == 0.0{
         panic!("Divide by zero in transform");
     } 
     
@@ -83,4 +95,5 @@ pub fn transform_vec(transform: &TMat4<f32>, v: &TVec3<f32>) -> TVec3<f32> {
     let transformed_vec = transpose(&transformed);
     return transformed_vec;
 }
+
 

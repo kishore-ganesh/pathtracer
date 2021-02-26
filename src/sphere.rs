@@ -16,11 +16,13 @@ pub struct Sphere {
 
 }
 
+#[derive(Debug, Clone, Copy)]
 pub struct Ray {
      pub origin: Point,
      pub direction: TVec3<f32>,
 }
 
+#[derive(Debug, Clone, Copy)]
 pub struct RayIntersection {
     pub t: f32
 }
@@ -39,11 +41,12 @@ pub struct RayIntersection {
  * */
 impl Sphere {
     pub fn create(radius: f32, centre: Point) -> Self{
-        let object_to_world = make_mat4x4(&[1.0, 0.0, 0.0, 
-                                        centre.x as f32, 0.0, 1.0,
-                                        0.0, centre.y as f32, 0.0,
-                                        0.0, 1.0, centre.z as f32,
-                                        0.0, 0.0, 0.0,1.0]);
+        let object_to_world = make_mat4x4(&[
+                                          1.0, 0.0, 0.0, centre.x as f32, 
+                                          0.0, 1.0,0.0, centre.y as f32, 
+                                          0.0,0.0, 1.0, centre.z as f32,
+                                          0.0, 0.0, 0.0,1.0
+        ]);
         //println!("{:?} {:?}", object_to_world, inverse(&object_to_world));
         return Sphere{r: radius, object_to_world: object_to_world, world_to_object: inverse(&object_to_world)}
     }
@@ -56,8 +59,9 @@ impl Object for Sphere {
         
 
         let a = length2(&t_direction);
-        let b = 2.0 * comp_add(&(matrix_comp_mult(&r.origin.vector(), &t_direction))); 
+        let b = 2.0 * comp_add(&(matrix_comp_mult(&t_origin.vector(), &t_direction))); 
         let c = t_origin.square_sum() - self.r*self.r;
+        //println!("{} {}", b*b, 4.0*a*c);
         //TODO:  improve precision
         if(b*b < 4.0*a*c){
             return None;
@@ -66,6 +70,8 @@ impl Object for Sphere {
             let res: f32 =  ((b*b - 4.0*a*c) as f32).sqrt();
             let r1: f32 = (-b as f32 + res)/((2.0*a) as f32);
             let r2: f32 = (-b as f32 - res) /((2.0*a) as f32); //Find better way to do this
+            
+            println!("r1: {}, r2: {}", r1, r2);
             if r1 < 0.0 {
                 return None;
             }
@@ -76,7 +82,6 @@ impl Object for Sphere {
                 return Some(RayIntersection{t: r1})
             }
             //Check which one is closer
-            println!("r1: {}, r2: {}", r1, r2)
             // We now know x, y, z Use it to find theta and phi.
             // z = rcostheta, use to find theta 
             // x = rsinthetacosphi, use to find phi 

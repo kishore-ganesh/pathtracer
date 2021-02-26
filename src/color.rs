@@ -46,7 +46,7 @@ impl DivAssign<f32> for RGB {
 }
 //TODO: Find more idiomatic way to do this 
 //Should give black 
-pub fn write_ppm(v: Vec<Vec<RGB>>,s: String) -> Result<String, Error>{
+pub fn write_ppm(v: &Vec<Vec<RGB>>,s: String) -> Result<String, Error>{
     //P6 width height 255 \n 
     //R G B 
     //TODO: better error handling

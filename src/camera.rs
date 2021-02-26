@@ -28,11 +28,11 @@ impl Camera {
 
 //NOTE: glm already has functions, we are reimplementing some for learning purposes
 impl Camera {
-    pub fn LookAt(from: Point, to: Point, f: f32, n: f32) -> Self{
+    pub fn look_at(from: Point, to: Point, f: f32, n: f32, screen_res: f32, raster_res: f32) -> Self{
         let z = normalize(&(to.vector()-from.vector()));
         let up = Point::create(0.0,1.0,0.0).vector();
-        let x = cross(&z,  &up);
-        let n_up = cross(&x, &z);
+        let x = normalize(&cross(&z,  &up));
+        let n_up = normalize(&cross(&x, &z));
         let camera_to_world = make_mat4x4(&[x.x, n_up.x, z.x, from.x as f32, 
                                         x.y, n_up.y, z.y, from.y as f32, 
                                         x.z, n_up.z, z.z, from.z as f32, 
@@ -45,13 +45,15 @@ impl Camera {
                                            0.0, 0.0, 1.0, 0.0]);
         let screen_to_camera = inverse(&camera_to_screen);
         //TODO: make this res a parameter
-        let screen_res = 512.0;
-        let raster_res = 512.0;
+ //       let screen_res = 512.0;
+   //     let raster_res = 512.0;
         let screen_to_raster = translate(screen_res/2.0, screen_res/2.0, 0.0) * scale(1.0/screen_res, 1.0/screen_res, 1.0) * scale(raster_res, raster_res, 1.0);
         let raster_to_screen = inverse(&screen_to_raster);
         //NOTE: If we do vec * Mat, then have to multiply matrices LTR, else RTL
         //Camera -> Screen -> NDC -> Raster 
         let raster_to_world = raster_to_screen * screen_to_camera * camera_to_world;
+
+        println!("Raster to world is: {:?}", raster_to_world);
         //TODO: check nice way to return it correctly
         return Camera{
             from: from,
