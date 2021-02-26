@@ -1,4 +1,5 @@
 extern crate nalgebra_glm as glm;
+extern crate rand;
 mod sphere;
 mod color;
 mod lights;
@@ -7,15 +8,15 @@ mod sampler;
 mod scene;
 mod camera;
 mod primitives;
-//mod pathtracer;
-use sphere::{Sphere, Ray};
+mod pathtracer;
+use sphere::{Sphere, Ray, Object};
 use primitives::Point;
 use color::RGB;
 use glm::{TMat4, TVec4, make_mat4x4, make_vec4, transpose, make_vec3, vec3_to_vec4, mat4_to_mat3};
 fn main() {
     let x: Sphere = Sphere::create(10.0, Point::create(2.0,3.0,4.0));
     let r: Ray = Ray{origin: Point::create(1.0,1.0,1.0), direction: make_vec3(&[1.0,1.0,1.0])};
-    x.intersection(r);
+    x.intersection(&r);
     let mut v: Vec<Vec<RGB>> = Vec::new();
     let x = 256;
     let y = 240;

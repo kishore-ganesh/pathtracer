@@ -1,5 +1,6 @@
 use std::fs::File;
 use std::io::{Write, Error};
+use std::ops::{AddAssign, DivAssign};
 use std::path::Path;
 #[derive(Copy, Clone, Debug)]
 pub struct RGB{
@@ -20,6 +21,28 @@ impl RGB {
         return RGB{r: 0.0, g: 0.0,b: 0.0};
     }
      
+}
+
+impl AddAssign for RGB{
+    fn add_assign(&mut self, other: Self){
+        //TODO: handle overflow
+        //TODO: check this syntax
+        *self = Self{
+            r: self.r + other.r,
+            g: self.g + other.g,
+            b: self.b + other.b
+        };
+    }
+}
+
+impl DivAssign<f32> for RGB {
+    fn div_assign(&mut self, rhs: f32){
+        *self = Self{
+            r: self.r/rhs,
+            g: self.g/rhs,
+            b: self.b/rhs
+        }
+    }
 }
 //TODO: Find more idiomatic way to do this 
 //Should give black 

@@ -5,6 +5,10 @@
 use std::ops;
 use glm::{TMat4, TVec3, make_mat4x4, make_vec3,inverse, length2, matrix_comp_mult, comp_add};
 use crate::primitives::{Point, pointwise_mul_sum,transform, transform_vec};
+pub trait Object{
+
+    fn intersection(&self, r: &Ray) -> Option<RayIntersection>;
+}
 pub struct Sphere {
     pub r: f32,
     pub object_to_world: TMat4<f32>,
@@ -43,9 +47,10 @@ impl Sphere {
         //println!("{:?} {:?}", object_to_world, inverse(&object_to_world));
         return Sphere{r: radius, object_to_world: object_to_world, world_to_object: inverse(&object_to_world)}
     }
-    pub fn intersection(&self, r: Ray) -> Option<RayIntersection> {
+}
+impl Object for Sphere {
+    fn intersection(&self, r: &Ray) -> Option<RayIntersection> {
         //This is wrong, fix this
-        
         let t_origin = transform(&self.world_to_object, &r.origin);
         let t_direction = transform_vec(&self.world_to_object, &r.direction);
         
@@ -79,4 +84,6 @@ impl Sphere {
         }
         return Some(RayIntersection{t: 1.0});
     }
+
 }
+   

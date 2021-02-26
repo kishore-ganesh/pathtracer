@@ -2,7 +2,7 @@ use glm::{TMat4, make_mat4x4, inverse, cross, normalize, transpose, vec3_to_vec4
 
 use crate::sphere::Ray;
 use crate::primitives::{Point, scale, translate, transform, transform_vec};
-struct Camera {
+pub struct Camera {
     from: Point,
     camera_to_world: TMat4<f32>,
     world_to_camera: TMat4<f32>,
@@ -28,14 +28,14 @@ impl Camera {
 
 //NOTE: glm already has functions, we are reimplementing some for learning purposes
 impl Camera {
-    fn LookAt(from: Point, to: Point, f: f32, n: f32) -> Self{
+    pub fn LookAt(from: Point, to: Point, f: f32, n: f32) -> Self{
         let z = normalize(&(to.vector()-from.vector()));
         let up = Point::create(0.0,1.0,0.0).vector();
         let x = cross(&z,  &up);
         let n_up = cross(&x, &z);
-        let camera_to_world = make_mat4x4(&[x.x, up.x, z.x, from.x as f32, 
-                                        x.y, up.y, z.y, from.y as f32, 
-                                        x.z, up.z, z.z, from.z as f32, 
+        let camera_to_world = make_mat4x4(&[x.x, n_up.x, z.x, from.x as f32, 
+                                        x.y, n_up.y, z.y, from.y as f32, 
+                                        x.z, n_up.z, z.z, from.z as f32, 
                                         0.0, 0.0, 0.0, 1.0]);
         let world_to_camera = inverse(&camera_to_world);
         let camera_to_screen = make_mat4x4(&[
@@ -82,7 +82,7 @@ impl Camera {
         //TODO: check screen space. 
     }
     //TODO: make sample a type
-    fn generate_ray(&self, sample: [f32; 2]) -> Ray{
+    pub fn generate_ray(&self, sample: [f32; 2]) -> Ray{
         //sample gives raster screen position, ray from world(camera_origin) to world(sample_pos)
        let raster_point = Point::create(sample[0], sample[1], 0.0);
        let transformed_point = transform(&self.raster_to_world, &raster_point);

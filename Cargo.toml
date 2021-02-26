@@ -8,3 +8,4 @@ edition = "2018"
 
 [dependencies]
 nalgebra-glm="0.10.0"
+rand = "0.8.3"
