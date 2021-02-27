@@ -19,7 +19,7 @@ pub struct PathTracer{
 impl PathTracer{
     //Should generate RGB grid 
     pub fn create(xres: i32, yres: i32, n_samples: i32, roulette_threshold: f32, scene: Scene, camera: Camera) -> Self{
-        let grid = vec![vec![RGB::black(); yres as usize]; xres as usize];
+        let grid = vec![vec![RGB::black(); xres as usize]; yres as usize];
         return PathTracer{
             xres: xres,
             yres: yres,
@@ -50,9 +50,13 @@ impl PathTracer{
                 }
 
                 radiance /= (self.n_samples as f32);
-                self.grid[x as usize][y as usize] = radiance;
+                self.grid[y as usize][x as usize] = radiance;
             }
         }
+
+        //For debugging
+        self.grid[(self.yres/2) as usize][(self.xres/2) as usize] = RGB::create(255.0,0.0,0.0);
+
         return self.grid.clone();
     } 
     //TODO: Special value for infinite intersection?

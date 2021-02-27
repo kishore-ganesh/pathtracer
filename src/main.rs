@@ -11,14 +11,14 @@ mod primitives;
 mod pathtracer;
 use glm::{TMat4, TVec4, make_mat4x4, make_vec4, transpose, make_vec3, vec3_to_vec4, mat4_to_mat3};
 use sphere::{Sphere, Ray, Object};
-use primitives::{Point, Rect};
+use primitives::{Point, Rect, transform};
 use color::RGB;
 use pathtracer::PathTracer;
 use scene::Scene;
 use camera::Camera;
 fn main() {
-    let center = Point::create(10.0,10.0,10.0);
-    let x: Sphere = Sphere::create(15.0, center.clone());
+    let center = Point::create(0.0,0.0,0.0);
+    let x: Sphere = Sphere::create(25.0, center.clone());
     let r: Ray = Ray{origin: Point::create(1.0,1.0,1.0), direction: make_vec3(&[1.0,1.0,1.0])};
     x.intersection(&r);
     /*let mut v: Vec<Vec<RGB>> = Vec::new();
@@ -42,13 +42,22 @@ fn main() {
     //
     */
     //TODO: link up sphere and cam?
+    //Need small region scale to control distortion
     let screen_res = 512.0;
     let raster_res = 512.0;
-    let look_at_point = center.clone();
-    let region = Rect::create(Point::create(-25.0,-25.0,0.0), Point::create(25.0,25.0,0.0));
+    let look_at_point = Point::create(0.0,0.0,0.0);
+    let region_scale = 1.0;
+    let fov = 60.0;
+    let region = Rect::create(Point::create(-region_scale,-region_scale,0.0), Point::create(region_scale, region_scale,0.0));
 //    let look_at_point = Point::create(0.0,0.0,1.0);
-    let scene = Scene::create(x);
-    let camera = Camera::look_at(Point::create(0.0,0.0,0.0), look_at_point, -5.0, 10.0, screen_res, raster_res, region); 
+    let camera = Camera::look_at(Point::create(0.0,0.0,10.0), look_at_point, 0.1, 1000.0, screen_res, raster_res, fov,region);
+    let relative_point = transform(&camera.camera_to_world, &Point::create(0.0,0.0,50.0));
+    let x2: Sphere = Sphere::create(2.0, Point::create(1.0,0.0,0.0));
+    let scene = Scene::create(vec![
+                             // Box::new(x),
+                              Box::new(x2)
+    ]);
+
     let mut pt = PathTracer::create(raster_res as i32, raster_res as i32, 1, 1.0, scene, camera);
     let grid = pt.generate(); 
     color::write_ppm(&grid, "test.ppm".to_string());

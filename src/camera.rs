@@ -2,9 +2,10 @@ use glm::{TMat4, make_mat4x4, inverse, cross, normalize, transpose, vec3_to_vec4
 
 use crate::sphere::Ray;
 use crate::primitives::{Point, Rect,scale, translate, transform, transform_vec};
+use std::f32::consts::PI;
 pub struct Camera {
     from: Point,
-    camera_to_world: TMat4<f32>,
+    pub camera_to_world: TMat4<f32>,
     world_to_camera: TMat4<f32>,
     raster_to_screen: TMat4<f32>,
     screen_to_raster: TMat4<f32>,
@@ -28,12 +29,13 @@ impl Camera {
 
 //NOTE: glm already has functions, we are reimplementing some for learning purposes
 impl Camera {
-    pub fn look_at(from: Point, to: Point, f: f32, n: f32, screen_res: f32, raster_res: f32, region: Rect) -> Self{
+    pub fn look_at(from: Point, to: Point, f: f32, n: f32, screen_res: f32, raster_res: f32, fov: f32,region: Rect) -> Self{
         let z = normalize(&(to.vector()-from.vector()));
         let up = Point::create(0.0,1.0,0.0).vector();
         //Should we normalize?
         let x = (cross(&z,  &up));
         let n_up = (cross(&x, &z));
+        let tangent = ((PI/180.0) * (fov/2.0)).tan();
         //println!("{} {} {}", x, n_up, z);
         //println!("{:?} {:?} {:?}", length(&x), length(&up), length(&z));
         let camera_to_world = make_mat4x4(&[x.x, n_up.x, z.x, from.x as f32, 
@@ -45,7 +47,7 @@ impl Camera {
                                            1.0,0.0,0.0,0.0,
                                            0.0,1.0,0.0,0.0,
                                            0.0,0.0,f/(f-n),(-f*n)/(f-n),
-                                           0.0, 0.0, 1.0, 0.0]);
+                                           0.0, 0.0, 1.0, 0.0]) * scale(1.0/tangent,1.0/tangent,1.0);
         let screen_to_camera = inverse(&camera_to_screen);
         //TODO: make this res a parameter
  //       let screen_res = 512.0;

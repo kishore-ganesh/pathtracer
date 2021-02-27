@@ -6,8 +6,8 @@ pub struct Scene {
 }
 //Why did Box<dyn Object> not work
 impl Scene {
-    pub fn create<O>(o: O) -> Self where O: Object+'static{
-        return Scene{objects: vec![Box::new(o)]};
+    pub fn create(objects: Vec<Box<dyn Object>>) -> Self{
+        return Scene{objects: objects};
 
     }
 }
