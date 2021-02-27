@@ -53,6 +53,18 @@ impl ops::Add<Point> for Point {
         return Self{x, y, z};
     }
 }
+
+
+pub struct Rect {
+    pub bottom: Point,
+    pub top: Point
+}
+
+impl Rect{
+    pub fn create(bottom: Point, top: Point) ->Self {
+        return Rect{bottom: bottom, top: top};
+    }
+}
 pub fn pointwise_mul_sum(p1: Point, p2: Point) -> f32 {
      return p1.x * p2.x + p1.y * p2.y + p1.z * p2.z;
 }

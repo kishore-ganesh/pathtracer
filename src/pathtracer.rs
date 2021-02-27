@@ -65,11 +65,12 @@ impl PathTracer{
             //println!("Before ray object intersection test");
 
             let intersection = object.intersection(&r);
-            println!("{:?}", intersection);
+            //println!("{:?}", intersection);
             //TODO: Add generic object type later 
             //Closest
             match intersection {
                 Some(i) => {
+                    println!("Intersection found");
                     min_intersection = Some(i); //TODO: make this min
                 }
                 None =>{}

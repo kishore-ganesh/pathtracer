@@ -56,13 +56,14 @@ impl Object for Sphere {
         //This is wrong, fix this
         let t_origin = transform(&self.world_to_object, &r.origin);
         let t_direction = transform_vec(&self.world_to_object, &r.direction);
-        
-
+        //println!("{:?}", r.direction);
+        //println!("{:?} {}", t_origin, t_direction);
         let a = length2(&t_direction);
         let b = 2.0 * comp_add(&(matrix_comp_mult(&t_origin.vector(), &t_direction))); 
         let c = t_origin.square_sum() - self.r*self.r;
         //println!("{} {}", b*b, 4.0*a*c);
         //TODO:  improve precision
+        //println!("{:?}", t_direction);
         if(b*b < 4.0*a*c){
             return None;
         }
@@ -71,7 +72,7 @@ impl Object for Sphere {
             let r1: f32 = (-b as f32 + res)/((2.0*a) as f32);
             let r2: f32 = (-b as f32 - res) /((2.0*a) as f32); //Find better way to do this
             
-            println!("r1: {}, r2: {}", r1, r2);
+            //println!("r1: {}, r2: {}", r1, r2);
             if r1 < 0.0 {
                 return None;
             }

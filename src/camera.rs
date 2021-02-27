@@ -1,7 +1,7 @@
-use glm::{TMat4, make_mat4x4, inverse, cross, normalize, transpose, vec3_to_vec4, mat4_to_mat3, TVec3};
+use glm::{TMat4, make_mat4x4, inverse, cross, normalize, transpose, vec3_to_vec4, mat4_to_mat3, TVec3, make_vec3, length};
 
 use crate::sphere::Ray;
-use crate::primitives::{Point, scale, translate, transform, transform_vec};
+use crate::primitives::{Point, Rect,scale, translate, transform, transform_vec};
 pub struct Camera {
     from: Point,
     camera_to_world: TMat4<f32>,
@@ -28,11 +28,14 @@ impl Camera {
 
 //NOTE: glm already has functions, we are reimplementing some for learning purposes
 impl Camera {
-    pub fn look_at(from: Point, to: Point, f: f32, n: f32, screen_res: f32, raster_res: f32) -> Self{
+    pub fn look_at(from: Point, to: Point, f: f32, n: f32, screen_res: f32, raster_res: f32, region: Rect) -> Self{
         let z = normalize(&(to.vector()-from.vector()));
         let up = Point::create(0.0,1.0,0.0).vector();
-        let x = normalize(&cross(&z,  &up));
-        let n_up = normalize(&cross(&x, &z));
+        //Should we normalize?
+        let x = (cross(&z,  &up));
+        let n_up = (cross(&x, &z));
+        //println!("{} {} {}", x, n_up, z);
+        //println!("{:?} {:?} {:?}", length(&x), length(&up), length(&z));
         let camera_to_world = make_mat4x4(&[x.x, n_up.x, z.x, from.x as f32, 
                                         x.y, n_up.y, z.y, from.y as f32, 
                                         x.z, n_up.z, z.z, from.z as f32, 
@@ -47,7 +50,9 @@ impl Camera {
         //TODO: make this res a parameter
  //       let screen_res = 512.0;
    //     let raster_res = 512.0;
-        let screen_to_raster = translate(screen_res/2.0, screen_res/2.0, 0.0) * scale(1.0/screen_res, 1.0/screen_res, 1.0) * scale(raster_res, raster_res, 1.0);
+
+        //let (region_min_x, region_max_x, region_min_y, region_max_y) = (-50.0)
+        let screen_to_raster = translate(-region.bottom.x, -region.top.y, 0.0) * scale(1.0/(region.top.x-region.bottom.x), -1.0/(region.top.y-region.bottom.y), 1.0) * scale(raster_res, raster_res, 1.0);
         let raster_to_screen = inverse(&screen_to_raster);
         //NOTE: If we do vec * Mat, then have to multiply matrices LTR, else RTL
         //Camera -> Screen -> NDC -> Raster 
@@ -89,6 +94,8 @@ impl Camera {
        let raster_point = Point::create(sample[0], sample[1], 0.0);
        let transformed_point = transform(&self.raster_to_world, &raster_point);
        let transformed_origin = transform(&self.camera_to_world, &Point::create(0.0,0.0,0.0));
+       //println!("Transformed origin is: {:?}", transformed_origin);
+
        let direction = normalize(&(transformed_point.vector() - transformed_origin.vector()));
                                          
         //TODO: improve performance here
