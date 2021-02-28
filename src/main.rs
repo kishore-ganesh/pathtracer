@@ -16,6 +16,7 @@ use color::RGB;
 use pathtracer::PathTracer;
 use scene::Scene;
 use camera::Camera;
+use lights::PointLight;
 fn main() {
     let center = Point::create(0.0,0.0,0.0);
     let x: Sphere = Sphere::create(25.0, center.clone());
@@ -48,6 +49,10 @@ fn main() {
     let look_at_point = Point::create(0.0,0.0,0.0);
     let region_scale = 1.0;
     let fov = 60.0;
+    let point_light = Box::new(PointLight::create(
+            Point::create(5.0,5.0,5.0),
+            RGB::create(255.0,255.0,255.0)
+    ));
     let region = Rect::create(Point::create(-region_scale,-region_scale,0.0), Point::create(region_scale, region_scale,0.0));
 //    let look_at_point = Point::create(0.0,0.0,1.0);
     let camera = Camera::look_at(Point::create(0.0,0.0,10.0), look_at_point, 0.1, 1000.0, screen_res, raster_res, fov,region);
@@ -56,7 +61,7 @@ fn main() {
     let scene = Scene::create(vec![
                              // Box::new(x),
                               Box::new(x2)
-    ]);
+    ], point_light);
 
     let mut pt = PathTracer::create(raster_res as i32, raster_res as i32, 1, 1.0, scene, camera);
     let grid = pt.generate(); 

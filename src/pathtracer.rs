@@ -82,7 +82,7 @@ impl PathTracer{
         }
 
         match min_intersection {
-            Some(RayIntersection) => {
+            Some(ray_intersection) => {
                 /*(f_r, direction, pdf ) = min_object.brdf_sample(); //TODO: pass incoming direction 
                 to_terminate = rand.gen::<f32>();
                 if to_terminate < roulette_threshold {
@@ -93,7 +93,11 @@ impl PathTracer{
                     return (f_r/pdf) * Li(object.generate_ray(direction));
                 }*/
 
-                return RGB::create(0.0,255.0,127.0);
+                //Light radiance to point then multiply by cos theta 
+                let light_color = self.scene.light.radiance(ray_intersection.point, ray_intersection.normal);
+                let color = RGB::create(0.0,255.0,127.0);
+
+                return light_color * color; 
             },
             None =>  RGB::black()
         }

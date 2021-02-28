@@ -3,8 +3,10 @@
 //
 //Implement cube
 use std::ops;
-use glm::{TMat4, TVec3, make_mat4x4, make_vec3,inverse, length2, matrix_comp_mult, comp_add};
+use std::f32::consts::PI;
+use glm::{TMat4, TVec3, make_mat4x4, make_vec3,inverse, length2, matrix_comp_mult, comp_add, normalize, angle};
 use crate::primitives::{Point, pointwise_mul_sum,transform, transform_vec};
+
 pub trait Object{
 
     fn intersection(&self, r: &Ray) -> Option<RayIntersection>;
@@ -24,7 +26,11 @@ pub struct Ray {
 
 #[derive(Debug, Clone, Copy)]
 pub struct RayIntersection {
-    pub t: f32
+    pub t: f32,
+    pub point: Point,
+    pub normal: TVec3<f32>
+
+
 }
 
 //TODO: implement CMP for rayintersection
@@ -71,24 +77,38 @@ impl Object for Sphere {
             let res: f32 =  ((b*b - 4.0*a*c) as f32).sqrt();
             let r1: f32 = (-b as f32 + res)/((2.0*a) as f32);
             let r2: f32 = (-b as f32 - res) /((2.0*a) as f32); //Find better way to do this
-            
+            let mut t = 0.0;
             //println!("r1: {}, r2: {}", r1, r2);
             if r1 < 0.0 {
                 return None;
             }
             if r2 >= 0.0 {
-                return Some(RayIntersection{t:r2}) 
+                t = r2;
+                //intersection = Some(RayIntersection{t:r2}) 
             }
             else {
-                return Some(RayIntersection{t: r1})
+                t = r1;
+                //intersection = Some(RayIntersection{t: r1})
             }
+
+            let point  = t_origin.vector() + t * t_direction;
+            let incoming_vector = -t*t_direction;
+            let denom = ((point.x.powi(2) + point.y.powi(2) - self.r.powi(2)));
+            let df_dx = (point.x) / denom;
+            let df_dy = (point.y)/ denom;
+            let normal_vec = normalize(&make_vec3(&[-df_dx, -df_dy, 1.0]));
+            
+            println!("{} {}", normal_vec, angle(&normal_vec, &incoming_vector) * (180.0/PI));
+            return Some(RayIntersection{t: t, point: Point::create_from_vec3(point), normal: normal_vec});
+
+        }
             //Check which one is closer
             // We now know x, y, z Use it to find theta and phi.
             // z = rcostheta, use to find theta 
             // x = rsinthetacosphi, use to find phi 
-
-        }
-        return Some(RayIntersection{t: 1.0});
+            //return intersection;
+        
+        return None;
     }
 
 }
