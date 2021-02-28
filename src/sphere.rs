@@ -28,8 +28,8 @@ pub struct Ray {
 pub struct RayIntersection {
     pub t: f32,
     pub point: Point,
-    pub normal: TVec3<f32>
-
+    pub normal: TVec3<f32>,
+    pub normal_angle: f32
 
 }
 
@@ -93,13 +93,13 @@ impl Object for Sphere {
 
             let point  = t_origin.vector() + t * t_direction;
             let incoming_vector = -t*t_direction;
-            let denom = ((point.x.powi(2) + point.y.powi(2) - self.r.powi(2)));
-            let df_dx = (point.x) / denom;
-            let df_dy = (point.y)/ denom;
+            let denom = ((-point.x.powi(2) - point.y.powi(2) + self.r.powi(2))).sqrt();
+            let df_dx = (-point.x) / denom;
+            let df_dy = (-point.y)/ denom;
             let normal_vec = normalize(&make_vec3(&[-df_dx, -df_dy, 1.0]));
-            
-            println!("{} {}", normal_vec, angle(&normal_vec, &incoming_vector) * (180.0/PI));
-            return Some(RayIntersection{t: t, point: Point::create_from_vec3(point), normal: normal_vec});
+            let normal_angle = angle(&normal_vec, &incoming_vector);
+            println!("{} {}", normal_vec, normal_angle * (180.0/PI));
+            return Some(RayIntersection{t: t, point: Point::create_from_vec3(point), normal: normal_vec, normal_angle: normal_angle});
 
         }
             //Check which one is closer

@@ -10,11 +10,12 @@ pub trait Light {
 #[derive(Copy, Debug, Clone)]
 pub struct PointLight {
     location: Point,
-    color: RGB
+    color: RGB,
+    intensity: f32,
 }
 impl PointLight {
-    pub fn create(location: Point, color: RGB) -> Self{
-        return PointLight{location: location, color: color};
+    pub fn create(location: Point, color: RGB, intensity: f32) -> Self{
+        return PointLight{location: location, color: color, intensity:  intensity};
     }
 }
 
@@ -23,8 +24,8 @@ impl Light for PointLight {
         let dist = distance(&self.location.vector(), &point.vector());
         let light_vec = normalize(&(point.vector() - self.location.vector()));
         let cos_angle = angle(&light_vec, &normal).cos();
-        println!("{}", cos_angle);
-        return self.color * cos_angle * (1.0/dist.powi(2));
+        println!("{}, {:?}, {:?}", cos_angle, self.color, self.color * cos_angle);
+        return self.color * cos_angle * (self.intensity/dist.powi(2));
     }
 }
 

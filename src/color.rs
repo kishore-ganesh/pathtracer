@@ -59,9 +59,9 @@ impl Mul<RGB> for RGB{
     type Output = Self;
     fn mul(self, rhs: Self) -> Self{
         return Self{
-            r: self.r * rhs.r,
-            g: self.g * rhs.g,
-            b: self.b * rhs.b
+            r: (self.r * rhs.r)/255.0,
+            g: (self.g * rhs.g)/255.0,
+            b: (self.b * rhs.b)/255.0
         }
     }
 }

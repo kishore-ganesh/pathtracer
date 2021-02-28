@@ -96,8 +96,8 @@ impl PathTracer{
                 //Light radiance to point then multiply by cos theta 
                 let light_color = self.scene.light.radiance(ray_intersection.point, ray_intersection.normal);
                 let color = RGB::create(0.0,255.0,127.0);
-
-                return light_color * color; 
+                return color * ray_intersection.normal_angle.cos();
+                //return light_color * color; 
             },
             None =>  RGB::black()
         }

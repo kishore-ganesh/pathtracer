@@ -50,8 +50,9 @@ fn main() {
     let region_scale = 1.0;
     let fov = 60.0;
     let point_light = Box::new(PointLight::create(
-            Point::create(5.0,5.0,5.0),
-            RGB::create(255.0,255.0,255.0)
+            Point::create(-10.0, 0.0,0.0),
+            RGB::create(255.0,255.0,255.0),
+            100.0
     ));
     let region = Rect::create(Point::create(-region_scale,-region_scale,0.0), Point::create(region_scale, region_scale,0.0));
 //    let look_at_point = Point::create(0.0,0.0,1.0);
