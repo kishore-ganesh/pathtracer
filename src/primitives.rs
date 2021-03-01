@@ -1,6 +1,6 @@
 use std::fmt::Display;
 use std::ops;
-use glm::{transpose, mat4_to_mat3, make_mat4x4, make_vec3, vec3_to_vec4, TVec3, TMat4};
+use glm::{transpose, mat4_to_mat3, make_mat4x4, make_vec3, vec3_to_vec4, TVec3, TMat4, dot, is_null, normalize};
 /*impl Display for TMat4<f32> {
 
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -106,6 +106,20 @@ pub fn transform_vec(transform: &TMat4<f32>, v: &TVec3<f32>) -> TVec3<f32> {
     let transformed = transpose(&v) * transform3;
     let transformed_vec = transpose(&transformed);
     return transformed_vec;
+}
+
+pub fn reflect_about_vec(v: &TVec3<f32>, about: &TVec3<f32>) -> TVec3<f32>{
+    //NOTE: this assumes both rooted in same point 
+    let normalized_about = normalize(&about);
+    let about_parallel = dot(&normalized_about, &v) * normalized_about;
+    let about_perpendicular = v - about_parallel;
+    println!("{} {} about perp: {} about_parallel: {}", v, about, about_perpendicular, about_parallel);
+    if(is_null(&about_perpendicular, 0.0)){
+        return -about_parallel;
+    }
+    else{
+        return about_parallel - about_perpendicular;
+    }
 }
 
 

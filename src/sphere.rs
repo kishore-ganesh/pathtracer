@@ -4,8 +4,8 @@
 //Implement cube
 use std::ops;
 use std::f32::consts::PI;
-use glm::{TMat4, TVec3, make_mat4x4, make_vec3,inverse, length2, matrix_comp_mult, comp_add, normalize, angle, dot};
-use crate::primitives::{Point, pointwise_mul_sum,transform, transform_vec};
+use glm::{TMat4, TVec3, make_mat4x4, make_vec3,inverse, length2, matrix_comp_mult, comp_add, normalize, angle, dot, distance};
+use crate::primitives::{Point, pointwise_mul_sum,transform, transform_vec, reflect_about_vec};
 
 pub trait Object{
 
@@ -36,7 +36,8 @@ pub struct RayIntersection {
     pub point: Point,
     pub normal: TVec3<f32>,
     pub normal_angle: f32,
-    pub reflection: TVec3<f32>
+    pub reflection: TVec3<f32>,
+    pub distance: f32
 
 }
 
@@ -81,15 +82,17 @@ impl Object for Sphere {
             return None;
         }
         else{
+            
+            println!("Ray origin: {:?}, direction: {}", t_origin, t_direction);
             let res: f32 =  ((b*b - 4.0*a*c) as f32).sqrt();
             let r1: f32 = (-b as f32 + res)/((2.0*a) as f32);
             let r2: f32 = (-b as f32 - res) /((2.0*a) as f32); //Find better way to do this
             let mut t = 0.0;
             //println!("r1: {}, r2: {}", r1, r2);
-            if r1 < 0.0 {
+            if r1 <= 0.0 {
                 return None;
             }
-            if r2 >= 0.0 {
+            if r2 > 0.0 {
                 t = r2;
                 //intersection = Some(RayIntersection{t:r2}) 
             }
@@ -99,16 +102,12 @@ impl Object for Sphere {
             }
 
             let point  = t_origin.vector() + t * t_direction;
+            println!("Direction is: {}", t_direction);
             let incoming_vector = -t*t_direction;
-            let denom = ((-point.x.powi(2) - point.y.powi(2) + self.r.powi(2))).sqrt();
-            let df_dx = (-point.x) / denom;
-            let df_dy = (-point.y)/ denom;
-            let normal_vec = normalize(&make_vec3(&[-df_dx, -df_dy, 1.0]));
+            let normal_vec = normalize(&point);
             let normal_angle = angle(&normal_vec, &incoming_vector);
-            let norm_parallel = dot(&incoming_vector, &normal_vec) * normal_vec;
-            let norm_perp = incoming_vector - norm_parallel;
-            let reflection = norm_parallel - norm_perp;
-
+            let reflection = reflect_about_vec(&incoming_vector, &normal_vec);
+            //TODO: handle refleciton case when perp = 0
             //let other_axis = cross(&normal_vec, &incoming_vector);
             /*
              * New coord system: normal, other_axis, cross(normal, other_axis)
@@ -117,12 +116,13 @@ impl Object for Sphere {
              * */
             println!("{} {}", normal_vec, normal_angle * (180.0/PI));
             println!("{}", angle(&normal_vec, &point));
-            println!("{} {}", norm_perp, norm_parallel);
             //TODO: change normal to world space
             let world_normal_vec = transform_vec(&self.object_to_world, &normal_vec);
             let world_reflection = normalize(&transform_vec(&self.object_to_world, &reflection));
             let world_point = transform(&self.object_to_world, &Point::create_from_vec3(point));
-            return Some(RayIntersection{t: t, point: world_point, normal: world_normal_vec, normal_angle: normal_angle, reflection: world_reflection});
+
+            println!("reflection: {}, world: {}", reflection, world_reflection);
+            return Some(RayIntersection{t: t, point: world_point, normal: world_normal_vec, normal_angle: normal_angle, reflection: world_reflection, distance: distance(&world_point.vector(), &t_origin.vector())});
 
         }
             //Check which one is closer

@@ -74,8 +74,16 @@ impl PathTracer{
             //Closest
             match intersection {
                 Some(i) => {
-                    println!("Intersection found");
-                    min_intersection = Some(i); //TODO: make this min
+                    println!("Intersection found at: {:?}", i.point);
+                    match min_intersection{
+                        Some(min_i) => {
+                            if i.distance < min_i.distance {
+                                min_intersection = Some(i);
+                            }
+                        }
+                        None => {min_intersection = Some(i);}
+                    }
+                    //min_intersection = Some(i); //TODO: make this min
                 }
                 None =>{}
             }
@@ -99,7 +107,6 @@ impl PathTracer{
                 let mut mult_color = RGB::black();
                 println!("Reflection: {}", ray_intersection.reflection);
                 if(recursion_depth>0){
-
                     mult_color = self.li(Ray::create(ray_intersection.point, ray_intersection.reflection), rand, recursion_depth-1)
                 };
                     
