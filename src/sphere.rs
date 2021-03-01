@@ -4,7 +4,7 @@
 //Implement cube
 use std::ops;
 use std::f32::consts::PI;
-use glm::{TMat4, TVec3, make_mat4x4, make_vec3,inverse, length2, matrix_comp_mult, comp_add, normalize, angle};
+use glm::{TMat4, TVec3, make_mat4x4, make_vec3,inverse, length2, matrix_comp_mult, comp_add, normalize, angle, dot};
 use crate::primitives::{Point, pointwise_mul_sum,transform, transform_vec};
 
 pub trait Object{
@@ -24,12 +24,19 @@ pub struct Ray {
      pub direction: TVec3<f32>,
 }
 
+impl Ray{
+    pub fn create(origin: Point, direction: TVec3<f32>) -> Self{
+        return Ray{origin: origin, direction: direction};
+    }
+}
+
 #[derive(Debug, Clone, Copy)]
 pub struct RayIntersection {
     pub t: f32,
     pub point: Point,
     pub normal: TVec3<f32>,
-    pub normal_angle: f32
+    pub normal_angle: f32,
+    pub reflection: TVec3<f32>
 
 }
 
@@ -98,8 +105,24 @@ impl Object for Sphere {
             let df_dy = (-point.y)/ denom;
             let normal_vec = normalize(&make_vec3(&[-df_dx, -df_dy, 1.0]));
             let normal_angle = angle(&normal_vec, &incoming_vector);
+            let norm_parallel = dot(&incoming_vector, &normal_vec) * normal_vec;
+            let norm_perp = incoming_vector - norm_parallel;
+            let reflection = norm_parallel - norm_perp;
+
+            //let other_axis = cross(&normal_vec, &incoming_vector);
+            /*
+             * New coord system: normal, other_axis, cross(normal, other_axis)
+             * rotate about other_axis 
+             * inverse transform
+             * */
             println!("{} {}", normal_vec, normal_angle * (180.0/PI));
-            return Some(RayIntersection{t: t, point: Point::create_from_vec3(point), normal: normal_vec, normal_angle: normal_angle});
+            println!("{}", angle(&normal_vec, &point));
+            println!("{} {}", norm_perp, norm_parallel);
+            //TODO: change normal to world space
+            let world_normal_vec = transform_vec(&self.object_to_world, &normal_vec);
+            let world_reflection = normalize(&transform_vec(&self.object_to_world, &reflection));
+            let world_point = transform(&self.object_to_world, &Point::create_from_vec3(point));
+            return Some(RayIntersection{t: t, point: world_point, normal: world_normal_vec, normal_angle: normal_angle, reflection: world_reflection});
 
         }
             //Check which one is closer

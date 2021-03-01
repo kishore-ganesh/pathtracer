@@ -18,8 +18,8 @@ use scene::Scene;
 use camera::Camera;
 use lights::PointLight;
 fn main() {
-    let center = Point::create(0.0,0.0,0.0);
-    let x: Sphere = Sphere::create(25.0, center.clone());
+    let center = Point::create(-1.0,0.0,0.0);
+    let x: Sphere = Sphere::create(1.0, center.clone());
     let r: Ray = Ray{origin: Point::create(1.0,1.0,1.0), direction: make_vec3(&[1.0,1.0,1.0])};
     x.intersection(&r);
     /*let mut v: Vec<Vec<RGB>> = Vec::new();
@@ -50,7 +50,7 @@ fn main() {
     let region_scale = 1.0;
     let fov = 60.0;
     let point_light = Box::new(PointLight::create(
-            Point::create(-10.0, 0.0,0.0),
+            Point::create(0.0, 10.0,0.0),
             RGB::create(255.0,255.0,255.0),
             100.0
     ));
@@ -58,9 +58,9 @@ fn main() {
 //    let look_at_point = Point::create(0.0,0.0,1.0);
     let camera = Camera::look_at(Point::create(0.0,0.0,10.0), look_at_point, 0.1, 1000.0, screen_res, raster_res, fov,region);
     let relative_point = transform(&camera.camera_to_world, &Point::create(0.0,0.0,50.0));
-    let x2: Sphere = Sphere::create(2.0, Point::create(1.0,0.0,0.0));
+    let x2: Sphere = Sphere::create(1.0, Point::create(1.0,0.0,0.0));
     let scene = Scene::create(vec![
-                             // Box::new(x),
+                              Box::new(x),
                               Box::new(x2)
     ], point_light);
 

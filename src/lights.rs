@@ -22,7 +22,7 @@ impl PointLight {
 impl Light for PointLight {
     fn radiance(&self, point: Point, normal: TVec3<f32>) -> RGB {
         let dist = distance(&self.location.vector(), &point.vector());
-        let light_vec = normalize(&(point.vector() - self.location.vector()));
+        let light_vec = -normalize(&(point.vector() - self.location.vector()));
         let cos_angle = angle(&light_vec, &normal).cos();
         println!("{}, {:?}, {:?}", cos_angle, self.color, self.color * cos_angle);
         return self.color * cos_angle * (self.intensity/dist.powi(2));

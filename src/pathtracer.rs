@@ -42,7 +42,7 @@ impl PathTracer{
                      //sample = sampler.generate_sample();
                      let sample = [x as f32, y as f32];
                      let ray = self.camera.generate_ray(sample);
-                     radiance += self.li(ray, &rng);
+                     radiance += self.li(ray, &rng, 5);
                      //have closest intersection 
                      //toss to find whether to stop 
                      //if stop, sample light source and reutrn radiance 
@@ -61,7 +61,7 @@ impl PathTracer{
     } 
     //TODO: Special value for infinite intersection?
     //Mult by angle for first
-    fn li(&mut self, r: Ray, rand: &impl Rng) -> RGB{
+    fn li(&mut self, r: Ray, rand: &impl Rng, recursion_depth: i32) -> RGB{
         //println!("Calculating Li");
         let mut min_intersection: Option<RayIntersection> = None;//compare None, o = o
         //let min_object: Option<Object> = None;
@@ -95,8 +95,21 @@ impl PathTracer{
 
                 //Light radiance to point then multiply by cos theta 
                 let light_color = self.scene.light.radiance(ray_intersection.point, ray_intersection.normal);
-                let color = RGB::create(0.0,255.0,127.0);
-                return color * ray_intersection.normal_angle.cos();
+                let color = RGB::create(0.0,255.0,127.0); 
+                let mut mult_color = RGB::black();
+                println!("Reflection: {}", ray_intersection.reflection);
+                if(recursion_depth>0){
+
+                    mult_color = self.li(Ray::create(ray_intersection.point, ray_intersection.reflection), rand, recursion_depth-1)
+                };
+                    
+                if(mult_color.is_black()){
+                    return color * ray_intersection.normal_angle.cos();
+                }
+                else{
+                    return color * mult_color * ray_intersection.normal_angle.cos();
+                }
+                //return color * ray_intersection.normal_angle.cos();
                 //return light_color * color; 
             },
             None =>  RGB::black()

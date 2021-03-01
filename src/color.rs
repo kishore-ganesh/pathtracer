@@ -20,6 +20,9 @@ impl RGB {
     pub fn black() -> Self {
         return RGB{r: 0.0, g: 0.0,b: 0.0};
     }
+    pub fn is_black(&self) -> bool {
+        return self.r==0.0 && self.g==0.0 && self.b == 0.0;
+    }
      
 }
 
