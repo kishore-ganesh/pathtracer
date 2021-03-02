@@ -3,13 +3,14 @@ extern crate rand;
 mod sphere;
 mod color;
 mod lights;
-mod materials;
+//mod materials;
 mod sampler;
 mod scene;
 mod camera;
 mod primitives;
 mod pathtracer;
 mod triangle;
+//mod triangle_mesh;
 use glm::{TMat4, TVec4, make_mat4x4, make_vec4, transpose, make_vec3, vec3_to_vec4, mat4_to_mat3};
 use sphere::{Sphere, Ray, Object};
 use primitives::{Point, Rect, transform, reflect_about_vec};
@@ -18,6 +19,7 @@ use pathtracer::PathTracer;
 use scene::Scene;
 use camera::Camera;
 use lights::PointLight;
+use triangle::Triangle;
 fn main() {
     let center = Point::create(-1.0,0.0,0.0);
     let x: Sphere = Sphere::create(1.0, center.clone());
@@ -65,9 +67,18 @@ fn main() {
     let camera = Camera::look_at(Point::create(0.0,0.0,10.0), look_at_point, 0.1, 1000.0, screen_res, raster_res, fov,region);
     let relative_point = transform(&camera.camera_to_world, &Point::create(0.0,0.0,50.0));
     let x2: Sphere = Sphere::create(1.0, Point::create(1.0,0.0,0.0));
+    let triangle = Triangle::create([
+                                    Point::create(0.0,0.0,0.0),
+                                    Point::create(0.0,-1.0,0.0),
+                                    Point::create(-1.0,0.0,0.0)
+    ],
+     make_vec3(&[0.0,0.0,1.0]) 
+    ); 
     let scene = Scene::create(vec![
-                              Box::new(x),
-                              Box::new(x2)
+                              Box::new(triangle),
+                              //Box::new(x),
+                              //Box::new(x2)
+
     ], point_light);
 
     let mut pt = PathTracer::create(raster_res as i32, raster_res as i32, 1, 1.0, scene, camera);

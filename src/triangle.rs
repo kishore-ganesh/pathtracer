@@ -1,25 +1,39 @@
 use crate::primitives::{Point, reflect_about_vec};
 use crate::sphere::{Object, Ray, RayIntersection};
-use glm::{normalize, angle, dot, cross, TVec3, distance};
-struct Triangle{
+use crate::color::RGB;
+use glm::{normalize, angle, dot, cross, TVec3, distance, length};
+pub struct Triangle{
     points: [Point; 3],
     normal_direction: TVec3<f32>
 }
 
+impl Triangle {
+    pub fn create(points: [Point; 3], normal_direction: TVec3<f32>) -> Self
+    {
+        return Triangle{
+            points: points,
+            normal_direction: normal_direction
+        }
+    }
+
+}
 //TODO: triangle coord system
 impl Object for Triangle{
-    fn intersection(&self, r: &Ray) -> Option<RayIntersection> {
+
+        fn intersection(&self, r: &Ray) -> Option<RayIntersection> {
         let origin = r.origin;
         let direction = r.direction;
         let b_a = self.points[1].vector() - self.points[0].vector();
         let c_a = self.points[2].vector() - self.points[0].vector();
         let o_a = origin.vector() - self.points[0].vector();
-        let u = dot(&cross(&o_a, &b_a), &c_a);
-        let v = dot(&cross(&-direction, &o_a),&c_a);
-        let t= dot(&cross(&-direction, &b_a), &o_a);
-        let permitted_range = 0.0..=1.0; 
-
+        let denom = dot(&cross(&-direction, &b_a), &c_a);
+        let t = dot(&cross(&o_a, &b_a), &c_a)/denom;
+        let u = dot(&cross(&-direction, &o_a),&c_a)/denom;
+        let v = dot(&cross(&-direction, &b_a), &o_a)/denom;
+        let permitted_range = 0.0..=1.0;
         if(permitted_range.contains(&u) && permitted_range.contains(&v) && permitted_range.contains(&(1.0-u-v))){
+            
+            println!("u: {}, v: {}, t: {}", u, v, t);
             let point = (1.0-u-v) * self.points[0].vector() + u*self.points[1].vector() + v * self.points[2].vector();
             let point_a = point - self.points[0].vector();
             let point_b = point - self.points[1].vector();
@@ -47,5 +61,29 @@ impl Object for Triangle{
         }
         return None;
 
-    } 
+    }
+
+        fn color(&self, p: &Point) -> RGB{
+            let p_v = p.vector();
+            let a_v = self.points[0].vector();
+            let b_v = self.points[1].vector();
+            let c_v = self.points[2].vector();
+            let total_area = length(&cross(&(c_v-a_v), &(b_v-a_v))).abs()/2.0;
+            let u_area = length(&cross(&(p_v-a_v), &(p_v-c_v))).abs()/2.0;
+            let v_area = length(&cross(&(p_v-a_v), &(p_v-b_v))).abs()/2.0;
+            let u = u_area/total_area;
+            let v = v_area/total_area;
+            let w = 1.0-u-v;
+            println!("u: {}, v: {}, w: {}", u, v, w);
+            let a_color = RGB::create(255.0,0.0,0.0);
+            let b_color = RGB::create(0.0,255.0,0.0);
+            let c_color = RGB::create(0.0,0.0,255.0);
+
+            return a_color*w + b_color*u + c_color*v;
+
+
+        }
+        
+
+        
 }

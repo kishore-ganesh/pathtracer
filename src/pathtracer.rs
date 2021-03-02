@@ -42,7 +42,7 @@ impl PathTracer{
                      //sample = sampler.generate_sample();
                      let sample = [x as f32, y as f32];
                      let ray = self.camera.generate_ray(sample);
-                     radiance += self.li(ray, &rng, 5);
+                     radiance += self.li(ray, &rng, 1);
                      //have closest intersection 
                      //toss to find whether to stop 
                      //if stop, sample light source and reutrn radiance 
@@ -64,8 +64,9 @@ impl PathTracer{
     fn li(&mut self, r: Ray, rand: &impl Rng, recursion_depth: i32) -> RGB{
         //println!("Calculating Li");
         let mut min_intersection: Option<RayIntersection> = None;//compare None, o = o
+        let mut min_index = 0;
         //let min_object: Option<Object> = None;
-        for object in &self.scene.objects {
+        for (index, object) in (&self.scene.objects).into_iter().enumerate() {
             //println!("Before ray object intersection test");
 
             let intersection = object.intersection(&r);
@@ -74,11 +75,12 @@ impl PathTracer{
             //Closest
             match intersection {
                 Some(i) => {
-                    println!("Intersection found at: {:?}", i.point);
+                    println!("Intersection found with object {} at: {:?}", index,i.point);
                     match min_intersection{
                         Some(min_i) => {
                             if i.distance < min_i.distance {
                                 min_intersection = Some(i);
+                                min_index = index;
                             }
                         }
                         None => {min_intersection = Some(i);}
@@ -105,11 +107,16 @@ impl PathTracer{
                 let light_color = self.scene.light.radiance(ray_intersection.point, ray_intersection.normal);
                 let color = RGB::create(0.0,255.0,127.0); 
                 let mut mult_color = RGB::black();
-                println!("Reflection: {}", ray_intersection.reflection);
+                println!("Object {} intersected at recursion depth {}", min_index, recursion_depth);
+                println!("Ray intersection point: {:?}", ray_intersection.point);
+                //println!("Reflection: {}", ray_intersection.reflection);
+                //Only for testing barycentric:
+                return self.scene.objects[min_index as usize].color(&ray_intersection.point);
                 if(recursion_depth>0){
-                    mult_color = self.li(Ray::create(ray_intersection.point, ray_intersection.reflection), rand, recursion_depth-1)
+                    //mult_color = self.li(Ray::create(ray_intersection.point, ray_intersection.reflection), rand, recursion_depth-1)
                 };
-                    
+                println!("{:?}", mult_color);
+
                 if(mult_color.is_black()){
                     return color * ray_intersection.normal_angle.cos();
                 }

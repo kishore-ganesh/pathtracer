@@ -2,14 +2,17 @@
 //TODO: Implement Disp trait
 //
 //Implement cube
+use std::cmp::{Ord, PartialOrd, PartialEq, Eq, Ordering};
 use std::ops;
 use std::f32::consts::PI;
 use glm::{TMat4, TVec3, make_mat4x4, make_vec3,inverse, length2, matrix_comp_mult, comp_add, normalize, angle, dot, distance};
+use crate::color::RGB;
 use crate::primitives::{Point, pointwise_mul_sum,transform, transform_vec, reflect_about_vec};
 
 pub trait Object{
 
     fn intersection(&self, r: &Ray) -> Option<RayIntersection>;
+    fn color(&self, p: &Point) -> RGB;
 }
 pub struct Sphere {
     pub r: f32,
@@ -41,6 +44,12 @@ pub struct RayIntersection {
 
 }
 
+
+
+
+/*impl PartialEq for Option<RayIntersection> {
+    fn eq(&self, other: &self)
+}(/)*/
 //TODO: implement CMP for rayintersection
 // derive debug?
 // Sphere should know where it is in world space. 
@@ -136,6 +145,10 @@ impl Object for Sphere {
             //return intersection;
         
         return None;
+    }
+
+    fn color(&self, p: &Point) -> RGB{
+        return RGB::black();
     }
 
 }
