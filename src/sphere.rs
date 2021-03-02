@@ -75,7 +75,7 @@ impl Object for Sphere {
         let a = length2(&t_direction);
         let b = 2.0 * comp_add(&(matrix_comp_mult(&t_origin.vector(), &t_direction))); 
         let c = t_origin.square_sum() - self.r*self.r;
-        //println!("{} {}", b*b, 4.0*a*c);
+        //println!("b: {} 4ac: {}", b*b, 4.0*a*c);
         //TODO:  improve precision
         //println!("{:?}", t_direction);
         if(b*b < 4.0*a*c){
@@ -83,7 +83,7 @@ impl Object for Sphere {
         }
         else{
             
-            println!("Ray origin: {:?}, direction: {}", t_origin, t_direction);
+            println!("Original origin: {:?}, Ray origin: {:?}, direction: {}", r.origin,t_origin, t_direction);
             let res: f32 =  ((b*b - 4.0*a*c) as f32).sqrt();
             let r1: f32 = (-b as f32 + res)/((2.0*a) as f32);
             let r2: f32 = (-b as f32 - res) /((2.0*a) as f32); //Find better way to do this
@@ -101,8 +101,12 @@ impl Object for Sphere {
                 //intersection = Some(RayIntersection{t: r1})
             }
 
+            if(t<=0.001){
+                return None;
+            }
+
             let point  = t_origin.vector() + t * t_direction;
-            println!("Direction is: {}", t_direction);
+            //println!("Direction is: {}", t_direction);
             let incoming_vector = -t*t_direction;
             let normal_vec = normalize(&point);
             let normal_angle = angle(&normal_vec, &incoming_vector);
@@ -115,13 +119,13 @@ impl Object for Sphere {
              * inverse transform
              * */
             println!("{} {}", normal_vec, normal_angle * (180.0/PI));
-            println!("{}", angle(&normal_vec, &point));
+            //println!("{}", angle(&normal_vec, &point));
             //TODO: change normal to world space
             let world_normal_vec = transform_vec(&self.object_to_world, &normal_vec);
             let world_reflection = normalize(&transform_vec(&self.object_to_world, &reflection));
             let world_point = transform(&self.object_to_world, &Point::create_from_vec3(point));
 
-            println!("reflection: {}, world: {}", reflection, world_reflection);
+            //println!("reflection: {}, world: {}", reflection, world_reflection);
             return Some(RayIntersection{t: t, point: world_point, normal: world_normal_vec, normal_angle: normal_angle, reflection: world_reflection, distance: distance(&world_point.vector(), &t_origin.vector())});
 
         }

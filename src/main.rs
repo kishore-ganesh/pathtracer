@@ -9,9 +9,10 @@ mod scene;
 mod camera;
 mod primitives;
 mod pathtracer;
+mod triangle;
 use glm::{TMat4, TVec4, make_mat4x4, make_vec4, transpose, make_vec3, vec3_to_vec4, mat4_to_mat3};
 use sphere::{Sphere, Ray, Object};
-use primitives::{Point, Rect, transform};
+use primitives::{Point, Rect, transform, reflect_about_vec};
 use color::RGB;
 use pathtracer::PathTracer;
 use scene::Scene;
@@ -22,6 +23,11 @@ fn main() {
     let x: Sphere = Sphere::create(1.0, center.clone());
     let r: Ray = Ray{origin: Point::create(1.0,1.0,1.0), direction: make_vec3(&[1.0,1.0,1.0])};
     x.intersection(&r);
+    let v = make_vec3(&[-1.0,1.0,0.0]);
+    let normal = make_vec3(&[0.0,1.0,0.0]);
+    let reflected_v = reflect_about_vec(&v, &normal);
+    println!("original: {}, reflected: {}", v, reflected_v);
+
     /*let mut v: Vec<Vec<RGB>> = Vec::new();
     let x = 256;
     let y = 240;
