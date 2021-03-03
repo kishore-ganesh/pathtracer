@@ -2,9 +2,10 @@ use crate::primitives::{Point, reflect_about_vec};
 use crate::sphere::{Object, Ray, RayIntersection};
 use crate::color::RGB;
 use glm::{normalize, angle, dot, cross, TVec3, distance, length};
+#[derive(Debug, Copy, Clone)]
 pub struct Triangle{
-    points: [Point; 3],
-    normal_direction: TVec3<f32>
+    pub points: [Point; 3],
+    pub normal_direction: TVec3<f32>
 }
 
 impl Triangle {

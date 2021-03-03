@@ -11,9 +11,11 @@ mod primitives;
 mod pathtracer;
 mod triangle;
 mod triangle_mesh;
+
+use std::f32::consts::PI;
 use glm::{TMat4, TVec4, make_mat4x4, make_vec4, transpose, make_vec3, vec3_to_vec4, mat4_to_mat3};
 use sphere::{Sphere, Ray, Object, Primitive};
-use primitives::{Point, Rect, transform, reflect_about_vec};
+use primitives::{Point, Rect, transform, transform_mesh, scale,reflect_about_vec, rotate_about_y};
 use color::RGB;
 use pathtracer::PathTracer;
 use scene::Scene;
@@ -118,7 +120,10 @@ fn main() {
         [0.0,1.0,0.0],
     ];    
 
-    let cube_tri_mesh = TriangleMesh::create(cube_mesh, cube_normals);
+    let mut cube_tri_mesh = TriangleMesh::create(cube_mesh, cube_normals);
+    //cube_tri_mesh = transform_mesh(&scale(2.0,2.0,1.0), &cube_tri_mesh);
+    let rotate_angle = (10.0) * (PI/180.0);
+    cube_tri_mesh = transform_mesh(&rotate_about_y(rotate_angle), &cube_tri_mesh);
     /*let mut v: Vec<Vec<RGB>> = Vec::new();
     let x = 256;
     let y = 240;

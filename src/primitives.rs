@@ -1,7 +1,7 @@
 use std::fmt::Display;
 use std::ops;
 use glm::{transpose, mat4_to_mat3, make_mat4x4, make_vec3, vec3_to_vec4, TVec3, TMat4, dot, is_null, normalize};
-
+use crate::{Triangle, TriangleMesh};
 //TODO: rename to geometric primitives
 /*impl Display for TMat4<f32> {
 
@@ -90,6 +90,15 @@ pub fn translate(tx: f32, ty: f32, tz: f32) -> TMat4<f32> {
     ])
 }
 
+pub fn rotate_about_y(angle: f32) -> TMat4<f32>{
+    return make_mat4x4(&[
+                       angle.cos(), 0.0, angle.sin(), 0.0,
+                       0.0, 1.0, 0.0, 0.0,
+                       -angle.sin(), 0.0, angle.cos(), 0.0,
+                       0.0,0.0,0.0,1.0
+
+    ])
+}
 
 //Transform for Point and For Vector
 //TODO: make transform faster
@@ -107,11 +116,30 @@ pub fn transform(transform: &TMat4<f32>, p: &Point) -> Point{
     return Point::create(transformed[0]/transformed[3], transformed[1]/transformed[3], transformed[2]/transformed[3]);
 }
 
+
 pub fn transform_vec(transform: &TMat4<f32>, v: &TVec3<f32>) -> TVec3<f32> {
     let transform3 = mat4_to_mat3(&transform);
     let transformed = transpose(&v) * transform3;
     let transformed_vec = transpose(&transformed);
     return transformed_vec;
+}
+
+pub fn transform_triangle(m: &TMat4<f32>, t: &Triangle) -> Triangle{
+    let mut points = t.points.clone();
+    for (index, point) in (&t.points).iter().enumerate(){
+        points[index] = transform(m, point);
+    }
+    //iter().map(|x| transform(M, x)).collect();
+    return Triangle::create(points, transform_vec(m, &t.normal_direction));
+}
+pub fn transform_mesh(transform: &TMat4<f32>, m: &TriangleMesh) -> TriangleMesh{
+    //TODO: make this better
+    let mut mesh = m.mesh.clone();
+    for (index,triangle) in (&m.mesh).iter().enumerate(){
+        mesh[index] = transform_triangle(transform, triangle);
+    }
+
+    return TriangleMesh::create_from(mesh);
 }
 
 pub fn reflect_about_vec(v: &TVec3<f32>, about: &TVec3<f32>) -> TVec3<f32>{
