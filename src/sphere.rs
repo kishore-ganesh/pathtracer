@@ -7,6 +7,7 @@ use std::ops;
 use std::f32::consts::PI;
 use glm::{TMat4, TVec3, make_mat4x4, make_vec3,inverse, length2, matrix_comp_mult, comp_add, normalize, angle, dot, distance};
 use crate::color::RGB;
+use crate::materials::Material;
 use crate::primitives::{Point, pointwise_mul_sum,transform, transform_vec, reflect_about_vec};
 
 pub trait Object{
@@ -14,12 +15,27 @@ pub trait Object{
     fn intersection(&self, r: &Ray) -> Option<RayIntersection>;
     fn color(&self, p: &Point) -> RGB;
 }
+
+
+pub struct Primitive{
+    pub object: Box<dyn Object>,
+    pub material: Box<dyn Material>
+}
+
+
+impl Primitive{
+    pub fn create(o: Box<dyn Object>, m: Box<dyn Material>) -> Self{
+        return Primitive{object: o, material: m};
+    }
+}
 pub struct Sphere {
     pub r: f32,
     pub object_to_world: TMat4<f32>,
-    pub world_to_object: TMat4<f32>
+    pub world_to_object: TMat4<f32>,
 
 }
+
+
 
 #[derive(Debug, Clone, Copy)]
 pub struct Ray {

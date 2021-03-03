@@ -1,6 +1,8 @@
 use std::fmt::Display;
 use std::ops;
 use glm::{transpose, mat4_to_mat3, make_mat4x4, make_vec3, vec3_to_vec4, TVec3, TMat4, dot, is_null, normalize};
+
+//TODO: rename to geometric primitives
 /*impl Display for TMat4<f32> {
 
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

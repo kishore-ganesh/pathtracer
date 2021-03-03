@@ -1,14 +1,15 @@
 use std::boxed::Box;
-use crate::sphere::{Object};
+use crate::sphere::{Primitive};
 use crate::lights::{Light};
+use crate::materials::{Material};
 pub struct Scene {
-   pub objects: Vec<Box<dyn Object>>,
+   pub primitives: Vec<Primitive>,
    pub light: Box<dyn Light>
 }
 //Why did Box<dyn Object> not work
 impl Scene {
-    pub fn create(objects: Vec<Box<dyn Object>>, light: Box<dyn Light>) -> Self{
-        return Scene{objects: objects, light: light};
+    pub fn create(primitives: Vec<Primitive>, light: Box<dyn Light>) -> Self{
+        return Scene{primitives: primitives, light: light};
 
     }
 }
