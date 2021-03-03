@@ -30,6 +30,10 @@ impl Point {
     pub fn create(x: f32, y: f32, z: f32) -> Self {
         return Point{x: x, y:y, z:z};
     }
+
+    pub fn create_from_arr(a: [f32; 3]) -> Self{
+        return Point{x: a[0], y: a[1], z: a[2]};
+    }
     pub fn vector(&self) -> TVec3<f32> {
         return make_vec3(&[self.x as f32, self.y as f32, self.z as f32]);
     }

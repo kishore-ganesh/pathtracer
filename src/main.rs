@@ -10,7 +10,7 @@ mod camera;
 mod primitives;
 mod pathtracer;
 mod triangle;
-//mod triangle_mesh;
+mod triangle_mesh;
 use glm::{TMat4, TVec4, make_mat4x4, make_vec4, transpose, make_vec3, vec3_to_vec4, mat4_to_mat3};
 use sphere::{Sphere, Ray, Object, Primitive};
 use primitives::{Point, Rect, transform, reflect_about_vec};
@@ -20,7 +20,8 @@ use scene::Scene;
 use camera::Camera;
 use lights::PointLight;
 use triangle::Triangle;
-use materials::DiffuseMaterial;
+use triangle_mesh::TriangleMesh;
+use materials::{DiffuseMaterial, SpecularMaterial};
 fn main() {
     let center = Point::create(-1.0,0.0,0.0);
     let x: Sphere = Sphere::create(1.0, center.clone());
@@ -31,6 +32,93 @@ fn main() {
     let reflected_v = reflect_about_vec(&v, &normal);
     println!("original: {}, reflected: {}", v, reflected_v);
 
+    let cube_mesh = vec![
+        //Front
+        [
+            [-1.0,-1.0,1.0],
+            [-1.0,1.0,1.0],
+            [1.0,-1.0,1.0]
+        ],
+        [
+            [-1.0,1.0,1.0],
+            [1.0,1.0,1.0],
+            [1.0,-1.0,1.0],
+        ],
+        //Left
+        [
+            [-1.0,-1.0,-1.0],
+            [-1.0,1.0, 1.0],
+            [-1.0,-1.0,1.0]
+        ],
+        [
+            [-1.0, -1.0,-1.0],
+            [-1.0,1.0,-1.0],
+            [-1.0,1.0,1.0]
+        ],
+        //Back
+        [
+            [-1.0,-1.0,-1.0],
+            [-1.0,1.0,-1.0],
+            [1.0,-1.0,-1.0]
+        ],
+        [
+            [-1.0,1.0,-1.0],
+            [1.0,1.0,-1.0],
+            [1.0,-1.0,-1.0],
+        ],
+        //Right
+        //
+        [
+            [1.0,-1.0,-1.0],
+            [1.0,1.0, 1.0],
+            [1.0,-1.0,1.0]
+        ],
+        [
+            [1.0, -1.0,-1.0],
+            [1.0,1.0,-1.0],
+            [1.0,1.0,1.0]
+        ],
+
+        //Bottom
+        [
+            [-1.0,-1.0,1.0],
+            [1.0,-1.0,-1.0],
+            [1.0,-1.0,1.0]
+        ],
+        [
+            [-1.0,-1.0,1.0],
+            [-1.0,-1.0,-1.0],
+            [1.0,-1.0,-1.0]
+        ],
+        //Top
+        [
+            [-1.0,1.0,1.0],
+            [1.0,1.0,-1.0],
+            [1.0,1.0,1.0]
+        ],
+        [
+            [-1.0,1.0,1.0],
+            [-1.0,1.0,-1.0],
+            [1.0,1.0,-1.0]
+        ]
+    ];
+
+    let cube_normals = vec![
+        [0.0,0.0,1.0],
+        [0.0,0.0,1.0],
+        [-1.0,0.0,0.0],
+        [-1.0,0.0,0.0],
+        [0.0,0.0,-1.0],
+        [0.0,0.0,-1.0],
+        [1.0,0.0,0.0],
+        [1.0,0.0,0.0],
+        [0.0,-1.0,0.0],
+        [0.0,-1.0,0.0],
+        [0.0,1.0,0.0],
+        [0.0,1.0,0.0],
+    ];    
+
+    let cube_tri_mesh = TriangleMesh::create(cube_mesh, cube_normals);
     /*let mut v: Vec<Vec<RGB>> = Vec::new();
     let x = 256;
     let y = 240;
@@ -77,9 +165,11 @@ fn main() {
     ); 
 
     let diffuse_material = DiffuseMaterial::create(RGB::create(0.0,255.0,127.0)); 
+    let specular_material = SpecularMaterial::create();
     let scene = Scene::create(vec![
-                              Primitive::create(Box::new(x), Box::new(diffuse_material.clone())),
-                              Primitive::create(Box::new(x2), Box::new(diffuse_material.clone()))
+                              //Primitive::create(Box::new(x), Box::new(specular_material.clone())),
+                              //Primitive::create(Box::new(x2), Box::new(diffuse_material.clone())),
+                              Primitive::create(Box::new(cube_tri_mesh), Box::new(diffuse_material.clone()))
                               //Box::new(triangle),
                               //Box::new(x),
                               //Box::new(x2)

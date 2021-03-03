@@ -42,7 +42,7 @@ impl PathTracer{
                      //sample = sampler.generate_sample();
                      let sample = [x as f32, y as f32];
                      let ray = self.camera.generate_ray(sample);
-                     radiance += self.li(ray, &rng, 1);
+                     radiance += self.li(ray, &rng, 2);
                      //have closest intersection 
                      //toss to find whether to stop 
                      //if stop, sample light source and reutrn radiance 
@@ -78,12 +78,16 @@ impl PathTracer{
                     println!("Intersection found with object {} at: {:?}", index,i.point);
                     match min_intersection{
                         Some(min_i) => {
+                            println!("{} {}", i.distance, min_i.distance);
                             if i.distance < min_i.distance {
                                 min_intersection = Some(i);
                                 min_index = index;
                             }
                         }
-                        None => {min_intersection = Some(i);}
+                        None => {
+                            min_intersection = Some(i);
+                            min_index = index;
+                        }
                     }
                     //min_intersection = Some(i); //TODO: make this min
                 }
@@ -114,8 +118,10 @@ impl PathTracer{
                         if(recursion_depth <=0){
                             return light_color;
                         }
-                        else{                
-                            return brdf * ray_intersection.normal_angle.cos() * self.li(r, rand, recursion_depth-1);  
+                        else{
+                            let along_reflected = self.li(r, rand, recursion_depth-1);
+                            println!("{:?}", along_reflected);
+                            return brdf * ray_intersection.normal_angle.cos() * along_reflected;
                         }
 
                     },

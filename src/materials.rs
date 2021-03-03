@@ -24,8 +24,15 @@ impl Material for DiffuseMaterial{
 }
 
 
+#[derive(Debug, Copy, Clone)]
 pub struct SpecularMaterial {
 
+}
+
+impl SpecularMaterial{
+    pub fn create() -> Self{
+        return SpecularMaterial{};
+    }
 }
 
 impl Material for SpecularMaterial{
