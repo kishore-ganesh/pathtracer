@@ -28,15 +28,23 @@ impl TriangleMesh{
 impl Object for TriangleMesh{
     fn intersection(&self, r: &Ray) -> Option<RayIntersection> {
         let mut min_intersection = None;
-        for triangle in &self.mesh{
+        let mut min_index:i32 = -1;
+        
+        for (index,triangle) in (&self.mesh).iter().enumerate(){
             //TODO: handle duplication of code
+            println!("Triangle index: {}", index);
             match min_intersection{
-                None => min_intersection = triangle.intersection(r),
+                None => {
+                    min_intersection = triangle.intersection(r);
+                    min_index = (index as i32);
+                },
                 Some(i) => {
                     match triangle.intersection(r){
                         Some(j) => {
+                            println!("Triangle {} {} distances: {} {}, t's: {} {}", index,min_index,j.distance, i.distance, j.t, i.t);
                             if (j.distance < i.distance){
                                 min_intersection = Some(j);
+                                min_index = (index as i32);
                             }
                         }
                         None => {},
@@ -44,6 +52,12 @@ impl Object for TriangleMesh{
                     }
                 }
             }
+        }
+
+        match min_intersection{
+            None => {},
+            _ => println!("Triangle {} intersected", min_index)
+            
         }
         return min_intersection;
     }

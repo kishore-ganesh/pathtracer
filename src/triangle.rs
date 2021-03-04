@@ -18,6 +18,22 @@ impl Triangle {
     }
 
 }
+
+fn approx(x: f32, l: f32, r: f32) -> f32{
+    let l_dist = (x-l).abs();
+    let r_dist = (x-r).abs();
+    return x;
+    let err = 1e-6;
+    //println!("{}", err);
+
+    if(l_dist <= err){
+        return l;
+    }
+    if(r_dist <= err){
+        return r;
+    }
+    return x;
+}
 //TODO: triangle coord system
 impl Object for Triangle{
 
@@ -28,11 +44,16 @@ impl Object for Triangle{
         let c_a = self.points[2].vector() - self.points[0].vector();
         let o_a = origin.vector() - self.points[0].vector();
         let denom = dot(&cross(&-direction, &b_a), &c_a);
-        let t = dot(&cross(&o_a, &b_a), &c_a)/denom;
-        let u = dot(&cross(&-direction, &o_a),&c_a)/denom;
-        let v = dot(&cross(&-direction, &b_a), &o_a)/denom;
+        let mut t = dot(&cross(&o_a, &b_a), &c_a)/denom;
+        let mut u = dot(&cross(&-direction, &o_a),&c_a)/denom;
+        let mut v = dot(&cross(&-direction, &b_a), &o_a)/denom;
         let permitted_range = 0.0..=1.0;
-        if(permitted_range.contains(&u) && permitted_range.contains(&v) && permitted_range.contains(&(1.0-u-v))){
+        //println!("Triangle u: {}, v: {} t: {}", u, v, t);
+        u = approx(u, 0.0, 1.0);
+        v = approx(v, 0.0, 1.0);
+        t = approx(t, 0.0, 1.0);
+        let w = approx(1.0-u-v, 0.0,1.0);
+        if(permitted_range.contains(&u) && permitted_range.contains(&v) && permitted_range.contains(&(w))){
             
             println!("u: {}, v: {}, t: {}", u, v, t);
             let point = (1.0-u-v) * self.points[0].vector() + u*self.points[1].vector() + v * self.points[2].vector();

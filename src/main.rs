@@ -2,6 +2,7 @@ extern crate nalgebra_glm as glm;
 extern crate rand;
 mod sphere;
 mod color;
+mod cube;
 mod lights;
 mod materials;
 mod sampler;
@@ -12,8 +13,10 @@ mod pathtracer;
 mod triangle;
 mod triangle_mesh;
 
+
 use std::f32::consts::PI;
 use glm::{TMat4, TVec4, make_mat4x4, make_vec4, transpose, make_vec3, vec3_to_vec4, mat4_to_mat3};
+use cube::Cube;
 use sphere::{Sphere, Ray, Object, Primitive};
 use primitives::{Point, Rect, transform, transform_mesh, scale,reflect_about_vec, rotate_about_y};
 use color::RGB;
@@ -33,97 +36,8 @@ fn main() {
     let normal = make_vec3(&[0.0,1.0,0.0]);
     let reflected_v = reflect_about_vec(&v, &normal);
     println!("original: {}, reflected: {}", v, reflected_v);
-
-    let cube_mesh = vec![
-        //Front
-        [
-            [-1.0,-1.0,1.0],
-            [-1.0,1.0,1.0],
-            [1.0,-1.0,1.0]
-        ],
-        [
-            [-1.0,1.0,1.0],
-            [1.0,1.0,1.0],
-            [1.0,-1.0,1.0],
-        ],
-        //Left
-        [
-            [-1.0,-1.0,-1.0],
-            [-1.0,1.0, 1.0],
-            [-1.0,-1.0,1.0]
-        ],
-        [
-            [-1.0, -1.0,-1.0],
-            [-1.0,1.0,-1.0],
-            [-1.0,1.0,1.0]
-        ],
-        //Back
-        [
-            [-1.0,-1.0,-1.0],
-            [-1.0,1.0,-1.0],
-            [1.0,-1.0,-1.0]
-        ],
-        [
-            [-1.0,1.0,-1.0],
-            [1.0,1.0,-1.0],
-            [1.0,-1.0,-1.0],
-        ],
-        //Right
-        //
-        [
-            [1.0,-1.0,-1.0],
-            [1.0,1.0, 1.0],
-            [1.0,-1.0,1.0]
-        ],
-        [
-            [1.0, -1.0,-1.0],
-            [1.0,1.0,-1.0],
-            [1.0,1.0,1.0]
-        ],
-
-        //Bottom
-        [
-            [-1.0,-1.0,1.0],
-            [1.0,-1.0,-1.0],
-            [1.0,-1.0,1.0]
-        ],
-        [
-            [-1.0,-1.0,1.0],
-            [-1.0,-1.0,-1.0],
-            [1.0,-1.0,-1.0]
-        ],
-        //Top
-        [
-            [-1.0,1.0,1.0],
-            [1.0,1.0,-1.0],
-            [1.0,1.0,1.0]
-        ],
-        [
-            [-1.0,1.0,1.0],
-            [-1.0,1.0,-1.0],
-            [1.0,1.0,-1.0]
-        ]
-    ];
-
-    let cube_normals = vec![
-        [0.0,0.0,1.0],
-        [0.0,0.0,1.0],
-        [-1.0,0.0,0.0],
-        [-1.0,0.0,0.0],
-        [0.0,0.0,-1.0],
-        [0.0,0.0,-1.0],
-        [1.0,0.0,0.0],
-        [1.0,0.0,0.0],
-        [0.0,-1.0,0.0],
-        [0.0,-1.0,0.0],
-        [0.0,1.0,0.0],
-        [0.0,1.0,0.0],
-    ];    
-
-    let mut cube_tri_mesh = TriangleMesh::create(cube_mesh, cube_normals);
-    //cube_tri_mesh = transform_mesh(&scale(2.0,2.0,1.0), &cube_tri_mesh);
-    let rotate_angle = (10.0) * (PI/180.0);
-    cube_tri_mesh = transform_mesh(&rotate_about_y(rotate_angle), &cube_tri_mesh);
+    let rotate_angle = (90.0) * (PI/180.0);
+    let cube = Cube::create(Point::create(0.0,0.0,0.0), 0.0, 5.0, true);
     /*let mut v: Vec<Vec<RGB>> = Vec::new();
     let x = 256;
     let y = 240;
@@ -174,7 +88,7 @@ fn main() {
     let scene = Scene::create(vec![
                               //Primitive::create(Box::new(x), Box::new(specular_material.clone())),
                               //Primitive::create(Box::new(x2), Box::new(diffuse_material.clone())),
-                              Primitive::create(Box::new(cube_tri_mesh), Box::new(diffuse_material.clone()))
+                              Primitive::create(Box::new(cube), Box::new(diffuse_material.clone()))
                               //Box::new(triangle),
                               //Box::new(x),
                               //Box::new(x2)
