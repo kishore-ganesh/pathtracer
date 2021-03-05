@@ -1,6 +1,6 @@
 use std::fs::File;
 use std::io::{Write, Error};
-use std::ops::{Add,AddAssign, DivAssign, Mul};
+use std::ops::{Add,AddAssign, Div, DivAssign, Mul};
 use std::path::Path;
 #[derive(Copy, Clone, Debug)]
 pub struct RGB{
@@ -47,6 +47,19 @@ impl AddAssign for RGB{
         };
     }
 }
+
+
+impl Div<f32> for RGB {
+    type Output = Self;
+    fn div(self, rhs: f32) -> Self{
+        return Self{
+            r: self.r/rhs,
+            g: self.g/rhs,
+            b: self.b/rhs
+        }
+    }
+}
+
 
 impl DivAssign<f32> for RGB {
     fn div_assign(&mut self, rhs: f32){

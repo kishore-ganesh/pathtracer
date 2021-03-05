@@ -34,7 +34,7 @@ fn main() {
     x.intersection(&r);
     let v = make_vec3(&[-1.0,1.0,0.0]);
     let normal = make_vec3(&[0.0,1.0,0.0]);
-    let reflected_v = reflect_about_vec(&v, &normal);
+    let (reflected_v, _) = reflect_about_vec(&v, &normal);
     println!("original: {}, reflected: {}", v, reflected_v);
     let rotate_angle = (45.0) * (PI/180.0);
     let cube = Cube::create(Point::create(0.0,-100.0,0.0), rotate_angle, 0.0, 100.0, true);

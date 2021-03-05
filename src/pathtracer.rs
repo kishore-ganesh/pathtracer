@@ -1,4 +1,5 @@
 
+use glm::angle;
 use crate::camera::Camera;
 use crate::color::RGB;
 use crate::scene::Scene;
@@ -42,7 +43,7 @@ impl PathTracer{
                      //sample = sampler.generate_sample();
                      let sample = [x as f32, y as f32];
                      let ray = self.camera.generate_ray(sample);
-                     radiance += self.li(ray, &rng, 2);
+                     radiance += self.li(ray, &mut rng, 2);
                      //have closest intersection 
                      //toss to find whether to stop 
                      //if stop, sample light source and reutrn radiance 
@@ -61,10 +62,9 @@ impl PathTracer{
     } 
     //TODO: Special value for infinite intersection?
     //Mult by angle for first
-    fn li(&mut self, r: Ray, rand: &impl Rng, recursion_depth: i32) -> RGB{
-        //println!("Calculating Li");
+    fn check_intersection(&self, r: &Ray) -> (Option<RayIntersection>, i32){
         let mut min_intersection: Option<RayIntersection> = None;//compare None, o = o
-        let mut min_index = 0;
+        let mut min_index: i32 = -1;
         //let min_object: Option<Object> = None;
         for (index, primitive) in (&self.scene.primitives).into_iter().enumerate() {
             //println!("Before ray object intersection test");
@@ -81,12 +81,12 @@ impl PathTracer{
                             println!("{} {}", i.distance, min_i.distance);
                             if i.distance < min_i.distance {
                                 min_intersection = Some(i);
-                                min_index = index;
+                                min_index = index as i32;
                             }
                         }
                         None => {
                             min_intersection = Some(i);
-                            min_index = index;
+                            min_index = index as i32;
                         }
                     }
                     //min_intersection = Some(i); //TODO: make this min
@@ -95,70 +95,101 @@ impl PathTracer{
             }
         }
 
-        match min_intersection {
-            Some(ray_intersection) => {
-                /*(f_r, direction, pdf ) = min_object.brdf_sample(); //TODO: pass incoming direction 
-                to_terminate = rand.gen::<f32>();
-                if to_terminate < roulette_threshold {
+        return (min_intersection, min_index);
+
+    }
+    fn li(&mut self, r: Ray, rand: &mut impl Rng, recursion_depth: i32) -> RGB{
+        //println!("Calculating Li");
+        let emitted_radiance = RGB::black();
+        let mut path_total = emitted_radiance;
+        let mut running_sum = emitted_radiance;
+        let mut prev_intersection: Option<RayIntersection> = None;
+        let mut r_c = r.clone();
+        let mut n_iterations = 0;
+        while(false){
+            let (min_intersection, min_index) = self.check_intersection(&r_c);
+            
+            match prev_intersection{
+                 //Here, check dir to light source & do running_sum += path_total * f(light_point
+                 //-> prev_point -> prev_point)
+                 //Need an evaluate function for that? -> need prev_theta and next_theta
+                 //Till we have material: hack: if diffuse -> easy, if specular, just check if same
+                 //dir else 0 
+                Some (ray_intersection) => {
+                 //Need to check light obstruction here 
+                 let (light_color, light_vector) = self.scene.light.radiance(ray_intersection.point, ray_intersection.normal);
+                 let shadow_ray = Ray::create(ray_intersection.point, light_vector);
+                 let (shadow_intersection, _) = self.check_intersection(&r_c);
+                 match shadow_intersection {
+                     Some(_) => {},
+                     None => {
+                         let brdf = self.scene.primitives[min_index as usize].material.brdf_eval(&ray_intersection, &light_vector);
+                         running_sum +=  path_total * light_color * brdf; 
+                     }
+                 }
+                },    
+                None => {}
+            }
+
+            if n_iterations > 3 {
+                let rand_value = rand.gen::<f32>();
+                if (rand_value <= self.roulette_threshold){
+                    running_sum = (running_sum) / (1.0-self.roulette_threshold);
+                    break;
+                }
+            }
+            match min_intersection {
+                Some(ray_intersection) => {
+                    //TODO: pass incoming direction 
                     //TODO: return light sampling here. 
-                    return RGB::black();
-                }
-                else{
-                    return (f_r/pdf) * Li(object.generate_ray(direction));
-                }*/
+                    
 
-                println!("Object {} intersected at recursion depth {}", min_index, recursion_depth);
-                println!("Ray intersection point: {:?}", ray_intersection.point);
-                //Light radiance to point then multiply by cos theta 
-                let light_color = self.scene.light.radiance(ray_intersection.point, ray_intersection.normal);
-                let (brdf, ray) = self.scene.primitives[min_index as usize].material.brdf(ray_intersection);
-                match ray{
-                    Some(r) => {
-                        //TODO: make this general
-                        if(recursion_depth==-1){
-                            return RGB::black();
-                        }
-                        else if(recursion_depth ==0){
-                            //let ray = Ray::create(ray_intersection.point, )
-                            let obstruction_color = self.li(r, rand, recursion_depth-1);
-                            return obstruction_color * light_color;
-                        }
-                        else{
-                            let along_reflected = self.li(r, rand, recursion_depth-1);
-                            println!("{:?}", along_reflected);
-                            return brdf * ray_intersection.normal_angle.cos() * along_reflected;
-                        }
+                    println!("Object {} intersected at recursion depth {}", min_index, recursion_depth);
+                    println!("Ray intersection point: {:?}", ray_intersection.point);
+                    //Light radiance to point then multiply by cos theta 
+                    let (light_color,_) = self.scene.light.radiance(ray_intersection.point, ray_intersection.normal);
+                    let (brdf, ray) = self.scene.primitives[min_index as usize].material.brdf(ray_intersection);
+                    let ray_angle = angle(&ray_intersection.normal, &ray.direction);
+                    path_total += brdf * ray_angle.cos();
+                    r_c = ray;
+                    //let color = RGB::create(0.0,255.0,127.0); 
+                    //let mut mult_color = RGB::black();
+                    //println!("Reflection: {}", ray_intersection.reflection);
+                    //Only for testing barycentric:
+                    //return self.scene.objects[min_index as usize].color(&ray_intersection.point);
+                    //if(recursion_depth>0){
+                        //mult_color = self.li(Ray::create(ray_intersection.point, ray_intersection.reflection), rand, recursion_depth-1)
+                    //}
+                    //println!("{:?}", mult_color);
 
-                    },
-                    None => return brdf * light_color 
-                        //ray_intersection.normal_angle.cos()
-                }
-                //let color = RGB::create(0.0,255.0,127.0); 
-                //let mut mult_color = RGB::black();
-                //println!("Reflection: {}", ray_intersection.reflection);
-                //Only for testing barycentric:
-                //return self.scene.objects[min_index as usize].color(&ray_intersection.point);
-                //if(recursion_depth>0){
-                    //mult_color = self.li(Ray::create(ray_intersection.point, ray_intersection.reflection), rand, recursion_depth-1)
-                //}
-                //println!("{:?}", mult_color);
-
-                //if(mult_color.is_black()){
-                  //  return color * ray_intersection.normal_angle.cos();
-                //}
-                //else{
-                 //   return color * mult_color * ray_intersection.normal_angle.cos();
-                //}
-                //return color * ray_intersection.normal_angle.cos();
-                //return light_color * color; 
+                    //if(mult_color.is_black()){
+                      //  return color * ray_intersection.normal_angle.cos();
+                    //}
+                    //else{
+                     //   return color * mult_color * ray_intersection.normal_angle.cos();
+                    //}
+                    //return color * ray_intersection.normal_angle.cos();
+                    //return leht_color * color; 
             },
             None => {
-                match recursion_depth{
+                //TODO: check this, maybe we can sample another direction?
+                break;
+                //return running_sum; 
+                /*match recursion_depth{
                   -1 => RGB::create(255.0,255.0,255.0),
                   _ => RGB::black()
   
-                } 
-            }       
+                }*/ 
+            }
+
         }
+            n_iterations += 1;
+            prev_intersection = min_intersection;
+
+
+        }
+
+            return running_sum;
+
     }
 }

@@ -54,6 +54,7 @@ pub struct RayIntersection {
     pub t: f32,
     pub point: Point,
     pub normal: TVec3<f32>,
+    pub perp: TVec3<f32>,
     pub normal_angle: f32,
     pub reflection: TVec3<f32>,
     pub distance: f32
@@ -135,7 +136,8 @@ impl Object for Sphere {
             let incoming_vector = -t*t_direction;
             let normal_vec = normalize(&point);
             let normal_angle = angle(&normal_vec, &incoming_vector);
-            let reflection = reflect_about_vec(&incoming_vector, &normal_vec);
+            let (reflection, perp) = reflect_about_vec(&incoming_vector, &normal_vec);
+            
             //TODO: handle refleciton case when perp = 0
             //let other_axis = cross(&normal_vec, &incoming_vector);
             /*
@@ -149,9 +151,15 @@ impl Object for Sphere {
             let world_normal_vec = transform_vec(&self.object_to_world, &normal_vec);
             let world_reflection = normalize(&transform_vec(&self.object_to_world, &reflection));
             let world_point = transform(&self.object_to_world, &Point::create_from_vec3(point));
-
+            let world_perp = transform_vec(&self.object_to_world, &perp);
             //println!("reflection: {}, world: {}", reflection, world_reflection);
-            return Some(RayIntersection{t: t, point: world_point, normal: world_normal_vec, normal_angle: normal_angle, reflection: world_reflection, distance: distance(&world_point.vector(), &t_origin.vector())});
+            return Some(RayIntersection{
+                t: t, point: world_point, 
+                normal: world_normal_vec,
+                perp: world_perp,
+                normal_angle: normal_angle, 
+                reflection: world_reflection, 
+                distance: distance(&world_point.vector(), &t_origin.vector())});
 
         }
             //Check which one is closer

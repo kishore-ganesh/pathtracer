@@ -66,12 +66,13 @@ impl Object for Triangle{
 
             let origin_vector = origin.vector() - point;
             let normal_angle = angle(&normal,&origin_vector);
-            let reflection = reflect_about_vec(&origin_vector, &normal);
+            let (reflection, perp) = reflect_about_vec(&origin_vector, &normal);
             //TODO: check when changing to triangle coordinates
             return Some(RayIntersection{
                 t: t, 
                 point: Point::create_from_vec3(point),
                 normal: normal, 
+                perp: perp,
                 normal_angle: normal_angle, 
                 reflection: reflection,
                 distance: distance(&point, &origin.vector())
