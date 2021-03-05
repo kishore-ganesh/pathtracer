@@ -36,13 +36,17 @@ fn approx(x: f32, l: f32, r: f32) -> f32{
 }
 //TODO: triangle coord system
 impl Object for Triangle{
-
-        fn intersection(&self, r: &Ray) -> Option<RayIntersection> {
-        let origin = r.origin;
+    //TODO: triangle intersection test in 0,0 space instead
+    fn intersection(&self, r: &Ray) -> Option<RayIntersection> {
+        //let origin = r.origin;
         let direction = r.direction;
-        let b_a = self.points[1].vector() - self.points[0].vector();
-        let c_a = self.points[2].vector() - self.points[0].vector();
-        let o_a = origin.vector() - self.points[0].vector();
+        let p0_v = (self.points[0] - r.origin).vector(); 
+        let p1_v = (self.points[1] - r.origin).vector();
+        let p2_v = (self.points[2] - r.origin).vector();
+        let origin = Point::create(0.0,0.0,0.0);
+        let b_a = p1_v - p0_v;
+        let c_a = p2_v - p0_v;
+        let o_a = origin.vector() - p0_v;
         let denom = dot(&cross(&-direction, &b_a), &c_a);
         let mut t = dot(&cross(&o_a, &b_a), &c_a)/denom;
         let mut u = dot(&cross(&-direction, &o_a),&c_a)/denom;
@@ -56,25 +60,27 @@ impl Object for Triangle{
         if(permitted_range.contains(&u) && permitted_range.contains(&v) && permitted_range.contains(&(w))){
             
             println!("u: {}, v: {}, t: {}", u, v, t);
-            let point = (1.0-u-v) * self.points[0].vector() + u*self.points[1].vector() + v * self.points[2].vector();
-            let point_a = point - self.points[0].vector();
-            let point_b = point - self.points[1].vector();
+            let point = (1.0-u-v) * p0_v + u*p1_v + v * p2_v;
+            let point_a = point - p0_v;
+            let point_b = point - p1_v;
             let mut normal = normalize(&cross(&point_a, &point_b));
             if(angle(&normal, &self.normal_direction)!=0.0){
                 normal = -normal;
             }
 
-            let origin_vector = origin.vector() - point;
+            
+            let transformed_point = Point::create_from_vec3(point) + r.origin;
+            let origin_vector = r.origin.vector() - transformed_point.vector();
             let normal_angle = angle(&normal,&origin_vector);
             let reflection = reflect_about_vec(&origin_vector, &normal);
             //TODO: check when changing to triangle coordinates
             return Some(RayIntersection{
                 t: t, 
-                point: Point::create_from_vec3(point),
+                point: transformed_point,
                 normal: normal, 
                 normal_angle: normal_angle, 
                 reflection: reflection,
-                distance: distance(&point, &origin.vector())
+                distance: distance(&transformed_point.vector(), &origin.vector())
             });
             //Reflection
 

@@ -60,6 +60,14 @@ impl ops::Add<Point> for Point {
     }
 }
 
+impl ops::Sub<Point> for Point {
+    type Output = Self;
+    fn sub(self, rhs: Self) -> Self {
+        let (x, y, z) = (self.x - rhs.x, self.y - rhs.y, self.z - rhs.z);
+        return Self{x, y, z};
+    }
+}
+
 
 pub struct Rect {
     pub bottom: Point,
