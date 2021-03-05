@@ -32,7 +32,7 @@ impl Object for TriangleMesh{
         
         for (index,triangle) in (&self.mesh).iter().enumerate(){
             //TODO: handle duplication of code
-            println!("Triangle index: {}", index);
+            //println!("Triangle index: {}", index);
             match min_intersection{
                 None => {
                     min_intersection = triangle.intersection(r);
@@ -41,7 +41,7 @@ impl Object for TriangleMesh{
                 Some(i) => {
                     match triangle.intersection(r){
                         Some(j) => {
-                            println!("Triangle {} {} distances: {} {}, t's: {} {}", index,min_index,j.distance, i.distance, j.t, i.t);
+                            //println!("Triangle {} {} distances: {} {}, t's: {} {}", index,min_index,j.distance, i.distance, j.t, i.t);
                             if (j.distance < i.distance){
                                 min_intersection = Some(j);
                                 min_index = (index as i32);

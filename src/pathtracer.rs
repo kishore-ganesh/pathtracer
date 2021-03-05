@@ -115,8 +115,13 @@ impl PathTracer{
                 match ray{
                     Some(r) => {
                         //TODO: make this general
-                        if(recursion_depth <=0){
-                            return light_color;
+                        if(recursion_depth==-1){
+                            return RGB::black();
+                        }
+                        else if(recursion_depth ==0){
+                            //let ray = Ray::create(ray_intersection.point, )
+                            let obstruction_color = self.li(r, rand, recursion_depth-1);
+                            return obstruction_color * light_color;
                         }
                         else{
                             let along_reflected = self.li(r, rand, recursion_depth-1);
@@ -125,7 +130,8 @@ impl PathTracer{
                         }
 
                     },
-                    None => return brdf * ray_intersection.normal_angle.cos()
+                    None => return brdf * light_color 
+                        //ray_intersection.normal_angle.cos()
                 }
                 //let color = RGB::create(0.0,255.0,127.0); 
                 //let mut mult_color = RGB::black();
@@ -146,7 +152,13 @@ impl PathTracer{
                 //return color * ray_intersection.normal_angle.cos();
                 //return light_color * color; 
             },
-            None =>  RGB::black()
+            None => {
+                match recursion_depth{
+                  -1 => RGB::create(255.0,255.0,255.0),
+                  _ => RGB::black()
+  
+                } 
+            }       
         }
     }
 }

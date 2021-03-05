@@ -90,6 +90,14 @@ pub fn translate(tx: f32, ty: f32, tz: f32) -> TMat4<f32> {
     ])
 }
 
+pub fn rotate_about_x(angle: f32) -> TMat4<f32> {
+    return make_mat4x4(&[
+                       1.0,0.0,0.0,0.0,
+                       0.0,angle.cos(), angle.sin(), 0.0,
+                       0.0,-angle.sin(), angle.cos(), 0.0,
+                       0.0,0.0,0.0,1.0
+    ]);
+}
 pub fn rotate_about_y(angle: f32) -> TMat4<f32>{
     return make_mat4x4(&[
                        angle.cos(), 0.0, angle.sin(), 0.0,

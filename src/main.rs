@@ -36,8 +36,8 @@ fn main() {
     let normal = make_vec3(&[0.0,1.0,0.0]);
     let reflected_v = reflect_about_vec(&v, &normal);
     println!("original: {}, reflected: {}", v, reflected_v);
-    let rotate_angle = (90.0) * (PI/180.0);
-    let cube = Cube::create(Point::create(0.0,0.0,0.0), 0.0, 5.0, true);
+    let rotate_angle = (45.0) * (PI/180.0);
+    let cube = Cube::create(Point::create(0.0,-100.0,0.0), rotate_angle, 0.0, 100.0, true);
     /*let mut v: Vec<Vec<RGB>> = Vec::new();
     let x = 256;
     let y = 240;
@@ -66,9 +66,9 @@ fn main() {
     let region_scale = 1.0;
     let fov = 60.0;
     let point_light = Box::new(PointLight::create(
-            Point::create(0.0, 10.0,0.0),
+            Point::create(0.0, 0.0,2.0),
             RGB::create(255.0,255.0,255.0),
-            100.0
+            10.0
     ));
     let region = Rect::create(Point::create(-region_scale,-region_scale,0.0), Point::create(region_scale, region_scale,0.0));
 //    let look_at_point = Point::create(0.0,0.0,1.0);
@@ -87,7 +87,7 @@ fn main() {
     let specular_material = SpecularMaterial::create();
     let scene = Scene::create(vec![
                               //Primitive::create(Box::new(x), Box::new(specular_material.clone())),
-                              //Primitive::create(Box::new(x2), Box::new(diffuse_material.clone())),
+                              Primitive::create(Box::new(x2), Box::new(diffuse_material.clone())),
                               Primitive::create(Box::new(cube), Box::new(diffuse_material.clone()))
                               //Box::new(triangle),
                               //Box::new(x),
