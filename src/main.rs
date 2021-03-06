@@ -70,6 +70,8 @@ fn main() {
             RGB::create(255.0,255.0,255.0),
             10.0
     ));
+
+    let n_samples = 1;
     let region = Rect::create(Point::create(-region_scale,-region_scale,0.0), Point::create(region_scale, region_scale,0.0));
 //    let look_at_point = Point::create(0.0,0.0,1.0);
     let camera = Camera::look_at(Point::create(0.0,0.0,10.0), look_at_point, 0.1, 1000.0, screen_res, raster_res, fov,region);
@@ -87,15 +89,13 @@ fn main() {
     let specular_material = SpecularMaterial::create();
     let scene = Scene::create(vec![
                               //Primitive::create(Box::new(x), Box::new(specular_material.clone())),
-                              Primitive::create(Box::new(x2), Box::new(diffuse_material.clone())),
+                              //Primitive::create(Box::new(x2), Box::new(diffuse_material.clone())),
+
                               Primitive::create(Box::new(cube), Box::new(diffuse_material.clone()))
-                              //Box::new(triangle),
-                              //Box::new(x),
-                              //Box::new(x2)
 
     ], point_light);
 
-    let mut pt = PathTracer::create(raster_res as i32, raster_res as i32, 1, 1.0, scene, camera);
+    let mut pt = PathTracer::create(raster_res as i32, raster_res as i32, n_samples, 1.0, scene, camera);
     let grid = pt.generate(); 
     color::write_ppm(&grid, "test.ppm".to_string());
     //println!("Hello, world!");

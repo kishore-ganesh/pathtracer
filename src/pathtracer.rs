@@ -41,6 +41,7 @@ impl PathTracer{
                 let mut radiance = RGB::black();
                 for sample_index in 0..self.n_samples {
                      //sample = sampler.generate_sample();
+                     println!("x: {}, y: {}, sample_index: {}", x, y, sample_index);
                      let sample = [x as f32, y as f32];
                      let ray = self.camera.generate_ray(sample);
                      radiance += self.li(ray, &mut rng, 2);
@@ -49,7 +50,7 @@ impl PathTracer{
                      //if stop, sample light source and reutrn radiance 
                      //else if not stop, sample BRDF and cast ray. brdf * Li(ray) + Le
                 }
-
+                //TODO fix here
                 radiance /= (self.n_samples as f32);
                 self.grid[y as usize][x as usize] = radiance;
             }
@@ -104,9 +105,11 @@ impl PathTracer{
         let mut path_total = emitted_radiance;
         let mut running_sum = emitted_radiance;
         let mut prev_intersection: Option<RayIntersection> = None;
+        let mut prev_min_index: i32 = -1;
         let mut r_c = r.clone();
         let mut n_iterations = 0;
-        while(false){
+        while(true){
+            //println!("iterations: {}", n_iterations);
             let (min_intersection, min_index) = self.check_intersection(&r_c);
             
             match prev_intersection{
@@ -123,7 +126,7 @@ impl PathTracer{
                  match shadow_intersection {
                      Some(_) => {},
                      None => {
-                         let brdf = self.scene.primitives[min_index as usize].material.brdf_eval(&ray_intersection, &light_vector);
+                         let brdf = self.scene.primitives[prev_min_index as usize].material.brdf_eval(&ray_intersection, &light_vector);
                          running_sum +=  path_total * light_color * brdf; 
                      }
                  }
@@ -133,6 +136,7 @@ impl PathTracer{
 
             if n_iterations > 3 {
                 let rand_value = rand.gen::<f32>();
+                println!("Rand value: {}, threshold: {}", rand_value, self.roulette_threshold);
                 if (rand_value <= self.roulette_threshold){
                     running_sum = (running_sum) / (1.0-self.roulette_threshold);
                     break;
@@ -185,7 +189,7 @@ impl PathTracer{
         }
             n_iterations += 1;
             prev_intersection = min_intersection;
-
+            prev_min_index = min_index;
 
         }
 

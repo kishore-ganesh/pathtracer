@@ -1,7 +1,10 @@
 //
-use glm::{make_vec3, TVec3};
+use std::f32::consts::PI;
+use glm::{angle, make_vec3, TVec3};
+use rand::Rng;
 use crate::color::RGB;
 use crate::sphere::{Ray, RayIntersection};
+use crate::primitives::get_vec_at_angle;
 pub trait Material {
     //TODO: check for better interface
     //For now, this will return a spectrum and a ray in the direction
@@ -22,11 +25,18 @@ impl DiffuseMaterial{
 impl Material for DiffuseMaterial{
     fn brdf(&self, r: RayIntersection) -> (RGB, Ray){
         //TODO: make this random direction
-        return (self.fraction, Ray::create(r.point, make_vec3(&[1.0,1.0,1.0])));
+        
+        let mut rand = rand::thread_rng();
+        let degree_angle = rand.gen_range(0.0..90.0);
+        let rad_angle = (PI/180.0) * degree_angle;
+        let direction = get_vec_at_angle(&r.normal, &r.perp, rad_angle);
+
+        return (self.fraction, Ray::create(r.point, direction));
     }
     fn brdf_eval(&self, r: &RayIntersection, v: &TVec3<f32>) -> RGB{
         //TODO: fill in
-        return RGB::black();
+        return self.fraction;
+        //return RGB::black();
     }
 }
 
@@ -49,7 +59,14 @@ impl Material for SpecularMaterial{
         return (RGB::create(255.0,255.0,255.0), ray);
     }
     fn brdf_eval(&self, r: &RayIntersection, v: &TVec3<f32>) -> RGB{
-        return RGB::black();
+        let ang = angle(&r.normal, &v);
+        let err = 1e-5; //TODO: make error more global, new float class?
+        if((ang-r.normal_angle).abs() < err){
+            return RGB::create(255.0,255.0,255.0);
+        }
+        else{
+            return RGB::black();
+        }
     }
 }
 
