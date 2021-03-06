@@ -44,8 +44,8 @@ fn main() {
     //let p1_vec = transform_vec(&rotate_about_x(plane_rotate_angle), &make_vec3(&[0.0,0.0,1.0]));
     let p1_vec = make_vec3(&[0.0,1.0,0.0]);
     let p2_vec = make_vec3(&[0.0,1.0,1.0]);
-    let p3_vec = make_vec3(&[-1.0,0.0,0.0]);
-    let p4_vec = make_vec3(&[1.0,0.0,0.0]);
+    let p3_vec = make_vec3(&[1.0,0.0,0.0]);
+    let p4_vec = make_vec3(&[-1.0,0.0,0.0]);
     let p1 = Plane::create_point_normal(Point::create(0.0,-2.0,0.0), p1_vec);
     let p2 = Plane::create_point_normal(Point::create(0.0,0.0,-10.0), p2_vec);
     let p3 = Plane::create_point_normal(Point::create(-5.0,0.0,0.0), p3_vec);
