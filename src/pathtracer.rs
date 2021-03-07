@@ -34,8 +34,8 @@ impl PathTracer{
     }
     pub fn generate(&mut self) -> Vec<Vec<RGB>>{
         let mut rng = rand::thread_rng();
-        for x in 0..self.xres {
-            for y in 0..self.yres {
+        for y in 0..self.yres {
+            for x in 0..self.xres {
                 //Average it out
                 //
                 let mut radiance = RGB::black();
@@ -96,13 +96,14 @@ impl PathTracer{
             }
         }
 
+        
         return (min_intersection, min_index);
 
     }
     fn li(&mut self, r: Ray, rand: &mut impl Rng, recursion_depth: i32) -> RGB{
         ////println!("Calculating Li");
         let emitted_radiance = RGB::black();
-        let mut path_total = emitted_radiance;
+        let mut path_total = RGB::create(255.0,255.0,255.0);
         let mut running_sum = emitted_radiance;
         let mut prev_intersection: Option<RayIntersection> = None;
         let mut prev_min_index: i32 = -1;
@@ -121,16 +122,34 @@ impl PathTracer{
                 Some (ray_intersection) => {
                  //Need to check light obstruction here 
                  //println!("Calculating for light");
-                 let (light_color, light_vector) = self.scene.light.radiance(ray_intersection.point, ray_intersection.normal);
+                 let (light_color, light_vector, light_distance) = self.scene.light.radiance(ray_intersection.point, ray_intersection.normal);
                  let shadow_ray = Ray::create(ray_intersection.point, light_vector);
                  let (shadow_intersection, _) = self.check_intersection(&r_c);
                  //println!("Ray Intersection is: {:?}, Shadow intersection: {:?}  Light vector: {}", ray_intersection,shadow_intersection, light_vector);
+                 
+                 let mut visible = false;
                  match shadow_intersection {
-                     Some(_) => {},
+                     Some(s) => {
+                         //println!("Shadow distance: {}, Current distance: {}", s.distance, light_distance);
+                         if(s.distance > light_distance){
+                            visible = true;
+                         }
+                     },
                      None => {
-                         let brdf = self.scene.primitives[prev_min_index as usize].material.brdf_eval(&ray_intersection, &light_vector);
-                         running_sum +=  path_total * light_color * brdf; 
+                         visible = true;
+                                              
                      }
+                 }
+
+                 //println!("Visible: {}", visible);
+                 match visible{
+                     true => {
+                        let brdf = self.scene.primitives[prev_min_index as usize].material.brdf_eval(&ray_intersection, &light_vector);
+                        //println!("running_sum: {:?}, path_total: {:?}, light_color: {:?}", running_sum, path_total, light_color);
+                        running_sum +=  path_total * light_color; 
+
+                     },
+                     false => {}
                  }
                 },    
                 None => {}
@@ -153,10 +172,14 @@ impl PathTracer{
                     //println!("Object {} intersected at recursion depth {}", min_index, recursion_depth);
                     //println!("Ray intersection point: {:?}", ray_intersection.point);
                     //Light radiance to point then multiply by cos theta 
-                    let (light_color,_) = self.scene.light.radiance(ray_intersection.point, ray_intersection.normal);
+                    let (light_color,_, _) = self.scene.light.radiance(ray_intersection.point, ray_intersection.normal);
                     let (brdf, ray) = self.scene.primitives[min_index as usize].material.brdf(ray_intersection);
                     let ray_angle = angle(&ray_intersection.normal, &ray.direction);
-                    path_total += brdf * ray_angle.cos();
+                    if(ray_angle.cos() < 0.0){
+                        println!("cos is: {}", ray_angle.cos());
+                    }
+                    //TODO: make it mul
+                    path_total = path_total * brdf * ray_angle.cos();
                     //println!("Path total: {:?}", path_total);
                     r_c = ray;
                     //let color = RGB::create(0.0,255.0,127.0); 
@@ -195,7 +218,7 @@ impl PathTracer{
             prev_min_index = min_index;
 
         }
-
+            //println!("Final running sum: {:?}", running_sum);
             return running_sum;
 
     }

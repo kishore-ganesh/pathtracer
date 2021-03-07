@@ -111,6 +111,7 @@ pub fn reflect_about_vec(v: &TVec3<f32>, about: &TVec3<f32>) -> (TVec3<f32>, TVe
     //println!("{} {} about perp: {} about_parallel: {}", v, about, about_perpendicular, about_parallel);
     
     if(is_null(&about_perpendicular, 0.0)){
+        //TODO: take anything else as about_perpendicular
         return (-about_parallel, normalize(&about_perpendicular));
     }
     else{

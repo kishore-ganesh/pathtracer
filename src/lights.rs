@@ -2,7 +2,7 @@ use crate::color::RGB;
 use glm::{TVec3, distance, angle, normalize};
 
 pub trait Light {
-    fn radiance(&self, point: TVec3<f32>, normal: TVec3<f32>) -> (RGB, TVec3<f32>);  
+    fn radiance(&self, point: TVec3<f32>, normal: TVec3<f32>) -> (RGB, TVec3<f32>, f32);  
 }
 //TODO: check light source interface 
 //
@@ -19,12 +19,12 @@ impl PointLight {
 }
 
 impl Light for PointLight {
-    fn radiance(&self, point: TVec3<f32>, normal: TVec3<f32>) -> (RGB, TVec3<f32>) {
+    fn radiance(&self, point: TVec3<f32>, normal: TVec3<f32>) -> (RGB, TVec3<f32>, f32) {
         let dist = distance(&self.location, &point);
         let light_vec = -normalize(&(point - self.location));
         let cos_angle = angle(&light_vec, &normal).cos();
         //println!("{}, {:?}, {:?}", cos_angle, self.color, self.color * cos_angle);
-        return (self.color * cos_angle, light_vec); 
+        return (self.color * cos_angle, light_vec, dist); 
             //* (self.intensity/dist.powi(2));
     }
 }

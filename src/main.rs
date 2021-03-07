@@ -85,6 +85,7 @@ fn main() {
     ));
 
     let n_samples = 1;
+    let roulette_threshold = 0.2;
     let region = Rect::create(make_vec3(&[ -region_scale,-region_scale,0.0 ]), make_vec3(&[ region_scale, region_scale,0.0 ]));
 //    let look_at_point = make_vec3(&[ 0.0,0.0,1.0 ]);
     let camera = Camera::look_at(make_vec3(&[ 0.0,0.0,10.0 ]), look_at_point, 0.1, 1000.0, screen_res, raster_res, fov,region);
@@ -104,13 +105,13 @@ fn main() {
     let blue_diffuse_material = DiffuseMaterial::create(RGB::create(0.0,0.0,255.0));
     let specular_material = SpecularMaterial::create();
     let scene = Scene::create(vec![
-                              //Primitive::create(Box::new(x), Box::new(specular_material.clone())),
+                              Primitive::create(Box::new(x), Box::new(specular_material.clone())),
                               //Primitive::create(Box::new(x2), Box::new(diffuse_material.clone())),
                               //Primitive::create(Box::new(cube), Box::new(diffuse_material.clone())),
                               Primitive::create(Box::new(p1), Box::new(diffuse_material.clone())),
                               Primitive::create(Box::new(p2), Box::new(red_diffuse_material.clone())),
-                              //Primitive::create(Box::new(p3), Box::new(green_diffuse_material.clone())),
-                              //Primitive::create(Box::new(p4), Box::new(blue_diffuse_material.clone())),
+                              Primitive::create(Box::new(p3), Box::new(green_diffuse_material.clone())),
+                              Primitive::create(Box::new(p4), Box::new(blue_diffuse_material.clone())),
                               
 
                               //Box::new(triangle),
@@ -119,7 +120,7 @@ fn main() {
 
     ], point_light);
 
-    let mut pt = PathTracer::create(raster_res as i32, raster_res as i32, n_samples, 1.0, scene, camera);
+    let mut pt = PathTracer::create(raster_res as i32, raster_res as i32, n_samples, roulette_threshold, scene, camera);
     let grid = pt.generate(); 
     color::write_ppm(&grid, "test.ppm".to_string());
     ////println!("Hello, world!");

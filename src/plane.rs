@@ -29,7 +29,7 @@ impl Object for Plane{
         let v = r.origin - self.point; 
         let t = -dot(&self.normal, &v)/(dot(&self.normal, &r.direction));
         let err = 1e-5;
-        if(t< -err){
+        if(t< err){
             return None;
         }
         let incoming_vector = -t*r.direction;
