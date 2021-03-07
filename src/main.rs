@@ -19,7 +19,7 @@ use std::f32::consts::PI;
 use glm::{TMat4, TVec4, make_mat4x4, make_vec4, transpose, make_vec3, vec3_to_vec4, mat4_to_mat3};
 use cube::Cube;
 use sphere::{Sphere, Ray, Object, Primitive};
-use primitives::{Point, Rect, transform, transform_mesh, transform_vec, scale,reflect_about_vec, rotate_about_x, rotate_about_y};
+use primitives::{Rect, transform, transform_mesh, transform_vec, scale,reflect_about_vec, rotate_about_x, rotate_about_y};
 use color::RGB;
 use pathtracer::PathTracer;
 use scene::Scene;
@@ -30,26 +30,26 @@ use triangle_mesh::TriangleMesh;
 use materials::{DiffuseMaterial, SpecularMaterial};
 use plane::Plane;
 fn main() {
-    let center = Point::create(-1.0,0.0,0.0);
+    let center = make_vec3(&[ -1.0,0.0,0.0 ]);
     let x: Sphere = Sphere::create(1.0, center.clone());
-    let r: Ray = Ray{origin: Point::create(1.0,1.0,1.0), direction: make_vec3(&[1.0,1.0,1.0])};
+    let r: Ray = Ray{origin: make_vec3(&[ 1.0,1.0,1.0 ]), direction: make_vec3(&[1.0,1.0,1.0])};
     x.intersection(&r);
     let v = make_vec3(&[-1.0,1.0,0.0]);
     let normal = make_vec3(&[0.0,1.0,0.0]);
     let (reflected_v, _) = reflect_about_vec(&v, &normal);
     println!("original: {}, reflected: {}", v, reflected_v);
     let rotate_angle = (45.0) * (PI/180.0);
-    let cube = Cube::create(Point::create(0.0,-100.0,0.0), rotate_angle, 0.0, 100.0, true);
+    let cube = Cube::create(make_vec3(&[ 0.0,-100.0,0.0 ]), rotate_angle, 0.0, 100.0, true);
     let plane_rotate_angle = (50.0) * (PI/180.0);
     //let p1_vec = transform_vec(&rotate_about_x(plane_rotate_angle), &make_vec3(&[0.0,0.0,1.0]));
     let p1_vec = make_vec3(&[0.0,1.0,0.0]);
     let p2_vec = make_vec3(&[0.0,1.0,1.0]);
     let p3_vec = make_vec3(&[1.0,0.0,0.0]);
     let p4_vec = make_vec3(&[-1.0,0.0,0.0]);
-    let p1 = Plane::create_point_normal(Point::create(0.0,-2.0,0.0), p1_vec);
-    let p2 = Plane::create_point_normal(Point::create(0.0,0.0,-10.0), p2_vec);
-    let p3 = Plane::create_point_normal(Point::create(-5.0,0.0,0.0), p3_vec);
-    let p4 = Plane::create_point_normal(Point::create(5.0,0.0,0.0), p4_vec);
+    let p1 = Plane::create_point_normal(make_vec3(&[ 0.0,-2.0,0.0 ]), p1_vec);
+    let p2 = Plane::create_point_normal(make_vec3(&[ 0.0,0.0,-10.0 ]), p2_vec);
+    let p3 = Plane::create_point_normal(make_vec3(&[ -5.0,0.0,0.0 ]), p3_vec);
+    let p4 = Plane::create_point_normal(make_vec3(&[ 5.0,0.0,0.0 ]), p4_vec);
     
     /*let mut v: Vec<Vec<RGB>> = Vec::new();
     let x = 256;
@@ -75,25 +75,25 @@ fn main() {
     //Need small region scale to control distortion
     let screen_res = 512.0;
     let raster_res = 512.0;
-    let look_at_point = Point::create(0.0,0.0,0.0);
+    let look_at_point = make_vec3(&[ 0.0,0.0,0.0 ]);
     let region_scale = 1.0;
     let fov = 60.0;
     let point_light = Box::new(PointLight::create(
-            Point::create(0.0, 0.0,2.0),
+            make_vec3(&[ 0.0, 0.0,2.0 ]),
             RGB::create(255.0,255.0,255.0),
             10.0
     ));
 
     let n_samples = 1;
-    let region = Rect::create(Point::create(-region_scale,-region_scale,0.0), Point::create(region_scale, region_scale,0.0));
-//    let look_at_point = Point::create(0.0,0.0,1.0);
-    let camera = Camera::look_at(Point::create(0.0,0.0,10.0), look_at_point, 0.1, 1000.0, screen_res, raster_res, fov,region);
-    let relative_point = transform(&camera.camera_to_world, &Point::create(0.0,0.0,50.0));
-    let x2: Sphere = Sphere::create(1.0, Point::create(1.0,0.0,0.0));
+    let region = Rect::create(make_vec3(&[ -region_scale,-region_scale,0.0 ]), make_vec3(&[ region_scale, region_scale,0.0 ]));
+//    let look_at_point = make_vec3(&[ 0.0,0.0,1.0 ]);
+    let camera = Camera::look_at(make_vec3(&[ 0.0,0.0,10.0 ]), look_at_point, 0.1, 1000.0, screen_res, raster_res, fov,region);
+    let relative_point = transform(&camera.camera_to_world, &make_vec3(&[ 0.0,0.0,50.0 ]));
+    let x2: Sphere = Sphere::create(1.0, make_vec3(&[ 1.0,0.0,0.0 ]));
     let triangle = Triangle::create([
-                                    Point::create(-2.0,0.0,0.0),
-                                    Point::create(0.0, 2.0,0.0),
-                                    Point::create(2.0,-2.0,0.0)
+                                    make_vec3(&[ -2.0,0.0,0.0 ]),
+                                    make_vec3(&[ 0.0, 2.0,0.0 ]),
+                                    make_vec3(&[ 2.0,-2.0,0.0 ])
     ],
      make_vec3(&[0.0,0.0,1.0]) 
     ); 

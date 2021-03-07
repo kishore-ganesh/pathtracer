@@ -1,4 +1,5 @@
-use crate::primitives::{Point, transform_mesh, rotate_about_x, rotate_about_y, scale, translate};
+use glm::TVec3;
+use crate::primitives::{transform_mesh, rotate_about_x, rotate_about_y, scale, translate};
 use crate::sphere::{Object, Ray, RayIntersection};
 use crate::triangle_mesh::TriangleMesh;
 use crate::color::RGB;
@@ -9,7 +10,7 @@ pub struct Cube{
 
 
 impl Cube{
-    pub fn create(location: Point, rx: f32, ry: f32, side: f32, inside: bool) -> Self{
+    pub fn create(location: TVec3<f32>, rx: f32, ry: f32, side: f32, inside: bool) -> Self{
         let cube_triangles: Vec<[[f32; 3]; 3]> = vec![
             //Front
             [
@@ -117,7 +118,7 @@ impl Object for Cube{
     fn intersection(&self, r: &Ray) -> Option<RayIntersection>{
         return self.mesh.intersection(r);
     }
-    fn color(&self, p: &Point) -> RGB {
+    fn color(&self, p: &TVec3<f32>) -> RGB {
         return self.mesh.color(p);
     }
 }

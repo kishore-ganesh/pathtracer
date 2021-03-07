@@ -13,65 +13,18 @@ use crate::{Triangle, TriangleMesh};
     }
 }
 */
-#[derive(Copy, Clone, Debug)]
-//Should be vector representation?
-//TODO: refactor out Point
-pub struct Point {
-    pub x: f32,
-    pub y: f32,
-    pub z: f32,
-
-}
-
-impl Point {
-    pub fn create_from_vec3(v: TVec3<f32>) -> Self{
-        return Point{x: v[0], y: v[1], z: v[2]};
-    }
-    pub fn create(x: f32, y: f32, z: f32) -> Self {
-        return Point{x: x, y:y, z:z};
-    }
-
-    pub fn create_from_arr(a: [f32; 3]) -> Self{
-        return Point{x: a[0], y: a[1], z: a[2]};
-    }
-    pub fn vector(&self) -> TVec3<f32> {
-        return make_vec3(&[self.x as f32, self.y as f32, self.z as f32]);
-    }
-    pub fn square_sum(&self) -> f32 {
-        let (x, y, z) = (self.x, self.y, self.z);
-        return x*x + y*y + z*z;
-    }
-   
-}
-impl ops::Mul<f32> for Point {
-    type Output = Self;
-    fn mul(self, rhs: f32) -> Self{
-        let (x, y, z) = (self.x * rhs, self.y * rhs, self.z * rhs);
-        return Self{x, y, z};
-        
-    }
-}
-
-impl ops::Add<Point> for Point {
-    type Output = Self;
-    fn add(self, rhs: Self) -> Self {
-        let (x, y, z) = (self.x + rhs.x, self.y + rhs.y, self.z + rhs.z);
-        return Self{x, y, z};
-    }
-}
-
 
 pub struct Rect {
-    pub bottom: Point,
-    pub top: Point
+    pub bottom: TVec3<f32>,
+    pub top: TVec3<f32>
 }
 
 impl Rect{
-    pub fn create(bottom: Point, top: Point) ->Self {
+    pub fn create(bottom: TVec3<f32>, top: TVec3<f32>) ->Self {
         return Rect{bottom: bottom, top: top};
     }
 }
-pub fn pointwise_mul_sum(p1: Point, p2: Point) -> f32 {
+pub fn pointwise_mul_sum(p1: TVec3<f32>, p2: TVec3<f32>) -> f32 {
      return p1.x * p2.x + p1.y * p2.y + p1.z * p2.z;
 }
 pub fn scale(scalex: f32, scaley: f32, scalez: f32) -> TMat4<f32> {
@@ -108,10 +61,10 @@ pub fn rotate_about_y(angle: f32) -> TMat4<f32>{
     ])
 }
 
-//Transform for Point and For Vector
+//Transform for TVec3<f32> and For Vector
 //TODO: make transform faster
-pub fn transform(transform: &TMat4<f32>, p: &Point) -> Point{
-    let mut v = vec3_to_vec4(&p.vector());
+pub fn transform(transform: &TMat4<f32>, p: &TVec3<f32>) -> TVec3<f32>{
+    let mut v = vec3_to_vec4(&p);
     v[3] = 1.0;
     //println!("{:?} {:?}", transform, v);
     let transformed = transpose(&v) * transform;
@@ -121,7 +74,7 @@ pub fn transform(transform: &TMat4<f32>, p: &Point) -> Point{
         panic!("Divide by zero in transform");
     } 
     
-    return Point::create(transformed[0]/transformed[3], transformed[1]/transformed[3], transformed[2]/transformed[3]);
+    return make_vec3(&[ transformed[0]/transformed[3], transformed[1]/transformed[3], transformed[2]/transformed[3]]);
 }
 
 

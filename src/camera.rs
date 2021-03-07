@@ -1,10 +1,10 @@
 use glm::{TMat4, make_mat4x4, inverse, cross, normalize, transpose, vec3_to_vec4, mat4_to_mat3, TVec3, make_vec3, length};
 
 use crate::sphere::Ray;
-use crate::primitives::{Point, Rect,scale, translate, transform, transform_vec};
+use crate::primitives::{Rect,scale, translate, transform, transform_vec};
 use std::f32::consts::PI;
 pub struct Camera {
-    from: Point,
+    from: TVec3<f32>,
     pub camera_to_world: TMat4<f32>,
     world_to_camera: TMat4<f32>,
     raster_to_screen: TMat4<f32>,
@@ -29,9 +29,9 @@ impl Camera {
 
 //NOTE: glm already has functions, we are reimplementing some for learning purposes
 impl Camera {
-    pub fn look_at(from: Point, to: Point, f: f32, n: f32, screen_res: f32, raster_res: f32, fov: f32,region: Rect) -> Self{
-        let z = normalize(&(to.vector()-from.vector()));
-        let up = Point::create(0.0,1.0,0.0).vector();
+    pub fn look_at(from: TVec3<f32>, to: TVec3<f32>, f: f32, n: f32, screen_res: f32, raster_res: f32, fov: f32,region: Rect) -> Self{
+        let z = normalize(&(to-from));
+        let up = make_vec3(&[ 0.0,1.0,0.0 ]);
         //Should we normalize?
         let x = (cross(&z,  &up));
         let n_up = (cross(&x, &z));
@@ -93,12 +93,12 @@ impl Camera {
     //TODO: make sample a type
     pub fn generate_ray(&self, sample: [f32; 2]) -> Ray{
         //sample gives raster screen position, ray from world(camera_origin) to world(sample_pos)
-       let raster_point = Point::create(sample[0], sample[1], 0.0);
+       let raster_point = make_vec3(&[ sample[0], sample[1], 0.0 ]);
        let transformed_point = transform(&self.raster_to_world, &raster_point);
-       let transformed_origin = transform(&self.camera_to_world, &Point::create(0.0,0.0,0.0));
+       let transformed_origin = transform(&self.camera_to_world, &make_vec3(&[ 0.0,0.0,0.0 ]));
        //println!("Transformed origin is: {:?}", transformed_origin);
 
-       let direction = normalize(&(transformed_point.vector() - transformed_origin.vector()));
+       let direction = normalize(&(transformed_point - transformed_origin));
                                          
         //TODO: improve performance here
 

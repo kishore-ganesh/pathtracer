@@ -8,12 +8,12 @@ use std::f32::consts::PI;
 use glm::{TMat4, TVec3, make_mat4x4, make_vec3,inverse, length2, matrix_comp_mult, comp_add, normalize, angle, dot, distance};
 use crate::color::RGB;
 use crate::materials::Material;
-use crate::primitives::{Point, pointwise_mul_sum,transform, transform_vec, reflect_about_vec};
+use crate::primitives::{pointwise_mul_sum,transform, transform_vec, reflect_about_vec};
 
 pub trait Object{
 
     fn intersection(&self, r: &Ray) -> Option<RayIntersection>;
-    fn color(&self, p: &Point) -> RGB;
+    fn color(&self, p: &TVec3<f32>) -> RGB;
 }
 
 
@@ -39,12 +39,12 @@ pub struct Sphere {
 
 #[derive(Debug, Clone, Copy)]
 pub struct Ray {
-     pub origin: Point,
+     pub origin: TVec3<f32>,
      pub direction: TVec3<f32>,
 }
 
 impl Ray{
-    pub fn create(origin: Point, direction: TVec3<f32>) -> Self{
+    pub fn create(origin: TVec3<f32>, direction: TVec3<f32>) -> Self{
         return Ray{origin: origin, direction: direction};
     }
 }
@@ -52,7 +52,7 @@ impl Ray{
 #[derive(Debug, Clone, Copy)]
 pub struct RayIntersection {
     pub t: f32,
-    pub point: Point,
+    pub point: TVec3<f32>,
     pub normal: TVec3<f32>,
     pub perp: TVec3<f32>,
     pub normal_angle: f32,
@@ -80,7 +80,7 @@ pub struct RayIntersection {
  * direction, should not translate (meaningless)
  * */
 impl Sphere {
-    pub fn create(radius: f32, centre: Point) -> Self{
+    pub fn create(radius: f32, centre: TVec3<f32>) -> Self{
         let object_to_world = make_mat4x4(&[
                                           1.0, 0.0, 0.0, centre.x as f32, 
                                           0.0, 1.0,0.0, centre.y as f32, 
@@ -99,8 +99,8 @@ impl Object for Sphere {
         //println!("{:?}", r.direction);
         //println!("{:?} {}", t_origin, t_direction);
         let a = length2(&t_direction);
-        let b = 2.0 * comp_add(&(matrix_comp_mult(&t_origin.vector(), &t_direction))); 
-        let c = t_origin.square_sum() - self.r*self.r;
+        let b = 2.0 * comp_add(&(matrix_comp_mult(&t_origin, &t_direction))); 
+        let c = length2(&t_origin) - self.r*self.r;
         //println!("b: {} 4ac: {}", b*b, 4.0*a*c);
         //TODO:  improve precision
         //println!("{:?}", t_direction);
@@ -131,7 +131,7 @@ impl Object for Sphere {
                 return None;
             }
 
-            let point  = t_origin.vector() + t * t_direction;
+            let point  = t_origin + t * t_direction;
             //println!("Direction is: {}", t_direction);
             let incoming_vector = -t*t_direction;
             let normal_vec = normalize(&point);
@@ -150,7 +150,7 @@ impl Object for Sphere {
             //TODO: change normal to world space
             let world_normal_vec = transform_vec(&self.object_to_world, &normal_vec);
             let world_reflection = normalize(&transform_vec(&self.object_to_world, &reflection));
-            let world_point = transform(&self.object_to_world, &Point::create_from_vec3(point));
+            let world_point = transform(&self.object_to_world, &point);
             let world_perp = transform_vec(&self.object_to_world, &perp);
             //println!("reflection: {}, world: {}", reflection, world_reflection);
             return Some(RayIntersection{
@@ -159,7 +159,7 @@ impl Object for Sphere {
                 perp: world_perp,
                 normal_angle: normal_angle, 
                 reflection: world_reflection, 
-                distance: distance(&world_point.vector(), &t_origin.vector())});
+                distance: distance(&world_point, &t_origin)});
 
         }
             //Check which one is closer
@@ -171,7 +171,7 @@ impl Object for Sphere {
         return None;
     }
 
-    fn color(&self, p: &Point) -> RGB{
+    fn color(&self, p: &TVec3<f32>) -> RGB{
         return RGB::black();
     }
 

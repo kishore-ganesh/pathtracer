@@ -1,5 +1,4 @@
-use glm::make_vec3;
-use crate::primitives::Point;
+use glm::{make_vec3, TVec3};
 use crate::sphere::{Object, Ray, RayIntersection};
 use crate::triangle::Triangle;
 use crate::color::RGB;
@@ -13,9 +12,9 @@ impl TriangleMesh{
         let mut mesh: Vec<Triangle> = vec![];
         for (index, point) in (&triangle_points).iter().enumerate(){
             mesh.push(Triangle::create([
-                Point::create_from_arr(point[0]),
-                Point::create_from_arr(point[1]),
-                Point::create_from_arr(point[2])
+                make_vec3(&point[0]),
+                make_vec3(&point[1]),
+                make_vec3(&point[2])
             ], make_vec3(&normals[index])));
         }
         return TriangleMesh{mesh: mesh}
@@ -62,7 +61,7 @@ impl Object for TriangleMesh{
         return min_intersection;
     }
 
-    fn color(&self, p: &Point) -> RGB{
+    fn color(&self, p: &TVec3<f32>) -> RGB{
         return RGB::black();
     }
 }
