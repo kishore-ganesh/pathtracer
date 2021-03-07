@@ -10,6 +10,7 @@ mod scene;
 mod camera;
 mod primitives;
 mod pathtracer;
+mod plane;
 mod triangle;
 mod triangle_mesh;
 
@@ -18,7 +19,7 @@ use std::f32::consts::PI;
 use glm::{TMat4, TVec4, make_mat4x4, make_vec4, transpose, make_vec3, vec3_to_vec4, mat4_to_mat3};
 use cube::Cube;
 use sphere::{Sphere, Ray, Object, Primitive};
-use primitives::{Point, Rect, transform, transform_mesh, scale,reflect_about_vec, rotate_about_y};
+use primitives::{Point, Rect, transform, transform_mesh, transform_vec, scale,reflect_about_vec, rotate_about_x, rotate_about_y};
 use color::RGB;
 use pathtracer::PathTracer;
 use scene::Scene;
@@ -27,6 +28,7 @@ use lights::PointLight;
 use triangle::Triangle;
 use triangle_mesh::TriangleMesh;
 use materials::{DiffuseMaterial, SpecularMaterial};
+use plane::Plane;
 fn main() {
     let center = Point::create(-1.0,0.0,0.0);
     let x: Sphere = Sphere::create(1.0, center.clone());
@@ -38,6 +40,17 @@ fn main() {
     println!("original: {}, reflected: {}", v, reflected_v);
     let rotate_angle = (45.0) * (PI/180.0);
     let cube = Cube::create(Point::create(0.0,-100.0,0.0), rotate_angle, 0.0, 100.0, true);
+    let plane_rotate_angle = (50.0) * (PI/180.0);
+    //let p1_vec = transform_vec(&rotate_about_x(plane_rotate_angle), &make_vec3(&[0.0,0.0,1.0]));
+    let p1_vec = make_vec3(&[0.0,1.0,0.0]);
+    let p2_vec = make_vec3(&[0.0,1.0,1.0]);
+    let p3_vec = make_vec3(&[1.0,0.0,0.0]);
+    let p4_vec = make_vec3(&[-1.0,0.0,0.0]);
+    let p1 = Plane::create_point_normal(Point::create(0.0,-2.0,0.0), p1_vec);
+    let p2 = Plane::create_point_normal(Point::create(0.0,0.0,-10.0), p2_vec);
+    let p3 = Plane::create_point_normal(Point::create(-5.0,0.0,0.0), p3_vec);
+    let p4 = Plane::create_point_normal(Point::create(5.0,0.0,0.0), p4_vec);
+    
     /*let mut v: Vec<Vec<RGB>> = Vec::new();
     let x = 256;
     let y = 240;
@@ -86,12 +99,23 @@ fn main() {
     ); 
 
     let diffuse_material = DiffuseMaterial::create(RGB::create(0.0,255.0,127.0)); 
+    let red_diffuse_material = DiffuseMaterial::create(RGB::create(255.0,0.0, 0.0));
+    let green_diffuse_material = DiffuseMaterial::create(RGB::create(0.0,255.0,0.0));
+    let blue_diffuse_material = DiffuseMaterial::create(RGB::create(0.0,0.0,255.0));
     let specular_material = SpecularMaterial::create();
     let scene = Scene::create(vec![
-                              //Primitive::create(Box::new(x), Box::new(specular_material.clone())),
+                              Primitive::create(Box::new(x), Box::new(specular_material.clone())),
                               //Primitive::create(Box::new(x2), Box::new(diffuse_material.clone())),
+                              //Primitive::create(Box::new(cube), Box::new(diffuse_material.clone())),
+                              Primitive::create(Box::new(p1), Box::new(diffuse_material.clone())),
+                              Primitive::create(Box::new(p2), Box::new(red_diffuse_material.clone())),
+                              Primitive::create(Box::new(p3), Box::new(green_diffuse_material.clone())),
+                              Primitive::create(Box::new(p4), Box::new(blue_diffuse_material.clone())),
+                              
 
-                              Primitive::create(Box::new(cube), Box::new(diffuse_material.clone()))
+                              //Box::new(triangle),
+                              //Box::new(x),
+                              //Box::new(x2)
 
     ], point_light);
 
