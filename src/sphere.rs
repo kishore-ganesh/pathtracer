@@ -109,7 +109,7 @@ impl Object for Sphere {
         }
         else{
             
-            println!("Original origin: {:?}, Ray origin: {:?}, direction: {}", r.origin,t_origin, t_direction);
+            //println!("Original origin: {:?}, Ray origin: {:?}, direction: {}", r.origin,t_origin, t_direction);
             let res: f32 =  ((b*b - 4.0*a*c) as f32).sqrt();
             let r1: f32 = (-b as f32 + res)/((2.0*a) as f32);
             let r2: f32 = (-b as f32 - res) /((2.0*a) as f32); //Find better way to do this
@@ -145,7 +145,7 @@ impl Object for Sphere {
              * rotate about other_axis 
              * inverse transform
              * */
-            println!("{} {}", normal_vec, normal_angle * (180.0/PI));
+            //println!("{} {}", normal_vec, normal_angle * (180.0/PI));
             //println!("{}", angle(&normal_vec, &point));
             //TODO: change normal to world space
             let world_normal_vec = transform_vec(&self.object_to_world, &normal_vec);

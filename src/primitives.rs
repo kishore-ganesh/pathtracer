@@ -108,7 +108,7 @@ pub fn reflect_about_vec(v: &TVec3<f32>, about: &TVec3<f32>) -> (TVec3<f32>, TVe
     let normalized_about = normalize(&about);
     let about_parallel = dot(&normalized_about, &v) * normalized_about;
     let about_perpendicular = v - about_parallel;
-    println!("{} {} about perp: {} about_parallel: {}", v, about, about_perpendicular, about_parallel);
+    //println!("{} {} about perp: {} about_parallel: {}", v, about, about_perpendicular, about_parallel);
     
     if(is_null(&about_perpendicular, 0.0)){
         return (-about_parallel, normalize(&about_perpendicular));

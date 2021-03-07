@@ -68,18 +68,18 @@ impl PathTracer{
         let mut min_index: i32 = -1;
         //let min_object: Option<Object> = None;
         for (index, primitive) in (&self.scene.primitives).into_iter().enumerate() {
-            //println!("Before ray object intersection test");
+            ////println!("Before ray object intersection test");
 
             let intersection = primitive.object.intersection(&r);
-            //println!("{:?}", intersection);
+            ////println!("{:?}", intersection);
             //TODO: Add generic object type later 
             //Closest
             match intersection {
                 Some(i) => {
-                    println!("Intersection found with object {} at: {:?}", index,i.point);
+                    //println!("Intersection found with object {} at: {:?}", index,i.point);
                     match min_intersection{
                         Some(min_i) => {
-                            println!("{} {}", i.distance, min_i.distance);
+                            //println!("{} {}", i.distance, min_i.distance);
                             if i.distance < min_i.distance {
                                 min_intersection = Some(i);
                                 min_index = index as i32;
@@ -100,7 +100,7 @@ impl PathTracer{
 
     }
     fn li(&mut self, r: Ray, rand: &mut impl Rng, recursion_depth: i32) -> RGB{
-        //println!("Calculating Li");
+        ////println!("Calculating Li");
         let emitted_radiance = RGB::black();
         let mut path_total = emitted_radiance;
         let mut running_sum = emitted_radiance;
@@ -109,7 +109,7 @@ impl PathTracer{
         let mut r_c = r.clone();
         let mut n_iterations = 0;
         while(true){
-            //println!("iterations: {}", n_iterations);
+            ////println!("iterations: {}", n_iterations);
             let (min_intersection, min_index) = self.check_intersection(&r_c);
             
             match prev_intersection{
@@ -136,7 +136,7 @@ impl PathTracer{
 
             if n_iterations > 3 {
                 let rand_value = rand.gen::<f32>();
-                println!("Rand value: {}, threshold: {}", rand_value, self.roulette_threshold);
+                //println!("Rand value: {}, threshold: {}", rand_value, self.roulette_threshold);
                 if (rand_value <= self.roulette_threshold){
                     running_sum = (running_sum) / (1.0-self.roulette_threshold);
                     break;
@@ -148,8 +148,8 @@ impl PathTracer{
                     //TODO: return light sampling here. 
                     
 
-                    println!("Object {} intersected at recursion depth {}", min_index, recursion_depth);
-                    println!("Ray intersection point: {:?}", ray_intersection.point);
+                    //println!("Object {} intersected at recursion depth {}", min_index, recursion_depth);
+                    //println!("Ray intersection point: {:?}", ray_intersection.point);
                     //Light radiance to point then multiply by cos theta 
                     let (light_color,_) = self.scene.light.radiance(ray_intersection.point, ray_intersection.normal);
                     let (brdf, ray) = self.scene.primitives[min_index as usize].material.brdf(ray_intersection);
@@ -158,13 +158,13 @@ impl PathTracer{
                     r_c = ray;
                     //let color = RGB::create(0.0,255.0,127.0); 
                     //let mut mult_color = RGB::black();
-                    //println!("Reflection: {}", ray_intersection.reflection);
+                    ////println!("Reflection: {}", ray_intersection.reflection);
                     //Only for testing barycentric:
                     //return self.scene.objects[min_index as usize].color(&ray_intersection.point);
                     //if(recursion_depth>0){
                         //mult_color = self.li(Ray::create(ray_intersection.point, ray_intersection.reflection), rand, recursion_depth-1)
                     //}
-                    //println!("{:?}", mult_color);
+                    ////println!("{:?}", mult_color);
 
                     //if(mult_color.is_black()){
                       //  return color * ray_intersection.normal_angle.cos();

@@ -55,7 +55,7 @@ impl Object for Triangle{
         let w = approx(1.0-u-v, 0.0,1.0);
         if(permitted_range.contains(&u) && permitted_range.contains(&v) && permitted_range.contains(&(w))){
             
-            println!("u: {}, v: {}, t: {}", u, v, t);
+            //println!("u: {}, v: {}, t: {}", u, v, t);
             let point = (1.0-u-v) * self.points[0] + u*self.points[1] + v * self.points[2];
             let point_a = point - self.points[0];
             let point_b = point - self.points[1];

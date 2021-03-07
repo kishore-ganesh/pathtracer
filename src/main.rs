@@ -37,7 +37,7 @@ fn main() {
     let v = make_vec3(&[-1.0,1.0,0.0]);
     let normal = make_vec3(&[0.0,1.0,0.0]);
     let (reflected_v, _) = reflect_about_vec(&v, &normal);
-    println!("original: {}, reflected: {}", v, reflected_v);
+    //println!("original: {}, reflected: {}", v, reflected_v);
     let rotate_angle = (45.0) * (PI/180.0);
     let cube = Cube::create(make_vec3(&[ 0.0,-100.0,0.0 ]), rotate_angle, 0.0, 100.0, true);
     let plane_rotate_angle = (50.0) * (PI/180.0);
@@ -64,10 +64,10 @@ fn main() {
     let c = make_vec3(&[1,2,3]);
     let mut d = vec3_to_vec4(&c);
     d[3] = 1;
-    println!("{:?}", d);
+    //println!("{:?}", d);
     let b_3 = mat4_to_mat3(&b);
-    println!("{:?} {:?}", b, b_3);
-    //println!("{:?}", transpose(&a) * b);
+    //println!("{:?} {:?}", b, b_3);
+    ////println!("{:?}", transpose(&a) * b);
     //color::write_ppm(&v, "test.ppm".to_string());
     //
     */
@@ -122,5 +122,5 @@ fn main() {
     let mut pt = PathTracer::create(raster_res as i32, raster_res as i32, n_samples, 1.0, scene, camera);
     let grid = pt.generate(); 
     color::write_ppm(&grid, "test.ppm".to_string());
-    //println!("Hello, world!");
+    ////println!("Hello, world!");
 }

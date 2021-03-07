@@ -55,7 +55,7 @@ impl Object for TriangleMesh{
 
         match min_intersection{
             None => {},
-            _ => println!("Triangle {} intersected", min_index)
+            _ =>  {} //println!("Triangle {} intersected", min_index)
             
         }
         return min_intersection;
