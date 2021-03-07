@@ -120,9 +120,11 @@ impl PathTracer{
                  //dir else 0 
                 Some (ray_intersection) => {
                  //Need to check light obstruction here 
+                 //println!("Calculating for light");
                  let (light_color, light_vector) = self.scene.light.radiance(ray_intersection.point, ray_intersection.normal);
                  let shadow_ray = Ray::create(ray_intersection.point, light_vector);
                  let (shadow_intersection, _) = self.check_intersection(&r_c);
+                 //println!("Ray Intersection is: {:?}, Shadow intersection: {:?}  Light vector: {}", ray_intersection,shadow_intersection, light_vector);
                  match shadow_intersection {
                      Some(_) => {},
                      None => {
@@ -155,6 +157,7 @@ impl PathTracer{
                     let (brdf, ray) = self.scene.primitives[min_index as usize].material.brdf(ray_intersection);
                     let ray_angle = angle(&ray_intersection.normal, &ray.direction);
                     path_total += brdf * ray_angle.cos();
+                    //println!("Path total: {:?}", path_total);
                     r_c = ray;
                     //let color = RGB::create(0.0,255.0,127.0); 
                     //let mut mult_color = RGB::black();

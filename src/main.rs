@@ -38,12 +38,12 @@ fn main() {
     let normal = make_vec3(&[0.0,1.0,0.0]);
     let (reflected_v, _) = reflect_about_vec(&v, &normal);
     //println!("original: {}, reflected: {}", v, reflected_v);
-    let rotate_angle = (45.0) * (PI/180.0);
-    let cube = Cube::create(make_vec3(&[ 0.0,-100.0,0.0 ]), rotate_angle, 0.0, 100.0, true);
+    let rotate_angle = (0.0) * (PI/180.0);
+    let cube = Cube::create(make_vec3(&[ 0.0,0.0,0.0 ]), rotate_angle, 0.0, 1.0, false);
     let plane_rotate_angle = (50.0) * (PI/180.0);
     //let p1_vec = transform_vec(&rotate_about_x(plane_rotate_angle), &make_vec3(&[0.0,0.0,1.0]));
     let p1_vec = make_vec3(&[0.0,1.0,0.0]);
-    let p2_vec = make_vec3(&[0.0,1.0,1.0]);
+    let p2_vec = make_vec3(&[0.0,0.0,1.0]);
     let p3_vec = make_vec3(&[1.0,0.0,0.0]);
     let p4_vec = make_vec3(&[-1.0,0.0,0.0]);
     let p1 = Plane::create_point_normal(make_vec3(&[ 0.0,-2.0,0.0 ]), p1_vec);
@@ -104,13 +104,13 @@ fn main() {
     let blue_diffuse_material = DiffuseMaterial::create(RGB::create(0.0,0.0,255.0));
     let specular_material = SpecularMaterial::create();
     let scene = Scene::create(vec![
-                              Primitive::create(Box::new(x), Box::new(specular_material.clone())),
+                              //Primitive::create(Box::new(x), Box::new(specular_material.clone())),
                               //Primitive::create(Box::new(x2), Box::new(diffuse_material.clone())),
                               //Primitive::create(Box::new(cube), Box::new(diffuse_material.clone())),
                               Primitive::create(Box::new(p1), Box::new(diffuse_material.clone())),
                               Primitive::create(Box::new(p2), Box::new(red_diffuse_material.clone())),
-                              Primitive::create(Box::new(p3), Box::new(green_diffuse_material.clone())),
-                              Primitive::create(Box::new(p4), Box::new(blue_diffuse_material.clone())),
+                              //Primitive::create(Box::new(p3), Box::new(green_diffuse_material.clone())),
+                              //Primitive::create(Box::new(p4), Box::new(blue_diffuse_material.clone())),
                               
 
                               //Box::new(triangle),
