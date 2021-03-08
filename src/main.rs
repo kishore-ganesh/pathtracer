@@ -84,7 +84,7 @@ fn main() {
             10.0
     ));
 
-    let n_samples = 1;
+    let n_samples = 100;
     let roulette_threshold = 0.2;
     let region = Rect::create(make_vec3(&[ -region_scale,-region_scale,0.0 ]), make_vec3(&[ region_scale, region_scale,0.0 ]));
 //    let look_at_point = make_vec3(&[ 0.0,0.0,1.0 ]);

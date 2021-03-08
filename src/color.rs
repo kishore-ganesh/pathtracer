@@ -1,6 +1,6 @@
 use std::fs::File;
 use std::io::{Write, Error};
-use std::ops::{Add,AddAssign, Div, DivAssign, Mul};
+use std::ops::{Add,Sub, AddAssign, Div, DivAssign, Mul};
 use std::path::Path;
 #[derive(Copy, Clone, Debug)]
 pub struct RGB{
@@ -36,6 +36,18 @@ impl Add for RGB{
         }
     }
 }
+
+impl Sub<f32> for RGB{
+    type Output = RGB;
+    fn sub(self, other: f32) -> Self{
+        return Self{
+            r: ((self.r-other)),
+            g: ((self.g-other)),
+            b: ((self.b-other)),
+        }
+    }
+}
+
 impl AddAssign for RGB{
     fn add_assign(&mut self, other: Self){
         //TODO: handle overflow

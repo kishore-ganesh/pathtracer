@@ -173,14 +173,15 @@ impl PathTracer{
                     //println!("Ray intersection point: {:?}", ray_intersection.point);
                     //Light radiance to point then multiply by cos theta 
                     let (light_color,_, _) = self.scene.light.radiance(ray_intersection.point, ray_intersection.normal);
-                    let (brdf, ray) = self.scene.primitives[min_index as usize].material.brdf(ray_intersection);
+                    let view_vector = r_c.origin - ray_intersection.point;
+                    let (brdf, ray) = self.scene.primitives[min_index as usize].material.brdf(ray_intersection, view_vector);
                     let ray_angle = angle(&ray_intersection.normal, &ray.direction);
                     if(ray_angle.cos() < 0.0){
                         println!("cos is: {}", ray_angle.cos());
                     }
                     //TODO: make it mul
                     path_total = path_total * brdf * ray_angle.cos();
-                    //println!("Path total: {:?}", path_total);
+                    //println!("Path total: {:?} brdf: {:?} cos: {}", path_total, brdf, ray_angle.cos());
                     r_c = ray;
                     //let color = RGB::create(0.0,255.0,127.0); 
                     //let mut mult_color = RGB::black();
@@ -218,7 +219,7 @@ impl PathTracer{
             prev_min_index = min_index;
 
         }
-            //println!("Final running sum: {:?}", running_sum);
+            println!("Final running sum: {:?}", running_sum);
             return running_sum;
 
     }
