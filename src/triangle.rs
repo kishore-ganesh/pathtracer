@@ -70,6 +70,7 @@ impl Object for Triangle{
             let (reflection, perp) = reflect_about_vec(&origin_vector, &normal);
             //TODO: check when changing to triangle coordinates
             return Some(RayIntersection{
+                origin: r.origin.clone(),
                 t: t, 
                 point: point,
                 normal: normal, 

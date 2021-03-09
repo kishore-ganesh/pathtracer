@@ -52,6 +52,7 @@ impl Ray{
 #[derive(Debug, Clone, Copy)]
 pub struct RayIntersection {
     pub t: f32,
+    pub origin: TVec3<f32>,
     pub point: TVec3<f32>,
     pub normal: TVec3<f32>,
     pub perp: TVec3<f32>,
@@ -154,6 +155,7 @@ impl Object for Sphere {
             let world_perp = transform_vec(&self.object_to_world, &perp);
             //println!("reflection: {}, world: {}", reflection, world_reflection);
             return Some(RayIntersection{
+                origin: r.origin.clone(),
                 t: t, point: world_point, 
                 normal: world_normal_vec,
                 perp: world_perp,

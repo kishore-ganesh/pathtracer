@@ -1,6 +1,6 @@
 //
 use std::f32::consts::PI;
-use glm::{angle, cross, make_vec3, normalize, TVec3};
+use glm::{angle, cross, length, make_vec3, normalize, TVec3};
 use rand::Rng;
 use crate::color::RGB;
 use crate::sphere::{Ray, RayIntersection};
@@ -8,7 +8,7 @@ use crate::primitives::{get_vec_at_angle, reflect_about_vec};
 pub trait Material {
     //TODO: check for better interface
     //For now, this will return a spectrum and a ray in the direction
-    fn brdf(&self, r: RayIntersection, v: TVec3<f32>) -> (RGB, Ray);
+    fn brdf(&self, r: RayIntersection, v: TVec3<f32>) -> (RGB, Ray, f32);
     fn brdf_eval(&self, r: &RayIntersection, v: &TVec3<f32>) -> RGB;
 }
 #[derive(Debug, Copy, Clone)]
@@ -23,7 +23,7 @@ impl DiffuseMaterial{
 }
 
 impl Material for DiffuseMaterial{
-    fn brdf(&self, r: RayIntersection, v: TVec3<f32>) -> (RGB, Ray){
+    fn brdf(&self, r: RayIntersection, v: TVec3<f32>) -> (RGB, Ray, f32){
         //TODO: make this random direction
         
         let mut rand = rand::thread_rng();
@@ -31,7 +31,7 @@ impl Material for DiffuseMaterial{
         let rad_angle = (PI/180.0) * degree_angle;
         let direction = get_vec_at_angle(&r.normal, &r.perp, rad_angle);
 
-        return (self.fraction, Ray::create(r.point, direction));
+        return (self.fraction, Ray::create(r.point, direction), 1.0);
     }
     fn brdf_eval(&self, r: &RayIntersection, v: &TVec3<f32>) -> RGB{
         //TODO: fill in
@@ -53,10 +53,10 @@ impl SpecularMaterial{
 }
 
 impl Material for SpecularMaterial{
-    fn brdf(&self, r: RayIntersection, v: TVec3<f32>) -> (RGB, Ray){
+    fn brdf(&self, r: RayIntersection, v: TVec3<f32>) -> (RGB, Ray, f32){
         //TODO: extract out the reflection
         let ray = Ray::create(r.point, r.reflection);
-        return (RGB::create(255.0,255.0,255.0), ray);
+        return (RGB::create(255.0,255.0,255.0), ray, 1.0);
     }
     fn brdf_eval(&self, r: &RayIntersection, v: &TVec3<f32>) -> RGB{
         let ang = angle(&r.normal, &v);
@@ -139,13 +139,25 @@ impl DisneyBRDFMaterial{
 
     }
 
+    fn eval(&self, theta_d: f32, theta_h: f32, theta_l: f32, theta_v: f32) -> (RGB, f32){
+       //TODO: refactor alpha 
+        let alpha = self.roughness.powi(2);
+        let diffuse = self.diffuse(theta_d, theta_l, theta_v);
+        let specular_d = self.specular_d(alpha, theta_h);
+        let specular_f = self.specular_f(theta_d);
+        let specular_g = self.specular_g(theta_l, theta_v, theta_d);
+        let res_color =  diffuse + specular_f * specular_d * specular_g / 4.0 * (theta_l.cos() * theta_v.cos());
+        let pdf = specular_d * theta_h.cos() / (4.0 * theta_d.cos());
+        return (res_color, pdf);
+    }
+
 
     //Where to get theta_h? Sample from D(theta_h), for anisotropic, phi = 1/2pi. Use it to find
     //half vector orientation, then reflect view about halfway.
 }
 
 impl Material for DisneyBRDFMaterial{
-    fn brdf(&self, r: RayIntersection, v: TVec3<f32>) -> (RGB, Ray){
+    fn brdf(&self, r: RayIntersection, v: TVec3<f32>) -> (RGB, Ray, f32){
         //Sample from D(theta_h) to get theta_h, phi 
         // Calculate h using theta_h, pi, three vectors (normal, tangent, bi tangent[r.normal,
         // r.perp, cross r.normal, r.perp?] 
@@ -165,18 +177,23 @@ impl Material for DisneyBRDFMaterial{
         let theta_l = angle(&r.normal, &l);
         let theta_v = angle(&r.normal, &v);
         let theta_d = angle(&h, &v);
-        let diffuse = self.diffuse(theta_d, theta_l, theta_v);
-        let specular_d = self.specular_d(alpha, theta_h);
-        let specular_f = self.specular_f(theta_d);
-        let specular_g = self.specular_g(theta_l, theta_v, theta_d);
-        let res_color =  diffuse + specular_f * specular_d * specular_g / 4.0 * (theta_l.cos() * theta_v.cos());
+        let (res_color, pdf) = self.eval(theta_d, theta_h, theta_l, theta_v);
         let ray = Ray::create(r.point, normalize(&l));
-        return (res_color, ray);
+        return (res_color, ray, pdf);
 
 
     }
+    //TODO: refactor into just i, o
     fn brdf_eval(&self, r: &RayIntersection, v: &TVec3<f32>) -> RGB{
-        return RGB::black();
+        let l = r.origin - r.point;
+        let h = (l + v) / length(&(l + v));
+        let theta_d = angle(&l, &h);
+        let theta_l = angle(&l, &r.normal);
+        let theta_h = angle(&h, &r.normal);
+        let theta_v = angle(&v, &r.normal);
+        let (res_color, _) = self.eval(theta_d, theta_h, theta_l, theta_v);
+        return res_color; 
+        //return RGB::black();
     }
 }
 
