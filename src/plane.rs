@@ -1,7 +1,7 @@
 
 use glm::{angle, cross, distance, dot, make_vec3, TVec3};
 use crate::color::RGB;
-use crate::primitives::{reflect_about_vec };
+use crate::primitives::{get_perp_vec, reflect_about_vec};
 use crate::sphere::{Object, Ray, RayIntersection};
 pub struct Plane{
     normal: TVec3<f32>,
@@ -43,7 +43,7 @@ impl Object for Plane{
             normal: self.normal.clone(),
             normal_angle: normal_angle,
             reflection: reflection,
-            perp: perp,
+            perp: get_perp_vec(&self.normal),
             distance: distance(&p_v, &r.origin)
         });
     }

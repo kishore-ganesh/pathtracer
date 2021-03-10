@@ -97,6 +97,7 @@ impl DisneyBRDFMaterial{
         let const_c = (const_l * const_r) / PI;
         let f_d = self.base_color * const_c;
         println!("theta_d: {}, theta_l: {}, theta_v: {}, res: {:?}", theta_d, theta_l, theta_v, f_d);
+        println!("fd90: {}, const_l: {}, const_r: {}, const_c: {}", fd_90, const_l, const_r, const_c);
         return f_d;
 
 
@@ -114,8 +115,9 @@ impl DisneyBRDFMaterial{
     fn specular_f(&self, theta_d: f32) -> RGB{
         //TODO: need to handle specular tint
         //is f0 a color?
+        let remapped_specular = self.specular * 0.08;
         let tint = RGB::create(255.0,255.0,255.0);
-        let f0 = tint * self.specular;
+        let f0 = tint * remapped_specular;
         let res = f0 +  (f0-1.0) * (-1.0) * (1.0-theta_d.cos()).powi(5);
         return res;
     }
@@ -154,6 +156,9 @@ impl DisneyBRDFMaterial{
 
     fn eval(&self, theta_d: f32, theta_h: f32, theta_l: f32, theta_v: f32) -> (RGB, f32){
        //TODO: refactor alpha 
+        /*if (theta_l.cos() < 0.0 || theta_v.cos() < 0.0){
+            return RGB::black();
+        }*/
         let alpha = self.roughness.powi(2);
         let diffuse = self.diffuse(theta_d, theta_l, theta_v);
         let specular_d = self.specular_d(alpha, theta_h);
@@ -196,6 +201,10 @@ impl Material for DisneyBRDFMaterial{
         let theta_v = angle(&r.normal, &v);
         let theta_d = angle(&h, &v);
         let (res_color, pdf) = self.eval(theta_d, theta_h, theta_l, theta_v);
+        if(theta_l.cos() < 0.0){
+            return (RGB::black(), Ray::create(r.point, r.normal), pdf);
+        }
+
         let ray = Ray::create(r.point, normalize(&l));
         return (res_color, ray, pdf);
 

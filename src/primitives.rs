@@ -119,25 +119,38 @@ pub fn reflect_about_vec(v: &TVec3<f32>, about: &TVec3<f32>) -> (TVec3<f32>, TVe
     }
 }
 
-/*pub fn get_perp_vec(n: &TVec3<f32>) -> TVec3<f32>{
-    if(n.x==0.0 && n.y == 0.0 && n.z==0.0){
+pub fn get_perp_vec(n: &TVec3<f32>) -> TVec3<f32>{
+    if(is_null(&n, 0.0)){
         panic!("All zero in perp");
     }
+    let mut first_nz = 0;
+    if(n.x != 0.0){
+        first_nz = 0;
+    }
+    else if(n.y != 0.0){
+        first_nz = 1;
+    }
+    else if(n.z != 0.0){
+        first_nz = 2;
+    }
 
-    let first_nz = n.position(|x| x !=0.0);
+    ;
     let (second_nz, third_nz) = match first_nz {
         0 => (1,2), 
         1 => (2,0),
-        2 => (0,1)
-    }
+        2 => (0,1),
+        _ => {
+            panic!("First nz invalid")
+        }
+    };
     let mut perp_n = [0.0,0.0,0.0];
     perp_n[second_nz] = 0.0;
-    perp_n[first_nz] = v[third_nz];
-    perp_n[third_nz] = v[first_nz];
+    perp_n[first_nz] = n[third_nz];
+    perp_n[third_nz] = -n[first_nz];
     return make_vec3(&perp_n);
 
     
-}*/
+}
 
 pub fn get_vec_at_angle(n: &TVec3<f32>, h: &TVec3<f32>,angle: f32) -> TVec3<f32>{
 

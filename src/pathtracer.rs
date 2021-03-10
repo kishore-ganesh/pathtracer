@@ -1,5 +1,5 @@
-
 use glm::angle;
+use std::f32::consts::PI;
 use crate::camera::Camera;
 use crate::color::RGB;
 use crate::scene::Scene;
@@ -115,7 +115,7 @@ impl PathTracer{
             ////println!("iterations: {}", n_iterations);
             let (min_intersection, min_index) = self.check_intersection(&r_c);
             
-            //For debugging BRDF:
+            //Uncomment for debugging BRDF:
             /*match min_intersection {
                 Some(r) => {
                      let (light_color, light_vector, light_distance) = self.scene.light.radiance(r.point, r.normal);
@@ -163,6 +163,7 @@ impl PathTracer{
                      true => {
                         let brdf = self.scene.primitives[prev_min_index as usize].material.brdf_eval(&ray_intersection, &light_vector);
                         //println!("running_sum: {:?}, path_total: {:?}, light_color: {:?}", running_sum, path_total, light_color);
+                        //TODO: should divide by cos theta
                         running_sum +=  prev_path_total * brdf * light_color; 
 
                      },
@@ -191,6 +192,7 @@ impl PathTracer{
                     //Light radiance to point then multiply by cos theta 
                     let (light_color,_, _) = self.scene.light.radiance(ray_intersection.point, ray_intersection.normal);
                     let view_vector = r_c.origin - ray_intersection.point;
+                    println!("VIEW angle: {}", angle(&ray_intersection.normal, &view_vector) * 180.0 / PI);
                     let (brdf, ray, pdf) = self.scene.primitives[min_index as usize].material.brdf(ray_intersection, view_vector);
                     let ray_angle = angle(&ray_intersection.normal, &ray.direction);
                     println!("BRDF is: {:?}", brdf);

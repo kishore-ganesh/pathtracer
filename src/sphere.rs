@@ -8,7 +8,7 @@ use std::f32::consts::PI;
 use glm::{TMat4, TVec3, make_mat4x4, make_vec3,inverse, length2, matrix_comp_mult, comp_add, normalize, angle, dot, distance};
 use crate::color::RGB;
 use crate::materials::Material;
-use crate::primitives::{pointwise_mul_sum,transform, transform_vec, reflect_about_vec};
+use crate::primitives::{get_perp_vec, pointwise_mul_sum,reflect_about_vec,transform, transform_vec};
 
 pub trait Object{
 
@@ -158,7 +158,7 @@ impl Object for Sphere {
                 origin: r.origin.clone(),
                 t: t, point: world_point, 
                 normal: world_normal_vec,
-                perp: world_perp,
+                perp: get_perp_vec(&world_normal_vec),
                 normal_angle: normal_angle, 
                 reflection: world_reflection, 
                 distance: distance(&world_point, &t_origin)});

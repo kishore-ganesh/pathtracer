@@ -16,10 +16,10 @@ mod triangle_mesh;
 
 
 use std::f32::consts::PI;
-use glm::{TMat4, TVec4, make_mat4x4, make_vec4, transpose, make_vec3, vec3_to_vec4, mat4_to_mat3};
+use glm::{dot, TMat4, TVec4, make_mat4x4, make_vec4, transpose, make_vec3, vec3_to_vec4, mat4_to_mat3};
 use cube::Cube;
 use sphere::{Sphere, Ray, Object, Primitive};
-use primitives::{Rect, transform, transform_mesh, transform_vec, scale,reflect_about_vec, rotate_about_x, rotate_about_y};
+use primitives::{get_perp_vec, transform, transform_mesh, transform_vec, Rect, reflect_about_vec, rotate_about_x, rotate_about_y, scale};
 use color::RGB;
 use pathtracer::PathTracer;
 use scene::Scene;
@@ -30,6 +30,11 @@ use triangle_mesh::TriangleMesh;
 use materials::{DiffuseMaterial, SpecularMaterial, DisneyBRDFMaterial};
 use plane::Plane;
 fn main() {
+    let v1 = make_vec3(&[0.0,1.0,0.0]); 
+    let v2 = make_vec3(&[1.2, 0.312, 2.4]);
+    println!("perp vec to: {} is: {}", &v1, get_perp_vec(&v1));
+    println!("perp vec to: {} is: {}, dot is: {}", &v2, get_perp_vec(&v2), dot(&v2, &get_perp_vec(&v2)));
+
     let center = make_vec3(&[ -1.0,0.0,0.0 ]);
     let x: Sphere = Sphere::create(1.0, center.clone());
     let r: Ray = Ray{origin: make_vec3(&[ 1.0,1.0,1.0 ]), direction: make_vec3(&[1.0,1.0,1.0])};
@@ -105,18 +110,18 @@ fn main() {
     let blue_diffuse_material = DiffuseMaterial::create(RGB::create(0.0,0.0,255.0));
     let specular_material = SpecularMaterial::create();
 
-    let disney_diffuse_material = DisneyBRDFMaterial::create(RGB::create(255.0,120.0,120.0), 0.0,0.0,0.5);
+    let disney_diffuse_material = DisneyBRDFMaterial::create(RGB::create(255.0,120.0,120.0), 0.0,0.5,0.9);
     let disney_red_diffuse_material = DisneyBRDFMaterial::create(RGB::create(255.0,0.0,0.0), 0.0,0.0,0.5);
     let disney_green_diffuse_material = DisneyBRDFMaterial::create(RGB::create(0.0,255.0,0.0), 0.0,0.0,0.5);
     let disney_blue_diffuse_material = DisneyBRDFMaterial::create(RGB::create(0.0,0.0,255.0), 0.0,0.0,0.5);
     let scene = Scene::create(vec![
                               //Primitive::create(Box::new(x), Box::new(specular_material.clone())),
-                              //Primitive::create(Box::new(x2), Box::new(disney_diffuse_material.clone())),
+                              Primitive::create(Box::new(x2), Box::new(disney_diffuse_material.clone())),
                               //Primitive::create(Box::new(cube), Box::new(diffuse_material.clone())),
-                              Primitive::create(Box::new(p1), Box::new(disney_diffuse_material.clone())),
-                              Primitive::create(Box::new(p2), Box::new(disney_red_diffuse_material.clone())),
-                              Primitive::create(Box::new(p3), Box::new(disney_green_diffuse_material.clone())),
-                              Primitive::create(Box::new(p4), Box::new(disney_blue_diffuse_material.clone())),
+                              //Primitive::create(Box::new(p1), Box::new(disney_diffuse_material.clone())),
+                             // Primitive::create(Box::new(p2), Box::new(disney_red_diffuse_material.clone())),
+                              //Primitive::create(Box::new(p3), Box::new(disney_green_diffuse_material.clone())),
+                              //Primitive::create(Box::new(p4), Box::new(disney_blue_diffuse_material.clone())),
                               
 
                               //Box::new(triangle),
