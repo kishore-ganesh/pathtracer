@@ -70,6 +70,7 @@ impl Material for SpecularMaterial{
     }
 }
 
+#[derive(Debug, Clone, Copy)]
 //Credits to Brent Burley and Disney for the equations
 pub struct DisneyBRDFMaterial{
     base_color: RGB,
@@ -80,12 +81,22 @@ pub struct DisneyBRDFMaterial{
 }
 
 impl DisneyBRDFMaterial{
+    pub fn create(base_color: RGB, metallic: f32, specular: f32, roughness: f32) -> Self{
+        return DisneyBRDFMaterial{
+            base_color: base_color, 
+            metallic: metallic, 
+            specular: specular,
+            roughness: roughness,
+
+        };
+    }
     fn diffuse(&self, theta_d: f32, theta_l: f32, theta_v: f32) -> RGB{
         let fd_90 = 0.5 + 2.0 * theta_d.powi(2).cos() * self.roughness;
         let const_l = (1.0  + (fd_90 - 1.0 )*(1.0-theta_l.cos()).powi(5));
         let const_r = (1.0  + (fd_90 - 1.0 )*(1.0-theta_v.cos()).powi(5));
         let const_c = (const_l * const_r) / PI;
         let f_d = self.base_color * const_c;
+        println!("theta_d: {}, theta_l: {}, theta_v: {}, res: {:?}", theta_d, theta_l, theta_v, f_d);
         return f_d;
 
 
@@ -113,7 +124,8 @@ impl DisneyBRDFMaterial{
          //TODO: check positive term 
           let r_term = 2.0 / (1.0 + (1.0 +alpha_g.powi(2) * theta_n.tan().powi(2)).sqrt());
           let l_term = (theta_m)/(theta_n);
-          return l_term * r_term;
+          let res = l_term * r_term;
+          return res;
           
     }
     fn specular_g(&self, theta_l: f32, theta_v: f32, theta_d: f32) -> f32{
@@ -134,6 +146,7 @@ impl DisneyBRDFMaterial{
         let gamma = 2.0;
         let numerator = (1.0 - ((alpha.powi(2).powf(1.0-gamma)) * (1.0-e2) + e2).powf(1.0/(1.0-gamma)));
         let denominator = (1.0-alpha.powi(2));
+        println!("alpha: {}, e1: {}, e2: {}, numerator: {}, denominator: {}", alpha, e1, e2, numerator, denominator);
         let cos_theta_h = (numerator/denominator).sqrt();
         return (cos_theta_h, phi);
 
@@ -148,6 +161,7 @@ impl DisneyBRDFMaterial{
         let specular_g = self.specular_g(theta_l, theta_v, theta_d);
         let res_color =  diffuse + specular_f * specular_d * specular_g / 4.0 * (theta_l.cos() * theta_v.cos());
         let pdf = specular_d * theta_h.cos() / (4.0 * theta_d.cos());
+        println!("Diffuse: {:?}, Specular_D: {}, Specular f: {:?}, Specular g: {}", diffuse, specular_d, specular_f, specular_g);
         return (res_color, pdf);
     }
 
@@ -170,10 +184,14 @@ impl Material for DisneyBRDFMaterial{
         
         let alpha = self.roughness.powi(2);
         let (cos_theta_h, phi) = self.sample_from_specular_d(alpha);
-        let theta_h = cos_theta_h.acos(); 
+        let theta_h = cos_theta_h.acos();
         let bitangent = cross(&r.normal, &r.perp);
+        //println!("normal: {}, tangent: {}, bitangent: {}", r.normal, r.perp, bitangent);
         let h = r.normal * cos_theta_h + r.perp * theta_h.sin() * phi.cos() + bitangent * theta_h.sin() * phi.sin();
-        let (l, _) = reflect_about_vec(&h, &v);
+        let (l, _) = reflect_about_vec(&v, &h);
+        //println!("Length of h: {}", length(&h));
+        //println!("Angle lh: {}, vh: {}", angle(&l, &h), angle(&v, &h));
+        //println!("cos_theta_h: {}, h: {}, light_vector: {}", cos_theta_h, h, l);
         let theta_l = angle(&r.normal, &l);
         let theta_v = angle(&r.normal, &v);
         let theta_d = angle(&h, &v);
@@ -184,13 +202,16 @@ impl Material for DisneyBRDFMaterial{
 
     }
     //TODO: refactor into just i, o
-    fn brdf_eval(&self, r: &RayIntersection, v: &TVec3<f32>) -> RGB{
-        let l = r.origin - r.point;
+    fn brdf_eval(&self, r: &RayIntersection, l: &TVec3<f32>) -> RGB{
+        let v = normalize(&(r.origin - r.point));
+        //println!("l: {}, v: {}", l, v);
         let h = (l + v) / length(&(l + v));
         let theta_d = angle(&l, &h);
         let theta_l = angle(&l, &r.normal);
         let theta_h = angle(&h, &r.normal);
         let theta_v = angle(&v, &r.normal);
+
+        //println!("LIGHTS: Angle lh: {}, vh: {}", angle(&l, &h), angle(&v, &h));
         let (res_color, _) = self.eval(theta_d, theta_h, theta_l, theta_v);
         return res_color; 
         //return RGB::black();

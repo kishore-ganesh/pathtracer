@@ -1,5 +1,5 @@
 
-use glm::{angle, cross, distance, dot, TVec3};
+use glm::{angle, cross, distance, dot, make_vec3, TVec3};
 use crate::color::RGB;
 use crate::primitives::{reflect_about_vec };
 use crate::sphere::{Object, Ray, RayIntersection};

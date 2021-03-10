@@ -104,14 +104,31 @@ impl PathTracer{
         ////println!("Calculating Li");
         let emitted_radiance = RGB::black();
         let mut path_total = RGB::create(255.0,255.0,255.0);
+        let mut prev_path_total = RGB::create(255.0,255.0,255.0);
         let mut running_sum = emitted_radiance;
         let mut prev_intersection: Option<RayIntersection> = None;
         let mut prev_min_index: i32 = -1;
         let mut r_c = r.clone();
         let mut n_iterations = 0;
+
         while(true){
             ////println!("iterations: {}", n_iterations);
             let (min_intersection, min_index) = self.check_intersection(&r_c);
+            
+            //For debugging BRDF:
+            /*match min_intersection {
+                Some(r) => {
+                     let (light_color, light_vector, light_distance) = self.scene.light.radiance(r.point, r.normal);
+                let brdf = self.scene.primitives[min_index as usize].material.brdf_eval(&r, &light_vector);
+                return brdf * light_color 
+                        //ray_intersection.normal_angle.cos()
+                },
+                
+                None => {
+                    return RGB::black();
+                }
+            }*/
+            
             
             match prev_intersection{
                  //Here, check dir to light source & do running_sum += path_total * f(light_point
@@ -146,7 +163,7 @@ impl PathTracer{
                      true => {
                         let brdf = self.scene.primitives[prev_min_index as usize].material.brdf_eval(&ray_intersection, &light_vector);
                         //println!("running_sum: {:?}, path_total: {:?}, light_color: {:?}", running_sum, path_total, light_color);
-                        running_sum +=  path_total * light_color; 
+                        running_sum +=  prev_path_total * brdf * light_color; 
 
                      },
                      false => {}
@@ -176,11 +193,16 @@ impl PathTracer{
                     let view_vector = r_c.origin - ray_intersection.point;
                     let (brdf, ray, pdf) = self.scene.primitives[min_index as usize].material.brdf(ray_intersection, view_vector);
                     let ray_angle = angle(&ray_intersection.normal, &ray.direction);
+                    println!("BRDF is: {:?}", brdf);
+                    //println!("Ray angle: {}", ray_angle);
                     if(ray_angle.cos() < 0.0){
                         println!("cos is: {}", ray_angle.cos());
                     }
                     //TODO: make it mul
+                    prev_path_total  = path_total;
                     path_total = (path_total * brdf * ray_angle.cos())/pdf;
+                    //WARNING: for debugging only. Uncomment if you want to return without bouncing 
+                    //return path_total;
                     //println!("Path total: {:?} brdf: {:?} cos: {}", path_total, brdf, ray_angle.cos());
                     r_c = ray;
                     //let color = RGB::create(0.0,255.0,127.0); 
