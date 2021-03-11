@@ -141,12 +141,13 @@ impl PathTracer{
                  //println!("Calculating for light");
                  let (light_color, light_vector, light_distance) = self.scene.light.radiance(ray_intersection.point, ray_intersection.normal);
                  let shadow_ray = Ray::create(ray_intersection.point, light_vector);
-                 let (shadow_intersection, _) = self.check_intersection(&r_c);
+                 let (shadow_intersection, shadow_min_index) = self.check_intersection(&r_c);
                  //println!("Ray Intersection is: {:?}, Shadow intersection: {:?}  Light vector: {}", ray_intersection,shadow_intersection, light_vector);
                  
                  let mut visible = false;
                  match shadow_intersection {
                      Some(s) => {
+                         //println!("Shadow min index: {}, Current min index: {}", shadow_min_index, prev_min_index);
                          //println!("Shadow distance: {}, Current distance: {}", s.distance, light_distance);
                          if(s.distance > light_distance){
                             visible = true;
@@ -162,7 +163,7 @@ impl PathTracer{
                  match visible{
                      true => {
                         let brdf = self.scene.primitives[prev_min_index as usize].material.brdf_eval(&ray_intersection, &light_vector);
-                        //println!("running_sum: {:?}, path_total: {:?}, light_color: {:?}", running_sum, path_total, light_color);
+                        //println!("running_sum: {:?}, path_total: {:?}, light_color: {:?}", running_sum, prev_path_total, light_color);
                         //TODO: should divide by cos theta
                         running_sum +=  prev_path_total * brdf * light_color; 
 
@@ -192,10 +193,10 @@ impl PathTracer{
                     //Light radiance to point then multiply by cos theta 
                     let (light_color,_, _) = self.scene.light.radiance(ray_intersection.point, ray_intersection.normal);
                     let view_vector = r_c.origin - ray_intersection.point;
-                    println!("VIEW angle: {}", angle(&ray_intersection.normal, &view_vector) * 180.0 / PI);
+                    //println!("VIEW angle: {}", angle(&ray_intersection.normal, &view_vector) * 180.0 / PI);
                     let (brdf, ray, pdf) = self.scene.primitives[min_index as usize].material.brdf(ray_intersection, view_vector);
                     let ray_angle = angle(&ray_intersection.normal, &ray.direction);
-                    println!("BRDF is: {:?}", brdf);
+                    //println!("BRDF is: {:?}", brdf);
                     //println!("Ray angle: {}", ray_angle);
                     if(ray_angle.cos() < 0.0){
                         println!("cos is: {}", ray_angle.cos());
@@ -205,7 +206,7 @@ impl PathTracer{
                     path_total = (path_total * brdf * ray_angle.cos())/pdf;
                     //WARNING: for debugging only. Uncomment if you want to return without bouncing 
                     //return path_total;
-                    //println!("Path total: {:?} brdf: {:?} cos: {}", path_total, brdf, ray_angle.cos());
+                    //println!("Path total: {:?} brdf: {:?} cos: {} pdf: {}", path_total, brdf, ray_angle.cos(), pdf);
                     r_c = ray;
                     //let color = RGB::create(0.0,255.0,127.0); 
                     //let mut mult_color = RGB::black();

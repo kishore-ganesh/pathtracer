@@ -30,9 +30,9 @@ impl Add for RGB{
     type Output = RGB;
     fn add(self, other: Self) -> Self{
         return Self{
-            r: ((self.r+other.r)/510.0) * 255.0,
-            g: ((self.g+other.g)/510.0) * 255.0,
-            b: ((self.b+other.b)/510.0) * 255.0,
+            r: ((self.r+other.r)),
+            g: ((self.g+other.g)),
+            b: ((self.b+other.b)),
         }
     }
 }
