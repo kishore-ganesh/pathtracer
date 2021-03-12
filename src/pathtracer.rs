@@ -114,7 +114,7 @@ impl PathTracer{
         while(true){
             ////println!("iterations: {}", n_iterations);
             let (min_intersection, min_index) = self.check_intersection(&r_c);
-            
+              
             //Uncomment for debugging BRDF:
             /*match min_intersection {
                 Some(r) => {
@@ -141,12 +141,12 @@ impl PathTracer{
                  //println!("Calculating for light");
                  let (light_color, light_vector, light_distance) = self.scene.light.radiance(ray_intersection.point, ray_intersection.normal);
                  let shadow_ray = Ray::create(ray_intersection.point, light_vector);
-                 let (shadow_intersection, shadow_min_index) = self.check_intersection(&r_c);
+                 let (shadow_intersection, shadow_min_index) = self.check_intersection(&shadow_ray);
                  //println!("Ray Intersection is: {:?}, Shadow intersection: {:?}  Light vector: {}", ray_intersection,shadow_intersection, light_vector);
-                 
                  let mut visible = false;
                  match shadow_intersection {
                      Some(s) => {
+                         //println!("Shadow intersected: {:?}", s);
                          //println!("Shadow min index: {}, Current min index: {}", shadow_min_index, prev_min_index);
                          //println!("Shadow distance: {}, Current distance: {}", s.distance, light_distance);
                          if(s.distance > light_distance){
@@ -158,7 +158,7 @@ impl PathTracer{
                                               
                      }
                  }
-
+                 //println!("Min index: {}", shadow_min_index);
                  //println!("Visible: {}", visible);
                  match visible{
                      true => {
@@ -178,8 +178,11 @@ impl PathTracer{
                 let rand_value = rand.gen::<f32>();
                 //println!("Rand value: {}, threshold: {}", rand_value, self.roulette_threshold);
                 if (rand_value <= self.roulette_threshold){
-                    running_sum = (running_sum) / (1.0-self.roulette_threshold);
+                    //running_sum = (running_sum) / (1.0-self.roulette_threshold);
                     break;
+                }
+                else{
+                    path_total = path_total / (1.0 - self.roulette_threshold);
                 }
             }
             match min_intersection {
@@ -206,6 +209,7 @@ impl PathTracer{
                     path_total = (path_total * brdf * ray_angle.cos())/pdf;
                     //WARNING: for debugging only. Uncomment if you want to return without bouncing 
                     //return path_total;
+                    //println!("PDF is: {}", pdf);
                     //println!("Path total: {:?} brdf: {:?} cos: {} pdf: {}", path_total, brdf, ray_angle.cos(), pdf);
                     r_c = ray;
                     //let color = RGB::create(0.0,255.0,127.0); 

@@ -115,11 +115,12 @@ impl DisneyBRDFMaterial{
     fn specular_f(&self, theta_d: f32) -> RGB{
         //TODO: need to handle specular tint
         //is f0 a color?
-        let remapped_specular = self.specular * 0.08;
-        let tint = RGB::create(255.0,255.0,255.0);
+        let remapped_specular = self.specular;
+        let tint = RGB::create(1.0,1.0,1.0);
         let f0 = tint * remapped_specular;
         let res = f0 +  (f0-1.0) * (-1.0) * (1.0-theta_d.cos()).powi(5);
-        return res;
+
+        return res * 255.0;
     }
 
     fn g1(&self, theta_m: f32, theta_n: f32, alpha_g: f32) -> f32{
@@ -166,8 +167,10 @@ impl DisneyBRDFMaterial{
         let specular_d = self.specular_d(alpha, theta_h);
         let specular_f = self.specular_f(theta_d);
         let specular_g = self.specular_g(theta_l, theta_v, theta_d);
-        let res_color =  diffuse + specular_f * specular_d * specular_g / 4.0 * (theta_l.cos() * theta_v.cos());
+        let specular = specular_f * specular_d * specular_g / 4.0 * (theta_l.cos() * theta_v.cos());
+        let res_color =  diffuse + specular;
         let pdf = specular_d * theta_h.cos() / (4.0 * theta_d.cos());
+        //println!("Specular color is: {:?}", specular);
         //println!("specular_d: {}, theta_h.cos(): {}, theta_d.cos(): {}", specular_d, theta_h.cos(), theta_d.cos());
         //println!("Diffuse: {:?}, Specular_D: {}, Specular f: {:?}, Specular g: {}", diffuse, specular_d, specular_f, specular_g);
         return (res_color, pdf);

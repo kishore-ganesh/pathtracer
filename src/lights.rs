@@ -24,7 +24,7 @@ impl Light for PointLight {
         let light_vec = -normalize(&(point - self.location));
         let cos_angle = angle(&light_vec, &normal).cos();
         //println!("{}, {:?}, {:?}", cos_angle, self.color, self.color * cos_angle);
-        return (self.color * cos_angle, light_vec, dist); 
+        return (self.color * cos_angle * self.intensity, light_vec, dist); 
             //* (self.intensity/dist.powi(2));
     }
 }
