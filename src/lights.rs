@@ -3,7 +3,7 @@ use std::f32::consts::PI;
 use rand::Rng;
 use crate::color::RGB;
 use crate::primitives::{get_perp_vec};
-use crate::sphere::{Sphere};
+use crate::sphere::{Object, Sphere};
 pub trait Light {
     fn sample_radiance(&self, point: TVec3<f32>, normal: TVec3<f32>) -> (RGB, TVec3<f32>, f32, f32);
 }
@@ -77,15 +77,30 @@ impl Light for SphericalAreaLight{
         //println!("Normal: {}, Tangent: {}, Bitangent: {}, Intersection Point: {}", normal, tangent, bitangent, intersection_point);
         //println!("Length: {}", length(&(intersection_point)));
         let light_vec = -normalize(&(point - intersection_point));
-        let theta_area = angle(&normal, &-light_vec);
+        let theta_area = angle(&(intersection_point - self.sphere.center), &-light_vec);
         let theta_light = angle(&point_normal, &light_vec);
 
-        //println!("Theta Area: {}, Theta Light: {}", theta_area * (180.0/PI), theta_light * (180.0/PI));
+        println!("Theta Area: {}, Theta Light: {}", theta_area * (180.0/PI), theta_light * (180.0/PI));
         let point_distance = distance(&intersection_point, &point);
         //println!("Point distance: {}", point_distance);
         let pdf = 1.0 / ((1.0 - theta_max.cos()) *(2.0 * PI));
-        return (self.color * theta_area.cos() * self.intensity * theta_light.cos(), light_vec, point_distance, pdf);
+        let mut res_color = RGB::black();
+        if(theta_light.cos() > 0.0){    
+            res_color =  self.color * theta_area.cos() * self.intensity * theta_light.cos();
+        }
+        return (res_color, light_vec, point_distance, pdf);
     }
 
 
 }
+/*
+impl Object for SphericalAreaLight{
+    fn intersection(&self, r: &Ray) -> Option<RayIntersection>{
+        return self.sphere.intersection(r);
+    };
+    fn color(&self, p: &TVec3<f32>) -> RGB{
+        return RGB::black();
+    };
+}
+
+*/
