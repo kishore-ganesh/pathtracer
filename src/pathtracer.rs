@@ -139,7 +139,7 @@ impl PathTracer{
                 Some (ray_intersection) => {
                  //Need to check light obstruction here 
                  //println!("Calculating for light");
-                 let (light_color, light_vector, light_distance) = self.scene.light.radiance(ray_intersection.point, ray_intersection.normal);
+                 let (light_color, light_vector, light_distance, pdf) = self.scene.light.sample_radiance(ray_intersection.point, ray_intersection.normal);
                  let shadow_ray = Ray::create(ray_intersection.point, light_vector);
                  let (shadow_intersection, shadow_min_index) = self.check_intersection(&shadow_ray);
                  //println!("Ray Intersection is: {:?}, Shadow intersection: {:?}  Light vector: {}", ray_intersection,shadow_intersection, light_vector);
@@ -165,7 +165,7 @@ impl PathTracer{
                         let brdf = self.scene.primitives[prev_min_index as usize].material.brdf_eval(&ray_intersection, &light_vector);
                         //println!("running_sum: {:?}, path_total: {:?}, light_color: {:?}", running_sum, prev_path_total, light_color);
                         //TODO: should divide by cos theta
-                        running_sum +=  prev_path_total * brdf * light_color; 
+                        running_sum +=  (prev_path_total * brdf * light_color * (1.0/pdf)); 
 
                      },
                      false => {}
@@ -194,7 +194,6 @@ impl PathTracer{
                     //println!("Object {} intersected at recursion depth {}", min_index, recursion_depth);
                     //println!("Ray intersection point: {:?}", ray_intersection.point);
                     //Light radiance to point then multiply by cos theta 
-                    let (light_color,_, _) = self.scene.light.radiance(ray_intersection.point, ray_intersection.normal);
                     let view_vector = r_c.origin - ray_intersection.point;
                     //println!("VIEW angle: {}", angle(&ray_intersection.normal, &view_vector) * 180.0 / PI);
                     let (brdf, ray, pdf) = self.scene.primitives[min_index as usize].material.brdf(ray_intersection, view_vector);

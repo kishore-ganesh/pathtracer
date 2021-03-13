@@ -29,6 +29,7 @@ impl Primitive{
     }
 }
 pub struct Sphere {
+    pub center: TVec3<f32>,
     pub r: f32,
     pub object_to_world: TMat4<f32>,
     pub world_to_object: TMat4<f32>,
@@ -81,15 +82,15 @@ pub struct RayIntersection {
  * direction, should not translate (meaningless)
  * */
 impl Sphere {
-    pub fn create(radius: f32, centre: TVec3<f32>) -> Self{
+    pub fn create(radius: f32, center: TVec3<f32>) -> Self{
         let object_to_world = make_mat4x4(&[
-                                          1.0, 0.0, 0.0, centre.x as f32, 
-                                          0.0, 1.0,0.0, centre.y as f32, 
-                                          0.0,0.0, 1.0, centre.z as f32,
+                                          1.0, 0.0, 0.0, center.x as f32, 
+                                          0.0, 1.0,0.0, center.y as f32, 
+                                          0.0,0.0, 1.0, center.z as f32,
                                           0.0, 0.0, 0.0,1.0
         ]);
         //println!("{:?} {:?}", object_to_world, inverse(&object_to_world));
-        return Sphere{r: radius, object_to_world: object_to_world, world_to_object: inverse(&object_to_world)}
+        return Sphere{center: center, r: radius, object_to_world: object_to_world, world_to_object: inverse(&object_to_world)}
     }
 }
 impl Object for Sphere {

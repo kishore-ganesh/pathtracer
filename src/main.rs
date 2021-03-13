@@ -24,7 +24,7 @@ use color::RGB;
 use pathtracer::PathTracer;
 use scene::Scene;
 use camera::Camera;
-use lights::PointLight;
+use lights::{PointLight, SphericalAreaLight};
 use triangle::Triangle;
 use triangle_mesh::TriangleMesh;
 use materials::{DiffuseMaterial, SpecularMaterial, DisneyBRDFMaterial};
@@ -86,16 +86,21 @@ fn main() {
     let point_light = Box::new(PointLight::create(
             make_vec3(&[ 0.0, 10.0,2.0 ]),
             RGB::create(255.0,255.0,255.0),
-            1.4
+            3.0
             ));
+    let spherical_area_light = Box::new(SphericalAreaLight::create(
+        Sphere::create(1.0, make_vec3(&[0.0,10.0,0.0])),
+        RGB::create(255.0,255.0,255.0),
+        100.0
 
+    ));
     let n_samples = 1;
     let roulette_threshold = 0.2;
     let region = Rect::create(make_vec3(&[ -region_scale,-region_scale,0.0 ]), make_vec3(&[ region_scale, region_scale,0.0 ]));
 //    let look_at_point = make_vec3(&[ 0.0,0.0,1.0 ]);
     let camera = Camera::look_at(make_vec3(&[ 0.0,0.0,10.0 ]), look_at_point, 0.1, 1000.0, screen_res, raster_res, fov,region);
     let relative_point = transform(&camera.camera_to_world, &make_vec3(&[ 0.0,0.0,50.0 ]));
-    let x2: Sphere = Sphere::create(1.0, make_vec3(&[ 1.0,0.0,0.0 ]));
+    let x2: Sphere = Sphere::create(1.0, make_vec3(&[ 1.0,-1.0,0.0 ]));
     let triangle = Triangle::create([
                                     make_vec3(&[ -2.0,0.0,0.0 ]),
                                     make_vec3(&[ 0.0, 2.0,0.0 ]),
@@ -111,7 +116,7 @@ fn main() {
     let specular_material = SpecularMaterial::create();
 
     let disney_diffuse_material = DisneyBRDFMaterial::create(RGB::create(255.0,120.0,120.0), 0.0,0.9,0.7);
-    let disney_yellow_diffuse_material = DisneyBRDFMaterial::create(RGB::create(0.0,255.0,255.0), 0.0,0.5,0.5);
+    let disney_yellow_diffuse_material = DisneyBRDFMaterial::create(RGB::create(40.0, 12.0, 148.0), 0.0,0.8,0.1);
     let disney_red_diffuse_material = DisneyBRDFMaterial::create(RGB::create(255.0,0.0,0.0), 0.0,0.0,0.5);
     let disney_green_diffuse_material = DisneyBRDFMaterial::create(RGB::create(0.0,255.0,0.0), 0.0,0.0,0.5);
     let disney_blue_diffuse_material = DisneyBRDFMaterial::create(RGB::create(0.0,0.0,255.0), 0.0,0.0,0.5);
@@ -130,7 +135,7 @@ fn main() {
                               //Box::new(x),
                               //Box::new(x2)
 
-    ], point_light);
+    ], spherical_area_light);
 
     let mut pt = PathTracer::create(raster_res as i32, raster_res as i32, n_samples, roulette_threshold, scene, camera);
     let grid = pt.generate(); 
