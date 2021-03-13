@@ -51,4 +51,9 @@ impl Object for Plane{
     fn color(&self, p: &TVec3<f32>) -> RGB{
         return RGB::black();
     }
+
+    fn le(&self, p: &TVec3<f32>, v: &TVec3<f32>) -> RGB {
+        return RGB::black();
+    }
+
 }

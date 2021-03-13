@@ -14,6 +14,8 @@ pub trait Object{
 
     fn intersection(&self, r: &Ray) -> Option<RayIntersection>;
     fn color(&self, p: &TVec3<f32>) -> RGB;
+    fn le(&self, p: &TVec3<f32>, v: &TVec3<f32>) -> RGB;
+    
 }
 
 
@@ -28,6 +30,8 @@ impl Primitive{
         return Primitive{object: o, material: m};
     }
 }
+
+#[derive(Debug, Copy, Clone)]
 pub struct Sphere {
     pub center: TVec3<f32>,
     pub r: f32,
@@ -175,6 +179,11 @@ impl Object for Sphere {
     }
 
     fn color(&self, p: &TVec3<f32>) -> RGB{
+        return RGB::black();
+    }
+
+
+    fn le(&self, p: &TVec3<f32>, v: &TVec3<f32>) -> RGB {
         return RGB::black();
     }
 

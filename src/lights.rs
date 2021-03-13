@@ -3,7 +3,7 @@ use std::f32::consts::PI;
 use rand::Rng;
 use crate::color::RGB;
 use crate::primitives::{get_perp_vec};
-use crate::sphere::{Object, Sphere};
+use crate::sphere::{Object, Ray, RayIntersection, Sphere};
 pub trait Light {
     fn sample_radiance(&self, point: TVec3<f32>, normal: TVec3<f32>) -> (RGB, TVec3<f32>, f32, f32);
 }
@@ -36,6 +36,7 @@ struct InfiniteLight {
 
 }
 
+#[derive(Debug, Copy, Clone)]
 pub struct SphericalAreaLight{
     sphere: Sphere,
     color: RGB,
@@ -80,7 +81,7 @@ impl Light for SphericalAreaLight{
         let theta_area = angle(&(intersection_point - self.sphere.center), &-light_vec);
         let theta_light = angle(&point_normal, &light_vec);
 
-        println!("Theta Area: {}, Theta Light: {}", theta_area * (180.0/PI), theta_light * (180.0/PI));
+        //println!("Theta Area: {}, Theta Light: {}", theta_area * (180.0/PI), theta_light * (180.0/PI));
         let point_distance = distance(&intersection_point, &point);
         //println!("Point distance: {}", point_distance);
         let pdf = 1.0 / ((1.0 - theta_max.cos()) *(2.0 * PI));
@@ -93,14 +94,20 @@ impl Light for SphericalAreaLight{
 
 
 }
-/*
+
 impl Object for SphericalAreaLight{
     fn intersection(&self, r: &Ray) -> Option<RayIntersection>{
         return self.sphere.intersection(r);
-    };
+    }
     fn color(&self, p: &TVec3<f32>) -> RGB{
         return RGB::black();
-    };
+    }
+    fn le(&self, p: &TVec3<f32>, v: &TVec3<f32>) -> RGB {
+        let normal = p - self.sphere.center;
+        let theta_area = angle(&normal, &v);
+        return self.color * theta_area.cos() * self.intensity;
+    }
+
 }
 
-*/
+

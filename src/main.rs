@@ -89,9 +89,9 @@ fn main() {
             3.0
             ));
     let spherical_area_light = Box::new(SphericalAreaLight::create(
-        Sphere::create(1.0, make_vec3(&[0.0,10.0,0.0])),
+        Sphere::create(5.0, make_vec3(&[0.0,10.0,0.0])),
         RGB::create(255.0,255.0,255.0),
-        100.0
+        3.0
 
     ));
     let n_samples = 1;
@@ -113,9 +113,10 @@ fn main() {
     let red_diffuse_material = DiffuseMaterial::create(RGB::create(255.0,0.0, 0.0));
     let green_diffuse_material = DiffuseMaterial::create(RGB::create(0.0,255.0,0.0));
     let blue_diffuse_material = DiffuseMaterial::create(RGB::create(0.0,0.0,255.0));
+    let white_diffuse_material = DiffuseMaterial::create(RGB::create(255.0,255.0,255.0));
     let specular_material = SpecularMaterial::create();
 
-    let disney_diffuse_material = DisneyBRDFMaterial::create(RGB::create(255.0,120.0,120.0), 0.0,0.9,0.7);
+    let disney_diffuse_material = DisneyBRDFMaterial::create(RGB::create(255.0,120.0,120.0), 0.0,0.9,0.01);
     let disney_yellow_diffuse_material = DisneyBRDFMaterial::create(RGB::create(40.0, 12.0, 148.0), 0.0,0.8,0.1);
     let disney_red_diffuse_material = DisneyBRDFMaterial::create(RGB::create(255.0,0.0,0.0), 0.0,0.0,0.5);
     let disney_green_diffuse_material = DisneyBRDFMaterial::create(RGB::create(0.0,255.0,0.0), 0.0,0.0,0.5);
@@ -123,12 +124,14 @@ fn main() {
     let scene = Scene::create(vec![
                               //Primitive::create(Box::new(x), Box::new(specular_material.clone())),
                               Primitive::create(Box::new(x2), Box::new(disney_diffuse_material.clone())),
+                              Primitive::create(spherical_area_light.clone(), Box::new(white_diffuse_material.clone())),
                               //Primitive::create(Box::new(x), Box::new(diffuse_material.clone())),
                               //Primitive::create(Box::new(cube), Box::new(diffuse_material.clone())),
                               Primitive::create(Box::new(p1), Box::new(disney_yellow_diffuse_material.clone())),
-                              Primitive::create(Box::new(p2), Box::new(disney_red_diffuse_material.clone())),
-                              Primitive::create(Box::new(p3), Box::new(disney_green_diffuse_material.clone())),
-                              Primitive::create(Box::new(p4), Box::new(disney_blue_diffuse_material.clone())),
+                              //Primitive::create(Box::new(p2), Box::new(disney_red_diffuse_material.clone())),
+
+                              //Primitive::create(Box::new(p3), Box::new(disney_green_diffuse_material.clone())),
+                              //Primitive::create(Box::new(p4), Box::new(disney_blue_diffuse_material.clone())),
                               
 
                               //Box::new(triangle),

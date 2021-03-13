@@ -110,11 +110,12 @@ impl PathTracer{
         let mut prev_min_index: i32 = -1;
         let mut r_c = r.clone();
         let mut n_iterations = 0;
+        
 
         while(true){
             ////println!("iterations: {}", n_iterations);
             let (min_intersection, min_index) = self.check_intersection(&r_c);
-              
+             
             //Uncomment for debugging BRDF:
             /*match min_intersection {
                 Some(r) => {
@@ -194,7 +195,11 @@ impl PathTracer{
                     //println!("Object {} intersected at recursion depth {}", min_index, recursion_depth);
                     //println!("Ray intersection point: {:?}", ray_intersection.point);
                     //Light radiance to point then multiply by cos theta 
+                    
                     let view_vector = r_c.origin - ray_intersection.point;
+                    if(n_iterations==0){
+                        running_sum += self.scene.primitives[min_index as usize].object.le(&ray_intersection.point, &view_vector);
+                    }
                     //println!("VIEW angle: {}", angle(&ray_intersection.normal, &view_vector) * 180.0 / PI);
                     let (brdf, ray, pdf) = self.scene.primitives[min_index as usize].material.brdf(ray_intersection, view_vector);
                     let ray_angle = angle(&ray_intersection.normal, &ray.direction);

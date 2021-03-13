@@ -108,6 +108,11 @@ impl Object for Triangle{
 
 
         }
+
+        fn le(&self, p: &TVec3<f32>, v: &TVec3<f32>) -> RGB {
+            return RGB::black();
+        }
+
         
 
         
