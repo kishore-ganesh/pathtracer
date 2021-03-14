@@ -89,12 +89,13 @@ fn main() {
             3.0
             ));
     let spherical_area_light = Box::new(SphericalAreaLight::create(
-        Sphere::create(5.0, make_vec3(&[0.0,10.0,0.0])),
+        Sphere::create(5.0, make_vec3(&[-10.0,10.0,0.0])),
         RGB::create(255.0,255.0,255.0),
-        3.0
+        50.0
 
     ));
     let n_samples = 1;
+    let chunk_size = 256;
     let roulette_threshold = 0.2;
     let region = Rect::create(make_vec3(&[ -region_scale,-region_scale,0.0 ]), make_vec3(&[ region_scale, region_scale,0.0 ]));
 //    let look_at_point = make_vec3(&[ 0.0,0.0,1.0 ]);
@@ -116,7 +117,7 @@ fn main() {
     let white_diffuse_material = DiffuseMaterial::create(RGB::create(255.0,255.0,255.0));
     let specular_material = SpecularMaterial::create();
 
-    let disney_diffuse_material = DisneyBRDFMaterial::create(RGB::create(255.0,120.0,120.0), 0.0,0.9,0.01);
+    let disney_diffuse_material = DisneyBRDFMaterial::create(RGB::create(255.0,120.0,120.0), 0.0,0.9,0.1);
     let disney_yellow_diffuse_material = DisneyBRDFMaterial::create(RGB::create(40.0, 12.0, 148.0), 0.0,0.8,0.1);
     let disney_red_diffuse_material = DisneyBRDFMaterial::create(RGB::create(255.0,0.0,0.0), 0.0,0.0,0.5);
     let disney_green_diffuse_material = DisneyBRDFMaterial::create(RGB::create(0.0,255.0,0.0), 0.0,0.0,0.5);
@@ -124,7 +125,7 @@ fn main() {
     let scene = Scene::create(vec![
                               //Primitive::create(Box::new(x), Box::new(specular_material.clone())),
                               Primitive::create(Box::new(x2), Box::new(disney_diffuse_material.clone())),
-                              Primitive::create(spherical_area_light.clone(), Box::new(white_diffuse_material.clone())),
+ //                             Primitive::create(spherical_area_light.clone(), Box::new(white_diffuse_material.clone())),
                               //Primitive::create(Box::new(x), Box::new(diffuse_material.clone())),
                               //Primitive::create(Box::new(cube), Box::new(diffuse_material.clone())),
                               Primitive::create(Box::new(p1), Box::new(disney_yellow_diffuse_material.clone())),
@@ -140,7 +141,7 @@ fn main() {
 
     ], spherical_area_light);
 
-    let mut pt = PathTracer::create(raster_res as i32, raster_res as i32, n_samples, roulette_threshold, scene, camera);
+    let mut pt = PathTracer::create(raster_res as i32, raster_res as i32, n_samples, chunk_size, roulette_threshold, scene, camera);
     let grid = pt.generate(); 
     color::write_ppm(&grid, "test.ppm".to_string());
     ////println!("Hello, world!");

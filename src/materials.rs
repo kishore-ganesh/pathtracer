@@ -5,11 +5,31 @@ use rand::Rng;
 use crate::color::RGB;
 use crate::sphere::{Ray, RayIntersection};
 use crate::primitives::{get_vec_at_angle, reflect_about_vec};
-pub trait Material {
+pub trait Material: MaterialClone {
     //TODO: check for better interface
     //For now, this will return a spectrum and a ray in the direction
     fn brdf(&self, r: RayIntersection, v: TVec3<f32>) -> (RGB, Ray, f32);
     fn brdf_eval(&self, r: &RayIntersection, v: &TVec3<f32>) -> RGB;
+}
+
+/*
+ * The following is a trick to get clone to work on dyn from:
+ * https://stackoverflow.com/questions/30353462/how-to-clone-a-struct-storing-a-boxed-trait-object/30353928
+ * */
+pub trait MaterialClone{
+    fn clone_material(&self) -> Box<dyn Material + Send>;
+}
+impl<T> MaterialClone for T
+where T: 'static + Material + Clone + Send{
+    fn clone_material(&self) -> Box<dyn Material + Send>{
+        return Box::new(self.clone());
+    }
+}
+
+impl Clone for Box<dyn Material + Send>{
+    fn clone(&self) -> Box<dyn Material + Send>{
+        return self.clone_material();
+    }
 }
 #[derive(Debug, Copy, Clone)]
 pub struct DiffuseMaterial {
@@ -96,8 +116,8 @@ impl DisneyBRDFMaterial{
         let const_r = (1.0  + (fd_90 - 1.0 )*(1.0-theta_v.cos()).powi(5));
         let const_c = (const_l * const_r) / PI;
         let f_d = self.base_color * const_c;
-        //println!("theta_d: {}, theta_l: {}, theta_v: {}, res: {:?}", theta_d, theta_l, theta_v, f_d);
-        //println!("fd90: {}, const_l: {}, const_r: {}, const_c: {}", fd_90, const_l, const_r, const_c);
+        ////println!("theta_d: {}, theta_l: {}, theta_v: {}, res: {:?}", theta_d, theta_l, theta_v, f_d);
+        ////println!("fd90: {}, const_l: {}, const_r: {}, const_c: {}", fd_90, const_l, const_r, const_c);
         return f_d;
 
 
@@ -108,7 +128,7 @@ impl DisneyBRDFMaterial{
         let numerator = (gamma-1.0) * (alpha.powf(2.0) -1.0);
         let denom = PI * (1.0 - (alpha.powi(2).powf(1.0-gamma))) * (1.0 + (alpha.powi(2) - 1.0)*theta_h.cos().powi(2)).powf(gamma);
         //println!("numerator: {}, denominator: {}", numerator, denom);
-    
+        ////println!("theta_h: {}, cos(theta_h): {},  alpha^2: {}, term: {}, term * cos(theta_h): {}", theta_h, theta_h.cos(), alpha.powi(2), term, term * (theta_h.cos())); 
         return numerator / denom; //TODO: have to use normalized form?
     }
 
@@ -137,7 +157,7 @@ impl DisneyBRDFMaterial{
         let l_term = self.g1(theta_d, theta_l, alpha_g);
         let r_term = self.g1(theta_d, theta_v, alpha_g);
         let res =  l_term * r_term;
-        //println!("l_term: {}, r_term: {}, res: {}", l_term, r_term, res);
+        ////println!("l_term: {}, r_term: {}, res: {}", l_term, r_term, res);
         return res;
 
     } 
@@ -151,7 +171,7 @@ impl DisneyBRDFMaterial{
         let gamma = 2.0;
         let numerator = (1.0 - ((alpha.powi(2).powf(1.0-gamma)) * (1.0-e2) + e2).powf(1.0/(1.0-gamma)));
         let denominator = (1.0-alpha.powi(2));
-        //println!("alpha: {}, e1: {}, e2: {}, numerator: {}, denominator: {}", alpha, e1, e2, numerator, denominator);
+        ////println!("alpha: {}, e1: {}, e2: {}, numerator: {}, denominator: {}", alpha, e1, e2, numerator, denominator);
         let cos_theta_h = (numerator/denominator).sqrt();
         return (cos_theta_h, phi);
 
@@ -170,8 +190,8 @@ impl DisneyBRDFMaterial{
         let specular = specular_f * specular_d * specular_g / 4.0 * (theta_l.cos() * theta_v.cos());
         let res_color =  diffuse + specular;
         let pdf = specular_d * theta_h.cos() / (4.0 * theta_d.cos());
-        //println!("Specular color is: {:?}", specular);
-        //println!("specular_d: {}, theta_h.cos(): {}, theta_d.cos(): {}", specular_d, theta_h.cos(), theta_d.cos());
+        ////println!("Specular color is: {:?}", specular);
+        ////println!("specular_d: {}, theta_h.cos(): {}, theta_d.cos(): {}", specular_d, theta_h.cos(), theta_d.cos());
         //println!("Diffuse: {:?}, Specular_D: {}, Specular f: {:?}, Specular g: {}", diffuse, specular_d, specular_f, specular_g);
         return (res_color, pdf);
     }
@@ -197,13 +217,13 @@ impl Material for DisneyBRDFMaterial{
         let (cos_theta_h, phi) = self.sample_from_specular_d(alpha);
         let theta_h = cos_theta_h.acos();
         let bitangent = cross(&r.normal, &r.perp);
-        //println!("normal: {}, tangent: {}, bitangent: {}", r.normal, r.perp, bitangent);
+        ////println!("normal: {}, tangent: {}, bitangent: {}", r.normal, r.perp, bitangent);
         let h = r.normal * cos_theta_h + r.perp * theta_h.sin() * phi.cos() + bitangent * theta_h.sin() * phi.sin();
         let (l, _) = reflect_about_vec(&normalized_v, &h);
-        //println!("Length of l: {}, h: {}, v: {}", length(&l), length(&h), length(&v));
-        //println!("Length of h: {}", length(&h));
-        //println!("Angle lh: {}, vh: {}", angle(&l, &h), angle(&v, &h));
-        //println!("cos_theta_h: {}, h: {}, light_vector: {}", cos_theta_h, h, l);
+        ////println!("Length of l: {}, h: {}, v: {}", length(&l), length(&h), length(&v));
+        ////println!("Length of h: {}", length(&h));
+        ////println!("Angle lh: {}, vh: {}", angle(&l, &h), angle(&v, &h));
+        ////println!("cos_theta_h: {}, h: {}, light_vector: {}", cos_theta_h, h, l);
         let theta_l = angle(&r.normal, &l);
         let theta_v = angle(&r.normal, &normalized_v);
         let theta_d = angle(&h, &normalized_v);
@@ -211,7 +231,7 @@ impl Material for DisneyBRDFMaterial{
         //NOTE: this is when the light ray goes inside. For refractive, may have to handle this
         //separately
         if(theta_l.cos() < 0.0){
-            //println!("View vector inside");
+            ////println!("View vector inside");
             return (RGB::black(), Ray::create(r.point, r.normal), pdf);
         }
 
@@ -223,15 +243,15 @@ impl Material for DisneyBRDFMaterial{
     //TODO: refactor into just i, o
     fn brdf_eval(&self, r: &RayIntersection, l: &TVec3<f32>) -> RGB{
         let v = normalize(&(r.origin - r.point));
-        //println!("LIGHT LENGTH: {}", length(&l))
-        //println!("l: {}, v: {}", l, v);
+        ////println!("LIGHT LENGTH: {}", length(&l))
+        ////println!("l: {}, v: {}", l, v);
         let h = (l + v) / length(&(l + v));
         let theta_d = angle(&l, &h);
         let theta_l = angle(&l, &r.normal);
         let theta_h = angle(&h, &r.normal);
         let theta_v = angle(&v, &r.normal);
 
-        //println!("LIGHTS: Angle lh: {}, vh: {}", angle(&l, &h), angle(&v, &h));
+        ////println!("LIGHTS: Angle lh: {}, vh: {}", angle(&l, &h), angle(&v, &h));
         let (res_color, _) = self.eval(theta_d, theta_h, theta_l, theta_v);
         return res_color; 
         //return RGB::black();

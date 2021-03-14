@@ -10,7 +10,8 @@ use crate::color::RGB;
 use crate::materials::Material;
 use crate::primitives::{get_perp_vec, pointwise_mul_sum,reflect_about_vec,transform, transform_vec};
 
-pub trait Object{
+
+pub trait Object: ObjectClone{
 
     fn intersection(&self, r: &Ray) -> Option<RayIntersection>;
     fn color(&self, p: &TVec3<f32>) -> RGB;
@@ -18,15 +19,34 @@ pub trait Object{
     
 }
 
+/*
+ * The following is a trick to get clone to work on dyn from:
+ * https://stackoverflow.com/questions/30353462/how-to-clone-a-struct-storing-a-boxed-trait-object/30353928
+ * */
+pub trait ObjectClone{
+    fn clone_object(&self) -> Box<dyn Object + Send>;
+}
+impl<T> ObjectClone for T
+where T: 'static + Object + Clone + Send{
+    fn clone_object(&self) -> Box<dyn Object + Send>{
+        return Box::new(self.clone());
+    }
+}
 
+impl Clone for Box<dyn Object + Send>{
+    fn clone(&self) -> Box<dyn Object + Send>{
+        return self.clone_object();
+    }
+}
+#[derive(Clone)]
 pub struct Primitive{
-    pub object: Box<dyn Object>,
-    pub material: Box<dyn Material>
+    pub object: Box<dyn Object + Send>,
+    pub material: Box<dyn Material + Send>
 }
 
 
 impl Primitive{
-    pub fn create(o: Box<dyn Object>, m: Box<dyn Material>) -> Self{
+    pub fn create(o: Box<dyn Object + Send>, m: Box<dyn Material + Send>) -> Self{
         return Primitive{object: o, material: m};
     }
 }

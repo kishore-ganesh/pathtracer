@@ -1,65 +1,141 @@
-use glm::angle;
+use glm::{angle, make_vec3};
 use std::f32::consts::PI;
+use std::thread;
+use std::thread::JoinHandle;
+use rand::Rng;
 use crate::camera::Camera;
 use crate::color::RGB;
+use crate::primitives::Rect;
 use crate::scene::Scene;
 use crate::sphere::{RayIntersection, Ray, Object};
-use rand::Rng;
 //TODO: make rng part of pathtracer. 
+#[derive(Clone)]
 pub struct PathTracer{
     xres: i32,
     yres: i32,
     n_samples: i32,
-    grid: Vec<Vec<RGB>>,
+    chunk_size: i32,
+//    grid: Vec<Vec<RGB>>,
     roulette_threshold: f32,
     camera: Camera,
     scene: Scene
     
 }
 
+
+fn generate_chunk(p: &PathTracer, r: Rect) -> Vec<Vec<RGB>>{
+     
+    
+    let mut rng = rand::thread_rng();
+    let mut grid = vec![vec![RGB::black(); p.chunk_size as usize]; p.chunk_size as usize];
+    for yindex in 0..p.chunk_size {
+        for xindex in 0..p.chunk_size {
+            
+            //Average it out
+            //
+            let y = yindex + (r.top.y as i32);
+            let x = xindex + (r.bottom.x as i32);
+            let mut radiance = RGB::black();
+            for sample_index in 0..p.n_samples {
+                 //sample = sampler.generate_sample();
+                 println!("x: {}, y: {}, sample_index: {}", x, y, sample_index);
+                 let sample = [x as f32, y as f32];
+                 let ray = p.camera.generate_ray(sample);
+                 radiance += p.li(ray, &mut rng, 2);
+                 //have closest intersection 
+                 //toss to find whether to stop 
+                 //if stop, sample light source and reutrn radiance 
+                 //else if not stop, sample BRDF and cast ray. brdf * Li(ray) + Le
+            }
+            //TODO fix here
+            radiance /= (p.n_samples as f32);
+            grid[yindex as usize][xindex as usize] = radiance;
+        }
+    }
+    return grid;
+}
+
+
 impl PathTracer{
     //Should generate RGB grid 
-    pub fn create(xres: i32, yres: i32, n_samples: i32, roulette_threshold: f32, scene: Scene, camera: Camera) -> Self{
-        let grid = vec![vec![RGB::black(); xres as usize]; yres as usize];
+    pub fn create(xres: i32, yres: i32, n_samples: i32, chunk_size: i32, roulette_threshold: f32, scene: Scene, camera: Camera) -> Self{
+        //let grid = vec![vec![RGB::black(); xres as usize]; yres as usize];
         return PathTracer{
             xres: xres,
             yres: yres,
             n_samples: n_samples,
-            grid: grid,
+            chunk_size: chunk_size,
+//            grid: grid,
             roulette_threshold: roulette_threshold,
             camera: camera,
             scene: scene
         };
 
     }
+
     pub fn generate(&mut self) -> Vec<Vec<RGB>>{
-        let mut rng = rand::thread_rng();
-        for y in 0..self.yres {
-            for x in 0..self.xres {
+        let mut thread_handles: Vec<Vec<Option<JoinHandle<Vec<Vec<RGB>>>>>> = vec![];
+
+        // Cannot use vec! initialization since JoinHandle is not cloneable
+        for y in 0..self.yres/self.chunk_size {
+            let mut v: Vec<Option<JoinHandle<Vec<Vec<RGB>>>>> = vec![]; 
+            for x in 0..self.xres / self.chunk_size {
+                v.push(None);
+            }
+
+            thread_handles.push(v);
+        }
+            //vec![vec![None; (self.xres/self.chunk_size) as usize]; (self.yres/self.chunk_size) as usize] 
+        let mut grid = vec![vec![RGB::black(); self.xres as usize]; self.yres as usize];
+        for y in 0..((self.yres/self.chunk_size) as i32) {
+            for x in 0..((self.xres/self.chunk_size) as i32){
+                
                 //Average it out
                 //
-                let mut radiance = RGB::black();
-                for sample_index in 0..self.n_samples {
-                     //sample = sampler.generate_sample();
-                     println!("x: {}, y: {}, sample_index: {}", x, y, sample_index);
-                     let sample = [x as f32, y as f32];
-                     let ray = self.camera.generate_ray(sample);
-                     radiance += self.li(ray, &mut rng, 2);
-                     //have closest intersection 
-                     //toss to find whether to stop 
-                     //if stop, sample light source and reutrn radiance 
-                     //else if not stop, sample BRDF and cast ray. brdf * Li(ray) + Le
-                }
-                //TODO fix here
-                radiance /= (self.n_samples as f32);
-                self.grid[y as usize][x as usize] = radiance;
+                let pt = self.clone();
+                thread_handles[y as usize][x as usize] = Some(thread::spawn(
+                    move || {
+
+                        let region = Rect{bottom: make_vec3(&[(x*pt.chunk_size) as f32, (y*pt.chunk_size + pt.chunk_size-1) as f32, 0.0]), top: make_vec3(&[(x*pt.chunk_size+pt.chunk_size-1) as f32, (y*pt.chunk_size) as f32, 0.0])};
+                        return generate_chunk(&pt, region);
+                    }
+                ));
             }
         }
 
-        //For debugging
-        self.grid[(self.yres/2) as usize][(self.xres/2) as usize] = RGB::create(255.0,0.0,0.0);
+        for ychunk in 0..self.yres/self.chunk_size {
+            for xchunk in 0..self.xres / self.chunk_size {
+                let thread_result = thread_handles[ychunk as usize][xchunk as usize].take().map(JoinHandle::join);
+                match thread_result{ 
+                    Some(result) => {
+                        //let result = handle.join();
+                        match(result){
+                            Ok(grid_section) => {
+                                for yindex in 0..self.chunk_size{
+                                    for xindex in 0..self.chunk_size{
+                                        let y = (ychunk*self.chunk_size + yindex);
+                                        let x = (xchunk*self.chunk_size + xindex);
+                                        grid[y as usize][x as usize] = grid_section[yindex as usize][xindex as usize];                
+                                    }
+                                }
+                            },
+                    
 
-        return self.grid.clone();
+                            Err(_) => panic!("Thread result unavailable")
+                        };
+                    },
+
+                    None => {}
+                }
+            };
+                
+        }
+        
+
+        //For debugging
+        grid[(self.yres/2) as usize][(self.xres/2) as usize] = RGB::create(255.0,0.0,0.0);
+
+        return grid;
     } 
     //TODO: Special value for infinite intersection?
     //Mult by angle for first
@@ -100,7 +176,8 @@ impl PathTracer{
         return (min_intersection, min_index);
 
     }
-    fn li(&mut self, r: Ray, rand: &mut impl Rng, recursion_depth: i32) -> RGB{
+    fn li(&self, r: Ray, rand: &mut impl Rng, recursion_depth: i32) -> RGB{
+
         ////println!("Calculating Li");
         let emitted_radiance = RGB::black();
         let mut path_total = RGB::create(255.0,255.0,255.0);
@@ -143,6 +220,7 @@ impl PathTracer{
                  let (light_color, light_vector, light_distance, pdf) = self.scene.light.sample_radiance(ray_intersection.point, ray_intersection.normal);
                  let shadow_ray = Ray::create(ray_intersection.point, light_vector);
                  let (shadow_intersection, shadow_min_index) = self.check_intersection(&shadow_ray);
+                 //TODO: if hits emissive object?
                  //println!("Ray Intersection is: {:?}, Shadow intersection: {:?}  Light vector: {}", ray_intersection,shadow_intersection, light_vector);
                  let mut visible = false;
                  match shadow_intersection {

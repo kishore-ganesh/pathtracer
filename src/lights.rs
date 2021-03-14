@@ -4,8 +4,28 @@ use rand::Rng;
 use crate::color::RGB;
 use crate::primitives::{get_perp_vec};
 use crate::sphere::{Object, Ray, RayIntersection, Sphere};
-pub trait Light {
+pub trait Light: LightClone {
     fn sample_radiance(&self, point: TVec3<f32>, normal: TVec3<f32>) -> (RGB, TVec3<f32>, f32, f32);
+}
+
+/*
+ * The following is a trick to get clone to work on dyn from:
+ * https://stackoverflow.com/questions/30353462/how-to-clone-a-struct-storing-a-boxed-trait-object/30353928
+ * */
+pub trait LightClone{
+    fn clone_light(&self) -> Box<dyn Light + Send>;
+}
+impl<T> LightClone for T
+where T: 'static + Light + Clone + Send{
+    fn clone_light(&self) -> Box<dyn Light + Send>{
+        return Box::new(self.clone());
+    }
+}
+
+impl Clone for Box<dyn Light + Send>{
+    fn clone(&self) -> Box<dyn Light + Send>{
+        return self.clone_light();
+    }
 }
 //TODO: check light source interface 
 //

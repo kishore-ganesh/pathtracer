@@ -3,6 +3,7 @@ use crate::primitives::{transform_mesh, rotate_about_x, rotate_about_y, scale, t
 use crate::sphere::{Object, Ray, RayIntersection};
 use crate::triangle_mesh::TriangleMesh;
 use crate::color::RGB;
+#[derive(Clone)]
 pub struct Cube{
     side: f32, 
     mesh: TriangleMesh,

@@ -3,6 +3,7 @@ use glm::{angle, cross, distance, dot, make_vec3, TVec3};
 use crate::color::RGB;
 use crate::primitives::{get_perp_vec, reflect_about_vec};
 use crate::sphere::{Object, Ray, RayIntersection};
+#[derive(Clone)]
 pub struct Plane{
     normal: TVec3<f32>,
     point: TVec3<f32>
