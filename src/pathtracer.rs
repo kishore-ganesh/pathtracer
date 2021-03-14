@@ -38,7 +38,7 @@ fn generate_chunk(p: &PathTracer, r: Rect) -> Vec<Vec<RGB>>{
             let mut radiance = RGB::black();
             for sample_index in 0..p.n_samples {
                  //sample = sampler.generate_sample();
-                 println!("x: {}, y: {}, sample_index: {}", x, y, sample_index);
+//                 println!("x: {}, y: {}, sample_index: {}", x, y, sample_index);
                  let sample = [x as f32, y as f32];
                  let ray = p.camera.generate_ray(sample);
                  radiance += p.li(ray, &mut rng, 2);
@@ -105,6 +105,7 @@ impl PathTracer{
 
         for ychunk in 0..self.yres/self.chunk_size {
             for xchunk in 0..self.xres / self.chunk_size {
+                println!("ychunk: {}, xchunk: {}", ychunk, xchunk);
                 let thread_result = thread_handles[ychunk as usize][xchunk as usize].take().map(JoinHandle::join);
                 match thread_result{ 
                     Some(result) => {
@@ -330,7 +331,7 @@ impl PathTracer{
             prev_min_index = min_index;
 
         }
-            println!("Final running sum: {:?}", running_sum);
+//            println!("Final running sum: {:?}", running_sum);
             return running_sum;
 
     }

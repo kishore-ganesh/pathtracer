@@ -51,10 +51,12 @@ fn main() {
     let p2_vec = make_vec3(&[0.0,0.0,1.0]);
     let p3_vec = make_vec3(&[1.0,0.0,0.0]);
     let p4_vec = make_vec3(&[-1.0,0.0,0.0]);
+    let p5_vec = make_vec3(&[0.0,-1.0,0.0]);
     let p1 = Plane::create_point_normal(make_vec3(&[ 0.0,-2.0,0.0 ]), p1_vec);
     let p2 = Plane::create_point_normal(make_vec3(&[ 0.0,0.0,-10.0 ]), p2_vec);
     let p3 = Plane::create_point_normal(make_vec3(&[ -5.0,0.0,0.0 ]), p3_vec);
     let p4 = Plane::create_point_normal(make_vec3(&[ 5.0,0.0,0.0 ]), p4_vec);
+    let p5 = Plane::create_point_normal(make_vec3(&[ 0.0,6.0,0.0 ]), p5_vec);
     
     /*let mut v: Vec<Vec<RGB>> = Vec::new();
     let x = 256;
@@ -89,13 +91,14 @@ fn main() {
             3.0
             ));
     let spherical_area_light = Box::new(SphericalAreaLight::create(
-        Sphere::create(5.0, make_vec3(&[-10.0,10.0,0.0])),
+        Sphere::create(5.0, make_vec3(&[0.0,5.0,0.0])),
         RGB::create(255.0,255.0,255.0),
-        50.0
+        8.0
 
     ));
-    let n_samples = 1;
-    let chunk_size = 256;
+    let n_samples = 10;
+    let chunk_size = 16;
+    println!("Chunk size: {}", chunk_size);
     let roulette_threshold = 0.2;
     let region = Rect::create(make_vec3(&[ -region_scale,-region_scale,0.0 ]), make_vec3(&[ region_scale, region_scale,0.0 ]));
 //    let look_at_point = make_vec3(&[ 0.0,0.0,1.0 ]);
@@ -118,21 +121,24 @@ fn main() {
     let specular_material = SpecularMaterial::create();
 
     let disney_diffuse_material = DisneyBRDFMaterial::create(RGB::create(255.0,120.0,120.0), 0.0,0.9,0.1);
-    let disney_yellow_diffuse_material = DisneyBRDFMaterial::create(RGB::create(40.0, 12.0, 148.0), 0.0,0.8,0.1);
+    let disney_violet_diffuse_material = DisneyBRDFMaterial::create(RGB::create(40.0, 12.0, 148.0), 0.0,0.5,0.1);
     let disney_red_diffuse_material = DisneyBRDFMaterial::create(RGB::create(255.0,0.0,0.0), 0.0,0.0,0.5);
     let disney_green_diffuse_material = DisneyBRDFMaterial::create(RGB::create(0.0,255.0,0.0), 0.0,0.0,0.5);
     let disney_blue_diffuse_material = DisneyBRDFMaterial::create(RGB::create(0.0,0.0,255.0), 0.0,0.0,0.5);
+    let disney_yellow_diffuse_material = DisneyBRDFMaterial::create(RGB::create(255.0,255.0, 0.0), 0.0,0.0,0.5);
+
     let scene = Scene::create(vec![
                               //Primitive::create(Box::new(x), Box::new(specular_material.clone())),
                               Primitive::create(Box::new(x2), Box::new(disney_diffuse_material.clone())),
  //                             Primitive::create(spherical_area_light.clone(), Box::new(white_diffuse_material.clone())),
                               //Primitive::create(Box::new(x), Box::new(diffuse_material.clone())),
                               //Primitive::create(Box::new(cube), Box::new(diffuse_material.clone())),
-                              Primitive::create(Box::new(p1), Box::new(disney_yellow_diffuse_material.clone())),
-                              //Primitive::create(Box::new(p2), Box::new(disney_red_diffuse_material.clone())),
+                              Primitive::create(Box::new(p1), Box::new(disney_violet_diffuse_material.clone())),
+                              Primitive::create(Box::new(p2), Box::new(disney_red_diffuse_material.clone())),
 
-                              //Primitive::create(Box::new(p3), Box::new(disney_green_diffuse_material.clone())),
-                              //Primitive::create(Box::new(p4), Box::new(disney_blue_diffuse_material.clone())),
+                              Primitive::create(Box::new(p3), Box::new(disney_green_diffuse_material.clone())),
+                              Primitive::create(Box::new(p4), Box::new(disney_blue_diffuse_material.clone())),
+                              //Primitive::create(Box::new(p5), Box::new(disney_yellow_diffuse_material.clone())),
                               
 
                               //Box::new(triangle),

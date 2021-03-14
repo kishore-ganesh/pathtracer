@@ -111,7 +111,7 @@ impl DisneyBRDFMaterial{
         };
     }
     fn diffuse(&self, theta_d: f32, theta_l: f32, theta_v: f32) -> RGB{
-        let fd_90 = 0.5 + 2.0 * theta_d.powi(2).cos() * self.roughness;
+        let fd_90 = 0.5 + 2.0 * (theta_d * self.roughness).powi(2).cos() * self.roughness;
         let const_l = (1.0  + (fd_90 - 1.0 )*(1.0-theta_l.cos()).powi(5));
         let const_r = (1.0  + (fd_90 - 1.0 )*(1.0-theta_v.cos()).powi(5));
         let const_c = (const_l * const_r) / PI;
@@ -187,7 +187,9 @@ impl DisneyBRDFMaterial{
         let specular_d = self.specular_d(alpha, theta_h);
         let specular_f = self.specular_f(theta_d);
         let specular_g = self.specular_g(theta_l, theta_v, theta_d);
-        let specular = specular_f * specular_d * specular_g / 4.0 * (theta_l.cos() * theta_v.cos());
+        let specular = specular_f * specular_d * specular_g / (4.0 * theta_l.cos() * theta_v.cos());
+
+        //println!("Specular check: {:?} {:?}", specular, (specular_f*specular_d*specular_g)/(4.0 * theta_l.cos() * theta_v.cos()));
         let res_color =  diffuse + specular;
         let pdf = specular_d * theta_h.cos() / (4.0 * theta_d.cos());
         ////println!("Specular color is: {:?}", specular);
