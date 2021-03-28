@@ -295,25 +295,7 @@ impl PathTracer{
                     //println!("PDF is: {}", pdf);
                     //println!("Path total: {:?} brdf: {:?} cos: {} pdf: {}", path_total, brdf, ray_angle.cos(), pdf);
                     r_c = ray;
-                    //let color = RGB::create(0.0,255.0,127.0); 
-                    //let mut mult_color = RGB::black();
-                    ////println!("Reflection: {}", ray_intersection.reflection);
-                    //Only for testing barycentric:
-                    //return self.scene.objects[min_index as usize].color(&ray_intersection.point);
-                    //if(recursion_depth>0){
-                        //mult_color = self.li(Ray::create(ray_intersection.point, ray_intersection.reflection), rand, recursion_depth-1)
-                    //}
-                    ////println!("{:?}", mult_color);
-
-                    //if(mult_color.is_black()){
-                      //  return color * ray_intersection.normal_angle.cos();
-                    //}
-                    //else{
-                     //   return color * mult_color * ray_intersection.normal_angle.cos();
-                    //}
-                    //return color * ray_intersection.normal_angle.cos();
-                    //return leht_color * color; 
-            },
+           },
             None => {
                 //TODO: check this, maybe we can sample another direction?
                 break;

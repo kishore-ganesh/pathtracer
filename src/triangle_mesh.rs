@@ -2,7 +2,7 @@ use glm::{make_vec3, TVec3};
 use crate::sphere::{Object, Ray, RayIntersection};
 use crate::triangle::Triangle;
 use crate::color::RGB;
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct TriangleMesh{
     pub mesh: Vec<Triangle>
 }

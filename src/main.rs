@@ -8,6 +8,7 @@ mod materials;
 mod sampler;
 mod scene;
 mod camera;
+mod obj_parser;
 mod primitives;
 mod pathtracer;
 mod plane;
@@ -25,11 +26,15 @@ use pathtracer::PathTracer;
 use scene::Scene;
 use camera::Camera;
 use lights::{PointLight, SphericalAreaLight};
+use obj_parser::parse;
 use triangle::Triangle;
 use triangle_mesh::TriangleMesh;
 use materials::{DiffuseMaterial, SpecularMaterial, DisneyBRDFMaterial};
 use plane::Plane;
 fn main() {
+    let imported_cube_mesh = parse(make_vec3(&[0.0,0.0,0.0]), "models/cube.obj");
+    let suzanne_mesh = parse(make_vec3(&[0.0,0.0,0.0]), "models/suzanne.obj");
+    println!("Imported Cube mesh: {:?}", imported_cube_mesh);
     let v1 = make_vec3(&[0.0,1.0,0.0]); 
     let v2 = make_vec3(&[1.2, 0.312, 2.4]);
     println!("perp vec to: {} is: {}", &v1, get_perp_vec(&v1));
@@ -44,7 +49,7 @@ fn main() {
     let (reflected_v, _) = reflect_about_vec(&v, &normal);
     //println!("original: {}, reflected: {}", v, reflected_v);
     let rotate_angle = (0.0) * (PI/180.0);
-    let cube = Cube::create(make_vec3(&[ 0.0,0.0,0.0 ]), rotate_angle, 0.0, 1.0, false);
+    let cube = Cube::create(make_vec3(&[ 0.0,0.0,0.0 ]), rotate_angle, 0.0, 0.5, false);
     let plane_rotate_angle = (50.0) * (PI/180.0);
     //let p1_vec = transform_vec(&rotate_about_x(plane_rotate_angle), &make_vec3(&[0.0,0.0,1.0]));
     let p1_vec = make_vec3(&[0.0,1.0,0.0]);
@@ -93,10 +98,10 @@ fn main() {
     let spherical_area_light = Box::new(SphericalAreaLight::create(
         Sphere::create(5.0, make_vec3(&[0.0,5.0,0.0])),
         RGB::create(255.0,255.0,255.0),
-        8.0
+        3.0
 
     ));
-    let n_samples = 10;
+    let n_samples = 1;
     let chunk_size = 16;
     println!("Chunk size: {}", chunk_size);
     let roulette_threshold = 0.2;
@@ -120,24 +125,27 @@ fn main() {
     let white_diffuse_material = DiffuseMaterial::create(RGB::create(255.0,255.0,255.0));
     let specular_material = SpecularMaterial::create();
 
-    let disney_diffuse_material = DisneyBRDFMaterial::create(RGB::create(255.0,120.0,120.0), 0.0,0.9,0.1);
-    let disney_violet_diffuse_material = DisneyBRDFMaterial::create(RGB::create(40.0, 12.0, 148.0), 0.0,0.5,0.1);
+    let disney_diffuse_material = DisneyBRDFMaterial::create(RGB::create(255.0,120.0,120.0), 0.0,0.0,0.8);
+    let disney_violet_diffuse_material = DisneyBRDFMaterial::create(RGB::create(40.0, 12.0, 148.0), 0.0,0.04,0.9);
     let disney_red_diffuse_material = DisneyBRDFMaterial::create(RGB::create(255.0,0.0,0.0), 0.0,0.0,0.5);
     let disney_green_diffuse_material = DisneyBRDFMaterial::create(RGB::create(0.0,255.0,0.0), 0.0,0.0,0.5);
     let disney_blue_diffuse_material = DisneyBRDFMaterial::create(RGB::create(0.0,0.0,255.0), 0.0,0.0,0.5);
     let disney_yellow_diffuse_material = DisneyBRDFMaterial::create(RGB::create(255.0,255.0, 0.0), 0.0,0.0,0.5);
 
     let scene = Scene::create(vec![
+                              //Primitive::create(Box::new(imported_cube_mesh), Box::new(disney_diffuse_material.clone()))
+                              Primitive::create(Box::new(suzanne_mesh), Box::new(disney_diffuse_material.clone())),
+                              //Primitive::create(Box::new(cube), Box::new(disney_diffuse_material.clone())),
                               //Primitive::create(Box::new(x), Box::new(specular_material.clone())),
-                              Primitive::create(Box::new(x2), Box::new(disney_diffuse_material.clone())),
+                              //Primitive::create(Box::new(x2), Box::new(disney_diffuse_material.clone())),
  //                             Primitive::create(spherical_area_light.clone(), Box::new(white_diffuse_material.clone())),
                               //Primitive::create(Box::new(x), Box::new(diffuse_material.clone())),
                               //Primitive::create(Box::new(cube), Box::new(diffuse_material.clone())),
-                              Primitive::create(Box::new(p1), Box::new(disney_violet_diffuse_material.clone())),
-                              Primitive::create(Box::new(p2), Box::new(disney_red_diffuse_material.clone())),
+                              //Primitive::create(Box::new(p1), Box::new(disney_violet_diffuse_material.clone())),
+                              //Primitive::create(Box::new(p2), Box::new(disney_red_diffuse_material.clone())),
 
-                              Primitive::create(Box::new(p3), Box::new(disney_green_diffuse_material.clone())),
-                              Primitive::create(Box::new(p4), Box::new(disney_blue_diffuse_material.clone())),
+                              //Primitive::create(Box::new(p3), Box::new(disney_green_diffuse_material.clone())),
+                              //Primitive::create(Box::new(p4), Box::new(disney_blue_diffuse_material.clone())),
                               //Primitive::create(Box::new(p5), Box::new(disney_yellow_diffuse_material.clone())),
                               
 
