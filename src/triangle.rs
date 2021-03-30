@@ -3,13 +3,18 @@ use crate::sphere::{Object, Ray, RayIntersection};
 use crate::color::RGB;
 use glm::{normalize, angle, dot, cross, TVec3, distance, length};
 #[derive(Debug, Copy, Clone)]
+pub enum NormalType{
+    FaceNormal(TVec3<f32>),
+    VertexNormals([TVec3<f32>; 3])
+}
+#[derive(Debug, Copy, Clone)]
 pub struct Triangle{
     pub points: [TVec3<f32>; 3],
-    pub normal_direction: TVec3<f32>
+    pub normal_direction: NormalType
 }
 
 impl Triangle {
-    pub fn create(points: [TVec3<f32>; 3], normal_direction: TVec3<f32>) -> Self
+    pub fn create(points: [TVec3<f32>; 3], normal_direction: NormalType) -> Self
     {
         return Triangle{
             points: points,
@@ -60,11 +65,20 @@ impl Object for Triangle{
             let point = (1.0-u-v) * self.points[0] + u*self.points[1] + v * self.points[2];
             let point_a = point - self.points[0];
             let point_b = point - self.points[1];
-            let mut normal = normalize(&cross(&point_a, &point_b));
-            if(angle(&normal, &self.normal_direction)!=0.0){
-                normal = -normal;
-            }
 
+            let mut normal = normalize(&cross(&point_a, &point_b));
+            match self.normal_direction {
+                NormalType::FaceNormal(normal_direction) => {
+                    if(angle(&normal, &normal_direction)!=0.0){
+                        normal = -normal;
+                    }
+
+                },
+                NormalType::VertexNormals(normals) => {
+                    normal = w * normals[0] + u * normals[1] + v * normals[2]
+                }
+            }
+            
             let origin_vector = origin - point;
             let normal_angle = angle(&normal,&origin_vector);
             let (reflection, perp) = reflect_about_vec(&origin_vector, &normal);

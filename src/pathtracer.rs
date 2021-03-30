@@ -38,7 +38,7 @@ fn generate_chunk(p: &PathTracer, r: Rect) -> Vec<Vec<RGB>>{
             let mut radiance = RGB::black();
             for sample_index in 0..p.n_samples {
                  //sample = sampler.generate_sample();
-//                 println!("x: {}, y: {}, sample_index: {}", x, y, sample_index);
+                 //println!("x: {}, y: {}, sample_index: {}", x, y, sample_index);
                  let sample = [x as f32, y as f32];
                  let ray = p.camera.generate_ray(sample);
                  radiance += p.li(ray, &mut rng, 2);
@@ -148,7 +148,7 @@ impl PathTracer{
             ////println!("Before ray object intersection test");
 
             let intersection = primitive.object.intersection(&r);
-            ////println!("{:?}", intersection);
+            //println!("{:?}", intersection);
             //TODO: Add generic object type later 
             //Closest
             match intersection {
@@ -197,7 +197,7 @@ impl PathTracer{
             //Uncomment for debugging BRDF:
             /*match min_intersection {
                 Some(r) => {
-                     let (light_color, light_vector, light_distance) = self.scene.light.radiance(r.point, r.normal);
+                     let (light_color, light_vector, light_distance,  _) = self.scene.light.sample_radiance(r.point, r.normal);
                 let brdf = self.scene.primitives[min_index as usize].material.brdf_eval(&r, &light_vector);
                 return brdf * light_color 
                         //ray_intersection.normal_angle.cos()
@@ -239,6 +239,7 @@ impl PathTracer{
                      }
                  }
                  //println!("Min index: {}", shadow_min_index);
+                 visible = true;
                  //println!("Visible: {}", visible);
                  match visible{
                      true => {

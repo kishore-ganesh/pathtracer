@@ -1,7 +1,7 @@
 use std::fmt::Display;
 use std::ops;
 use glm::{transpose, mat4_to_mat3, make_mat4x4, make_vec3, vec3_to_vec4, TVec3, TMat4, dot, is_null, normalize};
-use crate::{Triangle, TriangleMesh};
+use crate::{NormalType, Triangle, TriangleMesh};
 //TODO: rename to geometric primitives
 /*impl Display for TMat4<f32> {
 
@@ -91,7 +91,16 @@ pub fn transform_triangle(m: &TMat4<f32>, t: &Triangle) -> Triangle{
         points[index] = transform(m, point);
     }
     //iter().map(|x| transform(M, x)).collect();
-    return Triangle::create(points, transform_vec(m, &t.normal_direction));
+    match t.normal_direction{
+        NormalType::FaceNormal(n) => {
+            return Triangle::create(points, NormalType::FaceNormal(transform_vec(m, &n)));
+        },
+        NormalType::VertexNormals(v) => {
+            //TODO: correct
+            return Triangle::create(points, NormalType::VertexNormals(v));
+
+        }
+    }
 }
 pub fn transform_mesh(transform: &TMat4<f32>, m: &TriangleMesh) -> TriangleMesh{
     //TODO: make this better

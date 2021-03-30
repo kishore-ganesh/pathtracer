@@ -46,7 +46,7 @@ impl Light for PointLight {
         let dist = distance(&self.location, &point);
         let light_vec = -normalize(&(point - self.location));
         let cos_angle = angle(&light_vec, &normal).cos();
-        ////println!("{}, {:?}, {:?}", cos_angle, self.color, self.color * cos_angle);
+        //////println!("{}, {:?}, {:?}", cos_angle, self.color, self.color * cos_angle);
         return (self.color * cos_angle * self.intensity, light_vec, dist, 1.0); 
             //* (self.intensity/dist.powi(2));
     }
@@ -77,6 +77,7 @@ impl SphericalAreaLight{
 
 impl Light for SphericalAreaLight{
     fn sample_radiance(&self, point: TVec3<f32>, point_normal: TVec3<f32>) -> (RGB, TVec3<f32>, f32, f32){
+        //println!("Sampling light at: {}", point);
         let dist = distance(&point, &self.sphere.center);
         let sin_theta_max = self.sphere.r / dist;
         let theta_max = sin_theta_max.asin();
@@ -86,29 +87,32 @@ impl Light for SphericalAreaLight{
         let d_s = dist * e1.cos() - (self.sphere.r.powi(2) - dist.powi(2) * e1.sin().powi(2)).sqrt();
 
         let cos_alpha = (self.sphere.r.powi(2) + dist.powi(2) - d_s.powi(2))/(2.0 * dist * self.sphere.r);
-        //println!("Cos alpha: {}", cos_alpha * (180.0/PI));
+        ////println!("Cos alpha: {}", cos_alpha * (180.0/PI));
         let alpha = cos_alpha.acos();
         let normal = normalize(&(point - self.sphere.center));
         let tangent = normalize(&get_perp_vec(&normal));
         let bitangent = cross(&normal, &tangent);
-        //println!("Length of normal: {}, tangent: {}, bitangent: {}", length(&normal), length(&tangent), length(&bitangent));
-        //println!("Dot of normal, tangent is: {}", dot(&normal, &tangent));
+        //println!("Theta max: {} alpha: {}", theta_max, alpha);
+        //println!("numerator: {}, denom: {}", self.sphere.r, dist);
+        ////println!("Length of normal: {}, tangent: {}, bitangent: {}", length(&normal), length(&tangent), length(&bitangent));
+        ////println!("Dot of normal, tangent is: {}", dot(&normal, &tangent));
         //TODO: refactor out (same thing in Disney BRDF)
         let intersection_point = (normal * cos_alpha + tangent * alpha.sin() * e2.sin() + bitangent * alpha.sin() * e2.cos()) * self.sphere.r + self.sphere.center;
         //println!("Normal: {}, Tangent: {}, Bitangent: {}, Intersection Point: {}", normal, tangent, bitangent, intersection_point);
-        //println!("Length: {}", length(&(intersection_point)));
+        ////println!("Length: {}", length(&(intersection_point)));
         let light_vec = -normalize(&(point - intersection_point));
         let theta_area = angle(&(intersection_point - self.sphere.center), &-light_vec);
         let theta_light = angle(&point_normal, &light_vec);
 
         //println!("Theta Area: {}, Theta Light: {}", theta_area * (180.0/PI), theta_light * (180.0/PI));
         let point_distance = distance(&intersection_point, &point);
-        //println!("Point distance: {}", point_distance);
+        ////println!("Point distance: {}", point_distance);
         let pdf = 1.0 / ((1.0 - theta_max.cos()) *(2.0 * PI));
         let mut res_color = RGB::black();
         if(theta_light.cos() > 0.0){    
             res_color =  self.color * theta_area.cos() * self.intensity * theta_light.cos();
         }
+        //println!("{:?} {:?}", res_color, pdf);
         return (res_color, light_vec, point_distance, pdf);
     }
 

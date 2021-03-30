@@ -20,21 +20,24 @@ use std::f32::consts::PI;
 use glm::{dot, TMat4, TVec4, make_mat4x4, make_vec4, transpose, make_vec3, vec3_to_vec4, mat4_to_mat3};
 use cube::Cube;
 use sphere::{Sphere, Ray, Object, Primitive};
-use primitives::{get_perp_vec, transform, transform_mesh, transform_vec, Rect, reflect_about_vec, rotate_about_x, rotate_about_y, scale};
+use primitives::{Rect, reflect_about_vec, rotate_about_x, rotate_about_y, get_perp_vec, scale, translate, transform, transform_mesh, transform_vec};
 use color::RGB;
 use pathtracer::PathTracer;
 use scene::Scene;
 use camera::Camera;
 use lights::{PointLight, SphericalAreaLight};
 use obj_parser::parse;
-use triangle::Triangle;
+use triangle::{NormalType, Triangle};
 use triangle_mesh::TriangleMesh;
 use materials::{DiffuseMaterial, SpecularMaterial, DisneyBRDFMaterial};
 use plane::Plane;
 fn main() {
-    let imported_cube_mesh = parse(make_vec3(&[0.0,0.0,0.0]), "models/cube.obj");
+    //let imported_cube_mesh = parse(make_vec3(&[0.0,0.0,0.0]), "models/cube.obj");
     let suzanne_mesh = parse(make_vec3(&[0.0,0.0,0.0]), "models/suzanne.obj");
-    println!("Imported Cube mesh: {:?}", imported_cube_mesh);
+    //let imported_tri_mesh = parse(make_vec3(&[0.0,0.0,0.0]), "models/triangle.obj");
+    let transformed_suzanne_mesh = transform_mesh(&(translate(0.0,0.0,-5.0) * scale(3.0,3.0,3.0)), &suzanne_mesh);
+    //println!("Imported Cube mesh: {:?}", imported_cube_mesh);
+    //println!("Transformed Suzanne mesh: {:?}", transformed_suzanne_mesh);
     let v1 = make_vec3(&[0.0,1.0,0.0]); 
     let v2 = make_vec3(&[1.2, 0.312, 2.4]);
     println!("perp vec to: {} is: {}", &v1, get_perp_vec(&v1));
@@ -91,14 +94,14 @@ fn main() {
     let region_scale = 1.0;
     let fov = 60.0;
     let point_light = Box::new(PointLight::create(
-            make_vec3(&[ 0.0, 10.0,2.0 ]),
+            make_vec3(&[ 0.0, 20.0,2.0 ]),
             RGB::create(255.0,255.0,255.0),
             3.0
             ));
     let spherical_area_light = Box::new(SphericalAreaLight::create(
-        Sphere::create(5.0, make_vec3(&[0.0,5.0,0.0])),
+        Sphere::create(5.0, make_vec3(&[0.0,20.0,0.0])),
         RGB::create(255.0,255.0,255.0),
-        3.0
+        10.0
 
     ));
     let n_samples = 1;
@@ -115,8 +118,8 @@ fn main() {
                                     make_vec3(&[ 0.0, 2.0,0.0 ]),
                                     make_vec3(&[ 2.0,-2.0,0.0 ])
     ],
-     make_vec3(&[0.0,0.0,1.0]) 
-    ); 
+     NormalType::FaceNormal(make_vec3(&[0.0,0.0,1.0]) 
+    )); 
 
     let diffuse_material = DiffuseMaterial::create(RGB::create(0.0,255.0,127.0)); 
     let red_diffuse_material = DiffuseMaterial::create(RGB::create(255.0,0.0, 0.0));
@@ -134,7 +137,8 @@ fn main() {
 
     let scene = Scene::create(vec![
                               //Primitive::create(Box::new(imported_cube_mesh), Box::new(disney_diffuse_material.clone()))
-                              Primitive::create(Box::new(suzanne_mesh), Box::new(disney_diffuse_material.clone())),
+                              Primitive::create(Box::new(transformed_suzanne_mesh), Box::new(disney_diffuse_material.clone())),
+                              //Primitive::create(Box::new(imported_tri_mesh), Box::new(diffuse_material.clone())),
                               //Primitive::create(Box::new(cube), Box::new(disney_diffuse_material.clone())),
                               //Primitive::create(Box::new(x), Box::new(specular_material.clone())),
                               //Primitive::create(Box::new(x2), Box::new(disney_diffuse_material.clone())),
@@ -153,7 +157,7 @@ fn main() {
                               //Box::new(x),
                               //Box::new(x2)
 
-    ], spherical_area_light);
+    ], point_light);
 
     let mut pt = PathTracer::create(raster_res as i32, raster_res as i32, n_samples, chunk_size, roulette_threshold, scene, camera);
     let grid = pt.generate(); 

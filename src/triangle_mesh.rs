@@ -1,6 +1,6 @@
 use glm::{make_vec3, TVec3};
 use crate::sphere::{Object, Ray, RayIntersection};
-use crate::triangle::Triangle;
+use crate::triangle::{NormalType, Triangle};
 use crate::color::RGB;
 #[derive(Clone, Debug)]
 pub struct TriangleMesh{
@@ -16,11 +16,12 @@ impl TriangleMesh{
                 make_vec3(&point[0]),
                 make_vec3(&point[1]),
                 make_vec3(&point[2])
-            ], make_vec3(&normals[index])));
+            ], NormalType::FaceNormal(make_vec3(&normals[index]))));
         }
         return TriangleMesh{mesh: mesh}
     }
     pub fn create_from(v: Vec<Triangle>) -> Self{
+        println!("Number of triangles: {}", v.len());
         return TriangleMesh{mesh: v};
     }
 }
