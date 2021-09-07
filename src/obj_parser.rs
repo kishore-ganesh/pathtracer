@@ -89,7 +89,7 @@ pub fn parse<P: AsRef<Path>>(o: TVec3<f32>, path: P) -> TriangleMesh{
                                 normals[t[2].1 - 1]
                             ];
 
-                            println!("Triangle normals: {:?}", triangle_normals);
+                            //println!("Triangle normals: {:?}", triangle_normals);
                             triangles.push(Triangle::create(triangle_points, NormalType::VertexNormals(triangle_normals)));
                         }
                         ParseResult::Unknown => {}
@@ -102,10 +102,10 @@ pub fn parse<P: AsRef<Path>>(o: TVec3<f32>, path: P) -> TriangleMesh{
         },
 
         Err(e) => {
-            panic!("Error in opening file")
+            panic!("Error in opening file: {}", e)
         }
     }
-    println!("Normals are: {:?}", normals);
+    //println!("Normals are: {:?}", normals);
     return TriangleMesh::create_from(triangles);
     
 }

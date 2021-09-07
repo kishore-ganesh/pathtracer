@@ -113,7 +113,7 @@ impl Object for Triangle{
             let u = u_area/total_area;
             let v = v_area/total_area;
             let w = 1.0-u-v;
-            println!("u: {}, v: {}, w: {}", u, v, w);
+            //println!("u: {}, v: {}, w: {}", u, v, w);
             let a_color = RGB::create(255.0,0.0,0.0);
             let b_color = RGB::create(0.0,255.0,0.0);
             let c_color = RGB::create(0.0,0.0,255.0);

@@ -8,6 +8,7 @@ use crate::color::RGB;
 use crate::primitives::Rect;
 use crate::scene::Scene;
 use crate::sphere::{RayIntersection, Ray, Object};
+use indicatif::ProgressBar;
 //TODO: make rng part of pathtracer. 
 #[derive(Clone)]
 pub struct PathTracer{
@@ -23,7 +24,7 @@ pub struct PathTracer{
 }
 
 
-fn generate_chunk(p: &PathTracer, r: Rect) -> Vec<Vec<RGB>>{
+fn generate_chunk(p: &PathTracer, r: Rect, bar: ProgressBar) -> Vec<Vec<RGB>>{
      
     
     let mut rng = rand::thread_rng();
@@ -38,10 +39,15 @@ fn generate_chunk(p: &PathTracer, r: Rect) -> Vec<Vec<RGB>>{
             let mut radiance = RGB::black();
             for sample_index in 0..p.n_samples {
                  //sample = sampler.generate_sample();
-                 //println!("x: {}, y: {}, sample_index: {}", x, y, sample_index);
+                //  println!("x: {}, y: {}, sample_index: {}", x, y, sample_index);
                  let sample = [x as f32, y as f32];
-                 let ray = p.camera.generate_ray(sample);
+                 let e1 = rng.gen::<f32>();
+                 let e2 = rng.gen::<f32>();
+                 let perturbed_sample = [sample[0] + e1, sample[1] + e2];
+                //  println!("{:?} {:?}", sample, perturbed_sample);
+                 let ray = p.camera.generate_ray(perturbed_sample);
                  radiance += p.li(ray, &mut rng, 2);
+                 
                  //have closest intersection 
                  //toss to find whether to stop 
                  //if stop, sample light source and reutrn radiance 
@@ -52,6 +58,7 @@ fn generate_chunk(p: &PathTracer, r: Rect) -> Vec<Vec<RGB>>{
             grid[yindex as usize][xindex as usize] = radiance;
         }
     }
+    bar.inc((p.chunk_size * p.chunk_size * p.n_samples) as u64);
     return grid;
 }
 
@@ -74,6 +81,7 @@ impl PathTracer{
     }
 
     pub fn generate(&mut self) -> Vec<Vec<RGB>>{
+        let progress_bar = ProgressBar::new( (self.xres * self.yres * self.n_samples) as u64);
         let mut thread_handles: Vec<Vec<Option<JoinHandle<Vec<Vec<RGB>>>>>> = vec![];
 
         // Cannot use vec! initialization since JoinHandle is not cloneable
@@ -93,11 +101,13 @@ impl PathTracer{
                 //Average it out
                 //
                 let pt = self.clone();
+                let progress_bar_new = progress_bar.clone();
+                // println!("{:?}", progress_bar_new.length());
                 thread_handles[y as usize][x as usize] = Some(thread::spawn(
                     move || {
 
                         let region = Rect{bottom: make_vec3(&[(x*pt.chunk_size) as f32, (y*pt.chunk_size + pt.chunk_size-1) as f32, 0.0]), top: make_vec3(&[(x*pt.chunk_size+pt.chunk_size-1) as f32, (y*pt.chunk_size) as f32, 0.0])};
-                        return generate_chunk(&pt, region);
+                        return generate_chunk(&pt, region, progress_bar_new);
                     }
                 ));
             }
@@ -105,7 +115,7 @@ impl PathTracer{
 
         for ychunk in 0..self.yres/self.chunk_size {
             for xchunk in 0..self.xres / self.chunk_size {
-                println!("ychunk: {}, xchunk: {}", ychunk, xchunk);
+                //println!("ychunk: {}, xchunk: {}", ychunk, xchunk);
                 let thread_result = thread_handles[ychunk as usize][xchunk as usize].take().map(JoinHandle::join);
                 match thread_result{ 
                     Some(result) => {
@@ -286,7 +296,7 @@ impl PathTracer{
                     //println!("BRDF is: {:?}", brdf);
                     //println!("Ray angle: {}", ray_angle);
                     if(ray_angle.cos() < 0.0){
-                        println!("cos is: {}", ray_angle.cos());
+                        //println!("cos is: {}", ray_angle.cos());
                     }
                     //TODO: make it mul
                     prev_path_total  = path_total;
@@ -314,7 +324,7 @@ impl PathTracer{
             prev_min_index = min_index;
 
         }
-//            println!("Final running sum: {:?}", running_sum);
+//            //println!("Final running sum: {:?}", running_sum);
             return running_sum;
 
     }

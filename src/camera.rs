@@ -61,7 +61,7 @@ impl Camera {
         //Camera -> Screen -> NDC -> Raster 
         let raster_to_world = raster_to_screen * screen_to_camera * camera_to_world;
 
-        println!("Raster to world is: {:?}", raster_to_world);
+        //println!("Raster to world is: {:?}", raster_to_world);
         //TODO: check nice way to return it correctly
         return Camera{
             from: from,

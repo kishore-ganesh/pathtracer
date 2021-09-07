@@ -40,8 +40,8 @@ fn main() {
     //println!("Transformed Suzanne mesh: {:?}", transformed_suzanne_mesh);
     let v1 = make_vec3(&[0.0,1.0,0.0]); 
     let v2 = make_vec3(&[1.2, 0.312, 2.4]);
-    println!("perp vec to: {} is: {}", &v1, get_perp_vec(&v1));
-    println!("perp vec to: {} is: {}, dot is: {}", &v2, get_perp_vec(&v2), dot(&v2, &get_perp_vec(&v2)));
+    //println!("perp vec to: {} is: {}", &v1, get_perp_vec(&v1));
+    //println!("perp vec to: {} is: {}, dot is: {}", &v2, get_perp_vec(&v2), dot(&v2, &get_perp_vec(&v2)));
 
     let center = make_vec3(&[ -1.0,0.0,0.0 ]);
     let x: Sphere = Sphere::create(1.0, center.clone());
@@ -104,10 +104,10 @@ fn main() {
         10.0
 
     ));
-    let n_samples = 1;
+    let n_samples = 5;
     let chunk_size = 16;
-    println!("Chunk size: {}", chunk_size);
-    let roulette_threshold = 0.2;
+    //println!("Chunk size: {}", chunk_size);
+    let roulette_threshold = 0.01;
     let region = Rect::create(make_vec3(&[ -region_scale,-region_scale,0.0 ]), make_vec3(&[ region_scale, region_scale,0.0 ]));
 //    let look_at_point = make_vec3(&[ 0.0,0.0,1.0 ]);
     let camera = Camera::look_at(make_vec3(&[ 0.0,0.0,10.0 ]), look_at_point, 0.1, 1000.0, screen_res, raster_res, fov,region);
@@ -137,15 +137,15 @@ fn main() {
 
     let scene = Scene::create(vec![
                               //Primitive::create(Box::new(imported_cube_mesh), Box::new(disney_diffuse_material.clone()))
-                              Primitive::create(Box::new(transformed_suzanne_mesh), Box::new(disney_diffuse_material.clone())),
+                            //   Primitive::create(Box::new(transformed_suzanne_mesh), Box::new(disney_diffuse_material.clone())),
                               //Primitive::create(Box::new(imported_tri_mesh), Box::new(diffuse_material.clone())),
                               //Primitive::create(Box::new(cube), Box::new(disney_diffuse_material.clone())),
                               //Primitive::create(Box::new(x), Box::new(specular_material.clone())),
-                              //Primitive::create(Box::new(x2), Box::new(disney_diffuse_material.clone())),
+                              Primitive::create(Box::new(x2), Box::new(disney_diffuse_material.clone())),
  //                             Primitive::create(spherical_area_light.clone(), Box::new(white_diffuse_material.clone())),
                               //Primitive::create(Box::new(x), Box::new(diffuse_material.clone())),
                               //Primitive::create(Box::new(cube), Box::new(diffuse_material.clone())),
-                              //Primitive::create(Box::new(p1), Box::new(disney_violet_diffuse_material.clone())),
+                               Primitive::create(Box::new(p1), Box::new(disney_violet_diffuse_material.clone())),
                               //Primitive::create(Box::new(p2), Box::new(disney_red_diffuse_material.clone())),
 
                               //Primitive::create(Box::new(p3), Box::new(disney_green_diffuse_material.clone())),

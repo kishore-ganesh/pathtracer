@@ -21,7 +21,7 @@ impl TriangleMesh{
         return TriangleMesh{mesh: mesh}
     }
     pub fn create_from(v: Vec<Triangle>) -> Self{
-        println!("Number of triangles: {}", v.len());
+        //println!("Number of triangles: {}", v.len());
         return TriangleMesh{mesh: v};
     }
 }
