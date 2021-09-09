@@ -35,7 +35,7 @@ fn main() {
     //let imported_cube_mesh = parse(make_vec3(&[0.0,0.0,0.0]), "models/cube.obj");
     let suzanne_mesh = parse(make_vec3(&[0.0,0.0,0.0]), "models/suzanne.obj");
     //let imported_tri_mesh = parse(make_vec3(&[0.0,0.0,0.0]), "models/triangle.obj");
-    let transformed_suzanne_mesh = transform_mesh(&(translate(0.0,0.0,-5.0) * scale(3.0,3.0,3.0)), &suzanne_mesh);
+    let transformed_suzanne_mesh = transform_mesh(&(translate(0.0,0.0,-5.0) * scale(10.0,10.0,10.0)), &suzanne_mesh);
     //println!("Imported Cube mesh: {:?}", imported_cube_mesh);
     //println!("Transformed Suzanne mesh: {:?}", transformed_suzanne_mesh);
     let v1 = make_vec3(&[0.0,1.0,0.0]); 
@@ -43,7 +43,7 @@ fn main() {
     println!("perp vec to: {} is: {}", &v1, get_perp_vec(&v1));
     println!("perp vec to: {} is: {}, dot is: {}", &v2, get_perp_vec(&v2), dot(&v2, &get_perp_vec(&v2)));
 
-    let center = make_vec3(&[ -1.0,0.0,0.0 ]);
+    let center = make_vec3(&[ -1.0,1.0,-2.0 ]);
     let x: Sphere = Sphere::create(1.0, center.clone());
     let r: Ray = Ray{origin: make_vec3(&[ 1.0,1.0,1.0 ]), direction: make_vec3(&[1.0,1.0,1.0])};
     x.intersection(&r);
@@ -94,25 +94,26 @@ fn main() {
     let region_scale = 1.0;
     let fov = 60.0;
     let point_light = Box::new(PointLight::create(
-            make_vec3(&[ 0.0, 20.0,2.0 ]),
+            make_vec3(&[ 0.0, 10.0,15.0 ]),
             RGB::create(255.0,255.0,255.0),
             3.0
             ));
     let spherical_area_light = Box::new(SphericalAreaLight::create(
-        Sphere::create(5.0, make_vec3(&[0.0,20.0,0.0])),
+        Sphere::create(5.0, make_vec3(&[10.0,10.0,15.0])),
         RGB::create(255.0,255.0,255.0),
         10.0
 
     ));
-    let n_samples = 1;
+    let n_samples = 10;
     let chunk_size = 16;
     println!("Chunk size: {}", chunk_size);
-    let roulette_threshold = 0.2;
+    let roulette_threshold = 0.01;
     let region = Rect::create(make_vec3(&[ -region_scale,-region_scale,0.0 ]), make_vec3(&[ region_scale, region_scale,0.0 ]));
 //    let look_at_point = make_vec3(&[ 0.0,0.0,1.0 ]);
     let camera = Camera::look_at(make_vec3(&[ 0.0,0.0,10.0 ]), look_at_point, 0.1, 1000.0, screen_res, raster_res, fov,region);
     let relative_point = transform(&camera.camera_to_world, &make_vec3(&[ 0.0,0.0,50.0 ]));
-    let x2: Sphere = Sphere::create(1.0, make_vec3(&[ 1.0,-1.0,0.0 ]));
+    let x2: Sphere = Sphere::create(1.0, make_vec3(&[ 1.0,-1.0, 2.0 ]));
+    let x3: Sphere = Sphere::create(1.0, make_vec3(&[ -1.0,-1.0, 4.0 ]));
     let triangle = Triangle::create([
                                     make_vec3(&[ -2.0,0.0,0.0 ]),
                                     make_vec3(&[ 0.0, 2.0,0.0 ]),
@@ -130,22 +131,25 @@ fn main() {
 
     let disney_diffuse_material = DisneyBRDFMaterial::create(RGB::create(255.0,120.0,120.0), 0.0,0.0,0.8);
     let disney_violet_diffuse_material = DisneyBRDFMaterial::create(RGB::create(40.0, 12.0, 148.0), 0.0,0.04,0.9);
+    let disney_white_diffuse_material = DisneyBRDFMaterial::create(RGB::create(200.0, 200.0, 200.0), 0.0,0.04,0.9);
     let disney_red_diffuse_material = DisneyBRDFMaterial::create(RGB::create(255.0,0.0,0.0), 0.0,0.0,0.5);
     let disney_green_diffuse_material = DisneyBRDFMaterial::create(RGB::create(0.0,255.0,0.0), 0.0,0.0,0.5);
     let disney_blue_diffuse_material = DisneyBRDFMaterial::create(RGB::create(0.0,0.0,255.0), 0.0,0.0,0.5);
     let disney_yellow_diffuse_material = DisneyBRDFMaterial::create(RGB::create(255.0,255.0, 0.0), 0.0,0.0,0.5);
+    let disney_glossy_material = DisneyBRDFMaterial::create(RGB::create(255.0,255.0, 0.0), 0.0,0.1,0.1);
 
     let scene = Scene::create(vec![
                               //Primitive::create(Box::new(imported_cube_mesh), Box::new(disney_diffuse_material.clone()))
-                              Primitive::create(Box::new(transformed_suzanne_mesh), Box::new(disney_diffuse_material.clone())),
+                              //Primitive::create(Box::new(transformed_suzanne_mesh), Box::new(disney_glossy_material.clone())),
                               //Primitive::create(Box::new(imported_tri_mesh), Box::new(diffuse_material.clone())),
                               //Primitive::create(Box::new(cube), Box::new(disney_diffuse_material.clone())),
-                              //Primitive::create(Box::new(x), Box::new(specular_material.clone())),
-                              //Primitive::create(Box::new(x2), Box::new(disney_diffuse_material.clone())),
+                              Primitive::create(Box::new(x), Box::new(disney_diffuse_material.clone())),
+                              Primitive::create(Box::new(x2), Box::new(disney_glossy_material.clone())),
+                              Primitive::create(Box::new(x3), Box::new(disney_red_diffuse_material.clone())),
  //                             Primitive::create(spherical_area_light.clone(), Box::new(white_diffuse_material.clone())),
                               //Primitive::create(Box::new(x), Box::new(diffuse_material.clone())),
                               //Primitive::create(Box::new(cube), Box::new(diffuse_material.clone())),
-                              //Primitive::create(Box::new(p1), Box::new(disney_violet_diffuse_material.clone())),
+                              Primitive::create(Box::new(p1), Box::new(disney_white_diffuse_material.clone())),
                               //Primitive::create(Box::new(p2), Box::new(disney_red_diffuse_material.clone())),
 
                               //Primitive::create(Box::new(p3), Box::new(disney_green_diffuse_material.clone())),
@@ -157,7 +161,7 @@ fn main() {
                               //Box::new(x),
                               //Box::new(x2)
 
-    ], point_light);
+    ], spherical_area_light);
 
     let mut pt = PathTracer::create(raster_res as i32, raster_res as i32, n_samples, chunk_size, roulette_threshold, scene, camera);
     let grid = pt.generate(); 

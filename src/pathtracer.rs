@@ -239,7 +239,7 @@ impl PathTracer{
                      }
                  }
                  //println!("Min index: {}", shadow_min_index);
-                 visible = true;
+                 //visible = true;
                  //println!("Visible: {}", visible);
                  match visible{
                      true => {

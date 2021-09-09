@@ -23,6 +23,59 @@ impl Rect{
     pub fn create(bottom: TVec3<f32>, top: TVec3<f32>) ->Self {
         return Rect{bottom: bottom, top: top};
     }
+/*
+    pub fn create_points(p1: TVec3<f32>, p2: TVec3<f32>) -> Self{
+        return Rect{
+            bottom: make_vec3(&[
+                              min(p1.x, p2.x),
+                              min(p1.y, p2.y),
+                              min(p1.z, p2.z)
+            ]),
+            top: make_vec3(&[
+                              max(p1.x, p2.x),
+                              max(p1.y, p2.y),
+                              max(p1.z, p2.z)
+            ])
+        }
+    }
+
+    pub fn union_point(&self, p: TVec3<f32>) -> Self{
+        return Rect{
+            bottom: make_vec3(&[
+                              min(self.x, p.x),
+                              min(self.y, p.y),
+                              min(self.z, p.z)
+            ]),
+            top: make_vec3(&[
+                              max(self.x, p.x),
+                              max(self.y, p.y),
+                              max(self.z, p.z)
+            ])
+            
+        }
+
+    }
+    pub fn union_rect(&self, r: Self) -> Self{
+        return Rect{
+            bottom: make_vec3(&[
+                              min(self.x, r.x),
+                              min(self.y, r.y),
+                              min(self.z, r.z)
+            ],
+            top: make_vec3(&[
+                              max(self.x, r.x),
+                              max(self.y, r.y),
+                              max(self.z, r.z)
+            ])
+)
+        }
+
+    }
+
+    pub fn intersect(&self, r: &Ray) -> (f32, f32){
+        
+    }
+*/
 }
 pub fn pointwise_mul_sum(p1: TVec3<f32>, p2: TVec3<f32>) -> f32 {
      return p1.x * p2.x + p1.y * p2.y + p1.z * p2.z;
