@@ -249,7 +249,7 @@ impl PathTracer{
                      }
                  }
                  //println!("Min index: {}", shadow_min_index);
-                 visible = true;
+                //  visible = true;
                  //println!("Visible: {}", visible);
                  match visible{
                      true => {
@@ -265,7 +265,9 @@ impl PathTracer{
                 None => {}
             }
 
-            if n_iterations > 3 {
+            if n_iterations > 8 {
+                //TODO: Bounce or roulette threshold?
+                break;
                 let rand_value = rand.gen::<f32>();
                 //println!("Rand value: {}, threshold: {}", rand_value, self.roulette_threshold);
                 if (rand_value <= self.roulette_threshold){
