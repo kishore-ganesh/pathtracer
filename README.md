@@ -1,7 +1,7 @@
 
-#Path Tracer 
+# Path Tracer 
 
-I'm working on a path tracer in Rust. It currently is in an early stage right now and ouA path tracer written in Rus
+I'm working on a multithreaded path tracer in Rust. It currently is in an early stage right now and needs a lot of polish. 
 
 ## Credits 
 
@@ -18,6 +18,7 @@ Credits to Disney for the materials.
 6. 3D Transformation pipeline (All the routine transformations to/from Camera, NDC, World, Object, Raster - Perspective Projection) spaces, Translation, Rotation, Scaling
 7. Point lights and Spherical area lights
 8. Perfect diffuse and perfect specular materials 
+9. Multithreaded - Splits up the image into chunks and renders each chunk
 ## How it works 
 
 One liner: We bounce rays around randomly in order to approximate the rendering equation. This is called Monte Carlo integration.
@@ -36,17 +37,28 @@ Overall flow: We start on the image grid and draw a ray from each pixel of the g
 Note that this is a recursive process - To know how much light is coming in step 2, we recurse into the object and try to calculate the radiance at tha tpoint.
 
 ## Sample Renders
-
-![]("./readme_images/512_512_500_sample.png")
-![]("./readme_images/512_512_1024_samples.png)
-![]("./readme_images/1280_720_1_sample.png")
-![]("./readme_images/disney_materials_44_area_lights.png")
-![]("./readme_images/disney_materials_45_area_lights_10_samples.png")
-![]("./readme_images/disney_materials_47.png")
-![]("./readme_images/disney_materials_54_1024_samples.png")
-![]("./readme_images/disney_materials_55_1024_samples.png")
-![]("./readme_images/disney_materials_55_1280_res_1024_samples.png")
-![]("./readme_images/glossier.png")
+#### 512 x 512, 500 samples
+![512 x 512, 500 samples](readme_images/512_512_500_sample.png)
+#### 512 x 512, 1024 samples
+![512 x 512, 1024 samples](./readme_images/512_512_1024_samples.png)
+#### 1280 x 1280, 1 sample
+![1280 x 720, 1 sample](./readme_images/1280_720_1_sample.png)
+#### 1280 x 1280, 1024 samples
+![1280 x 720, 1024 samples](./readme_images/disney_materials_55_1280_res_1024_samples.png)
+#### 512 x 512 (older version)
+![512 x 512 (older version)](./readme_images/disney_materials_44_area_lights.png)
+#### 512 x 512, 10 samples (older version)
+![512 x 512 (older version)](./readme_images/disney_materials_45_area_lights_10_samples.png)
+#### 512 x 512(older version)
+![](./readme_images/disney_materials_47.png)
+#### 512 x 512, 1024 samples
+![512 x 512, 1024 samples](./readme_images/disney_materials_54_1024_samples.png)
+#### 512 x 512, 1024 samples
+![512 x 512, 1024 samples](./readme_images/disney_materials_55_1024_samples.png)
+#### 512 x 512, (slightly) Glossy Material
+![Slightly glossy material](readme_images/glossier.png)
+#### 1280 x 1280, Imported Suzanne Mesh, 256 samples 
+![Imported Mesh](readme_images/suzanne_256_samples_1280_res_1.png)
 
 ## Things to think about
 1. Noise Reduction - There's a lot of noise in the rendered images. This can be reduced by doing better sampling (stratified sampling?) for the image pixels, cosine weighted sampling and implementing multiple importance sampling 
@@ -63,9 +75,4 @@ Note that this is a recursive process - To know how much light is coming in step
 1. Constructive Solid Geometry 
 2. Textures
 
-phong shading
-3D transformations
-OBJ Imports (basic)
-Flow
-disney materials (partial, no metal) - write the equations 
 

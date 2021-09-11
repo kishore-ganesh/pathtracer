@@ -88,8 +88,8 @@ fn main() {
     */
     //TODO: link up sphere and cam?
     //Need small region scale to control distortion
-    let screen_res = 1280.0;
-    let raster_res = 1280.0;
+    let screen_res = 512.0;
+    let raster_res = 512.0;
     let look_at_point = make_vec3(&[ 0.0,0.0,0.0 ]);
     let region_scale = 1.0;
     let fov = 60.0;
@@ -101,7 +101,7 @@ fn main() {
     let spherical_area_light = Box::new(SphericalAreaLight::create(
         Sphere::create(5.0, make_vec3(&[10.0,10.0,15.0])),
         RGB::create(255.0,255.0,255.0),
-        20.0
+        50.0
 
     ));
     let n_samples = 256;
