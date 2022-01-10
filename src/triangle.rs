@@ -1,6 +1,7 @@
 use crate::primitives::reflect_about_vec;
 use crate::sphere::{Object, Ray, RayIntersection};
 use crate::color::RGB;
+use crate::bounding_box::BoundingBox;
 use glm::{normalize, angle, dot, cross, TVec3, distance, length};
 #[derive(Debug, Copy, Clone)]
 pub enum NormalType{
@@ -28,6 +29,7 @@ fn approx(x: f32, l: f32, r: f32) -> f32{
     let l_dist = (x-l).abs();
     let r_dist = (x-r).abs();
     return x;
+    /*
     let err = 1e-6;
     //println!("{}", err);
 
@@ -37,7 +39,7 @@ fn approx(x: f32, l: f32, r: f32) -> f32{
     if(r_dist <= err){
         return r;
     }
-    return x;
+    return x;*/
 }
 //TODO: triangle coord system
 impl Object for Triangle{
@@ -59,7 +61,7 @@ impl Object for Triangle{
         t = approx(t, 0.0, 1.0);
         let eps = 1e-5;
         let w = approx(1.0-u-v, 0.0,1.0);
-        if(permitted_range.contains(&u) && permitted_range.contains(&v) && permitted_range.contains(&(w)) && t > eps){
+        if permitted_range.contains(&u) && permitted_range.contains(&v) && permitted_range.contains(&(w)) && t > eps {
             
             //println!("u: {}, v: {}, t: {}", u, v, t);
             let point = (1.0-u-v) * self.points[0] + u*self.points[1] + v * self.points[2];
@@ -69,7 +71,7 @@ impl Object for Triangle{
             let mut normal = normalize(&cross(&point_a, &point_b));
             match self.normal_direction {
                 NormalType::FaceNormal(normal_direction) => {
-                    if(angle(&normal, &normal_direction)!=0.0){
+                    if angle(&normal, &normal_direction)!=0.0 {
                         normal = -normal;
                     }
 
@@ -125,6 +127,16 @@ impl Object for Triangle{
 
         fn le(&self, p: &TVec3<f32>, v: &TVec3<f32>) -> RGB {
             return RGB::black();
+        }
+
+        fn bounds(&self) -> BoundingBox {
+            return BoundingBox::union_point(
+                BoundingBox::union_point(
+                    BoundingBox::create(
+                        self.points[0], self.points[0]
+                    ), 
+                    self.points[1]), 
+                self.points[2]);
         }
 
         

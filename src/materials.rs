@@ -81,7 +81,7 @@ impl Material for SpecularMaterial{
     fn brdf_eval(&self, r: &RayIntersection, v: &TVec3<f32>) -> RGB{
         let ang = angle(&r.normal, &v);
         let err = 1e-5; //TODO: make error more global, new float class?
-        if((ang-r.normal_angle).abs() < err){
+        if (ang-r.normal_angle).abs() < err {
             return RGB::create(255.0,255.0,255.0);
         }
         else{
@@ -112,8 +112,8 @@ impl DisneyBRDFMaterial{
     }
     fn diffuse(&self, theta_d: f32, theta_l: f32, theta_v: f32) -> RGB{
         let fd_90 = 0.5 + 2.0 * (theta_d).powi(2).cos() * self.roughness;
-        let const_l = (1.0  + (fd_90 - 1.0 )*(1.0-theta_l.cos()).powi(5));
-        let const_r = (1.0  + (fd_90 - 1.0 )*(1.0-theta_v.cos()).powi(5));
+        let const_l = 1.0  + (fd_90 - 1.0 )*(1.0-theta_l.cos()).powi(5);
+        let const_r = 1.0  + (fd_90 - 1.0 )*(1.0-theta_v.cos()).powi(5);
         let const_c = (const_l * const_r) / PI;
         let f_d = self.base_color * const_c;
         ////println!("theta_d: {}, theta_l: {}, theta_v: {}, res: {:?}", theta_d, theta_l, theta_v, f_d);
@@ -169,8 +169,8 @@ impl DisneyBRDFMaterial{
         let e2 = rng.gen::<f32>();
         let phi = 2.0 * PI * e1;
         let gamma = 2.0;
-        let numerator = (1.0 - ((alpha.powi(2).powf(1.0-gamma)) * (1.0-e2) + e2).powf(1.0/(1.0-gamma)));
-        let denominator = (1.0-alpha.powi(2));
+        let numerator = 1.0 - ((alpha.powi(2).powf(1.0-gamma)) * (1.0-e2) + e2).powf(1.0/(1.0-gamma));
+        let denominator = 1.0-alpha.powi(2);
         ////println!("alpha: {}, e1: {}, e2: {}, numerator: {}, denominator: {}", alpha, e1, e2, numerator, denominator);
         let cos_theta_h = (numerator/denominator).sqrt();
         return (cos_theta_h, phi);
@@ -232,7 +232,7 @@ impl Material for DisneyBRDFMaterial{
         let (res_color, pdf) = self.eval(theta_d, theta_h, theta_l, theta_v);
         //NOTE: this is when the light ray goes inside. For refractive, may have to handle this
         //separately
-        if(theta_l.cos() < 0.0){
+        if theta_l.cos() < 0.0 {
             ////println!("View vector inside");
             return (RGB::black(), Ray::create(r.point, r.normal), pdf);
         }

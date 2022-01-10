@@ -1,7 +1,7 @@
 use glm::{TMat4, make_mat4x4, inverse, cross, normalize, transpose, vec3_to_vec4, mat4_to_mat3, TVec3, make_vec3, length};
 
 use crate::sphere::Ray;
-use crate::primitives::{Rect,scale, translate, transform, transform_vec};
+use crate::primitives::{Rect,scale, translate, transform};
 use std::f32::consts::PI;
 #[derive(Debug, Copy, Clone)]
 pub struct Camera {
@@ -34,8 +34,8 @@ impl Camera {
         let z = normalize(&(to-from));
         let up = make_vec3(&[ 0.0,1.0,0.0 ]);
         //Should we normalize?
-        let x = (cross(&z,  &up));
-        let n_up = (cross(&x, &z));
+        let x =  cross(&z,  &up);
+        let n_up = cross(&x, &z);
         let tangent = ((PI/180.0) * (fov/2.0)).tan();
         //println!("{} {} {}", x, n_up, z);
         //println!("{:?} {:?} {:?}", length(&x), length(&up), length(&z));

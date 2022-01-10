@@ -8,6 +8,8 @@ use crate::color::RGB;
 use crate::primitives::Rect;
 use crate::scene::Scene;
 use crate::sphere::{RayIntersection, Ray, Object};
+
+use crate::materials::Material;
 use indicatif::ProgressBar;
 //TODO: make rng part of pathtracer. 
 #[derive(Clone)]
@@ -24,7 +26,7 @@ pub struct PathTracer{
 }
 
 
-fn generate_chunk(p: &PathTracer, r: Rect, bar: ProgressBar) -> Vec<Vec<RGB>>{
+fn generate_chunk(p: &mut PathTracer, r: Rect, bar: ProgressBar) -> Vec<Vec<RGB>>{
      
     
     let mut rng = rand::thread_rng();
@@ -54,7 +56,7 @@ fn generate_chunk(p: &PathTracer, r: Rect, bar: ProgressBar) -> Vec<Vec<RGB>>{
                  //else if not stop, sample BRDF and cast ray. brdf * Li(ray) + Le
             }
             //TODO fix here
-            radiance /= (p.n_samples as f32);
+            radiance /= p.n_samples as f32;
             grid[yindex as usize][xindex as usize] = radiance;
         }
     }
@@ -100,14 +102,17 @@ impl PathTracer{
                 
                 //Average it out
                 //
-                let pt = self.clone();
+                let mut pt = self.clone();
                 let progress_bar_new = progress_bar.clone();
                 // println!("{:?}", progress_bar_new.length());
                 thread_handles[y as usize][x as usize] = Some(thread::spawn(
                     move || {
 
-                        let region = Rect{bottom: make_vec3(&[(x*pt.chunk_size) as f32, (y*pt.chunk_size + pt.chunk_size-1) as f32, 0.0]), top: make_vec3(&[(x*pt.chunk_size+pt.chunk_size-1) as f32, (y*pt.chunk_size) as f32, 0.0])};
-                        return generate_chunk(&pt, region, progress_bar_new);
+                        let region = Rect{
+                            bottom: make_vec3(&[(x*pt.chunk_size) as f32, (y*pt.chunk_size + pt.chunk_size-1) as f32, 0.0]), 
+                            top: make_vec3(&[(x*pt.chunk_size+pt.chunk_size-1) as f32, (y*pt.chunk_size) as f32, 0.0]
+                        )};
+                        return generate_chunk(&mut pt, region, progress_bar_new);
                     }
                 ));
             }
@@ -120,12 +125,12 @@ impl PathTracer{
                 match thread_result{ 
                     Some(result) => {
                         //let result = handle.join();
-                        match(result){
+                        match result {
                             Ok(grid_section) => {
                                 for yindex in 0..self.chunk_size{
                                     for xindex in 0..self.chunk_size{
-                                        let y = (ychunk*self.chunk_size + yindex);
-                                        let x = (xchunk*self.chunk_size + xindex);
+                                        let y = ychunk*self.chunk_size + yindex;
+                                        let x = xchunk*self.chunk_size + xindex;
                                         grid[y as usize][x as usize] = grid_section[yindex as usize][xindex as usize];                
                                     }
                                 }
@@ -150,44 +155,11 @@ impl PathTracer{
     } 
     //TODO: Special value for infinite intersection?
     //Mult by angle for first
-    fn check_intersection(&self, r: &Ray) -> (Option<RayIntersection>, i32){
-        let mut min_intersection: Option<RayIntersection> = None;//compare None, o = o
-        let mut min_index: i32 = -1;
-        //let min_object: Option<Object> = None;
-        for (index, primitive) in (&self.scene.primitives).into_iter().enumerate() {
-            ////println!("Before ray object intersection test");
-
-            let intersection = primitive.object.intersection(&r);
-            //println!("{:?}", intersection);
-            //TODO: Add generic object type later 
-            //Closest
-            match intersection {
-                Some(i) => {
-                    //println!("Intersection found with object {} at: {:?}", index,i.point);
-                    match min_intersection{
-                        Some(min_i) => {
-                            //println!("{} {}", i.distance, min_i.distance);
-                            if i.distance < min_i.distance {
-                                min_intersection = Some(i);
-                                min_index = index as i32;
-                            }
-                        }
-                        None => {
-                            min_intersection = Some(i);
-                            min_index = index as i32;
-                        }
-                    }
-                    //min_intersection = Some(i); //TODO: make this min
-                }
-                None =>{}
-            }
-        }
-
-        
-        return (min_intersection, min_index);
+    fn check_intersection(&mut self, r: &Ray) -> Option<RayIntersection> {
+        return self.scene.bvh_root.intersection(r);
 
     }
-    fn li(&self, r: Ray, rand: &mut impl Rng, recursion_depth: i32) -> RGB{
+    fn li(&mut self, r: Ray, rand: &mut impl Rng, recursion_depth: i32) -> RGB{
 
         ////println!("Calculating Li");
         let emitted_radiance = RGB::black();
@@ -200,9 +172,9 @@ impl PathTracer{
         let mut n_iterations = 0;
         
 
-        while(true){
+        loop {
             ////println!("iterations: {}", n_iterations);
-            let (min_intersection, min_index) = self.check_intersection(&r_c);
+            let  min_intersection = self.check_intersection(&r_c);
              
             //Uncomment for debugging BRDF:
             /*match min_intersection {
@@ -230,7 +202,7 @@ impl PathTracer{
                  //println!("Calculating for light");
                  let (light_color, light_vector, light_distance, pdf) = self.scene.light.sample_radiance(ray_intersection.point, ray_intersection.normal);
                  let shadow_ray = Ray::create(ray_intersection.point, light_vector);
-                 let (shadow_intersection, shadow_min_index) = self.check_intersection(&shadow_ray);
+                 let shadow_intersection  = self.check_intersection(&shadow_ray);
                  //TODO: if hits emissive object?
                  //println!("Ray Intersection is: {:?}, Shadow intersection: {:?}  Light vector: {}", ray_intersection,shadow_intersection, light_vector);
                  let mut visible = false;
@@ -239,7 +211,7 @@ impl PathTracer{
                          //println!("Shadow intersected: {:?}", s);
                          //println!("Shadow min index: {}, Current min index: {}", shadow_min_index, prev_min_index);
                          //println!("Shadow distance: {}, Current distance: {}", s.distance, light_distance);
-                         if(s.distance > light_distance){
+                         if s.distance > light_distance {
                             visible = true;
                          }
                      },
@@ -253,10 +225,10 @@ impl PathTracer{
                  //println!("Visible: {}", visible);
                  match visible{
                      true => {
-                        let brdf = self.scene.primitives[prev_min_index as usize].material.brdf_eval(&ray_intersection, &light_vector);
+                        let brdf = self.scene.bvh_root.brdf_eval_old(&ray_intersection, &light_vector);
                         //println!("running_sum: {:?}, path_total: {:?}, light_color: {:?}", running_sum, prev_path_total, light_color);
                         //TODO: should divide by cos theta
-                        running_sum +=  (prev_path_total * brdf * light_color * (1.0/pdf)); 
+                        running_sum +=  prev_path_total * brdf * light_color * (1.0/pdf); 
 
                      },
                      false => {}
@@ -270,7 +242,7 @@ impl PathTracer{
                 break;
                 let rand_value = rand.gen::<f32>();
                 //println!("Rand value: {}, threshold: {}", rand_value, self.roulette_threshold);
-                if (rand_value <= self.roulette_threshold){
+                if rand_value <= self.roulette_threshold {
                     //running_sum = (running_sum) / (1.0-self.roulette_threshold);
                     break;
                 }
@@ -289,15 +261,15 @@ impl PathTracer{
                     //Light radiance to point then multiply by cos theta 
                     
                     let view_vector = r_c.origin - ray_intersection.point;
-                    if(n_iterations==0){
-                        running_sum += self.scene.primitives[min_index as usize].object.le(&ray_intersection.point, &view_vector);
+                    if n_iterations==0 {
+                        running_sum += self.scene.bvh_root.le(&ray_intersection.point, &view_vector);
                     }
                     //println!("VIEW angle: {}", angle(&ray_intersection.normal, &view_vector) * 180.0 / PI);
-                    let (brdf, ray, pdf) = self.scene.primitives[min_index as usize].material.brdf(ray_intersection, view_vector);
+                    let (brdf, ray, pdf) = self.scene.bvh_root.brdf(ray_intersection, view_vector);
                     let ray_angle = angle(&ray_intersection.normal, &ray.direction);
                     //println!("BRDF is: {:?}", brdf);
                     //println!("Ray angle: {}", ray_angle);
-                    if(ray_angle.cos() < 0.0){
+                    if ray_angle.cos() < 0.0 {
                         //println!("cos is: {}", ray_angle.cos());
                     }
                     //TODO: make it mul
@@ -323,7 +295,7 @@ impl PathTracer{
         }
             n_iterations += 1;
             prev_intersection = min_intersection;
-            prev_min_index = min_index;
+            //prev_min_index = min_index
 
         }
 //            //println!("Final running sum: {:?}", running_sum);

@@ -2,6 +2,7 @@ use glm::{make_vec3, TVec3};
 use crate::sphere::{Object, Ray, RayIntersection};
 use crate::triangle::{NormalType, Triangle};
 use crate::color::RGB;
+use crate::bounding_box::BoundingBox;
 #[derive(Clone, Debug)]
 pub struct TriangleMesh{
     pub mesh: Vec<Triangle>
@@ -37,15 +38,15 @@ impl Object for TriangleMesh{
             match min_intersection{
                 None => {
                     min_intersection = triangle.intersection(r);
-                    min_index = (index as i32);
+                    min_index = index as i32;
                 },
                 Some(i) => {
                     match triangle.intersection(r){
                         Some(j) => {
                             //println!("Triangle {} {} distances: {} {}, t's: {} {}", index,min_index,j.distance, i.distance, j.t, i.t);
-                            if (j.distance < i.distance){
+                            if j.distance < i.distance {
                                 min_intersection = Some(j);
-                                min_index = (index as i32);
+                                min_index = index as i32;
                             }
                         }
                         None => {},
@@ -69,6 +70,12 @@ impl Object for TriangleMesh{
 
     fn le(&self, p: &TVec3<f32>, v: &TVec3<f32>) -> RGB {
         return RGB::black();
+    }
+
+    fn bounds(&self) -> BoundingBox {
+        //TODO: incorrect impl
+        panic!("Mesh bounding box called");
+        
     }
 
 }

@@ -1,5 +1,3 @@
-use std::fmt::Display;
-use std::ops;
 use glm::{transpose, mat4_to_mat3, make_mat4x4, make_vec3, vec3_to_vec4, TVec3, TMat4, dot, is_null, normalize};
 use crate::{NormalType, Triangle, TriangleMesh};
 //TODO: rename to geometric primitives
@@ -119,7 +117,7 @@ pub fn reflect_about_vec(v: &TVec3<f32>, about: &TVec3<f32>) -> (TVec3<f32>, TVe
     let about_perpendicular = v - about_parallel;
     //println!("{} {} about perp: {} about_parallel: {}", v, about, about_perpendicular, about_parallel);
     
-    if(is_null(&about_perpendicular, 0.0)){
+    if is_null(&about_perpendicular, 0.0) {
         //TODO: take anything else as about_perpendicular
         return (-about_parallel, normalize(&about_perpendicular));
     }
@@ -129,17 +127,17 @@ pub fn reflect_about_vec(v: &TVec3<f32>, about: &TVec3<f32>) -> (TVec3<f32>, TVe
 }
 
 pub fn get_perp_vec(n: &TVec3<f32>) -> TVec3<f32>{
-    if(is_null(&n, 0.0)){
+    if is_null(&n, 0.0) {
         panic!("All zero in perp");
     }
     let mut first_nz = 0;
-    if(n.x != 0.0){
+    if n.x != 0.0 {
         first_nz = 0;
     }
-    else if(n.y != 0.0){
+    else if n.y != 0.0 {
         first_nz = 1;
     }
-    else if(n.z != 0.0){
+    else if n.z != 0.0 {
         first_nz = 2;
     }
 

@@ -14,6 +14,8 @@ mod pathtracer;
 mod plane;
 mod triangle;
 mod triangle_mesh;
+mod bounding_box;
+mod bounding_volume_hierarchy;
 
 
 use std::f32::consts::PI;
@@ -31,6 +33,7 @@ use triangle::{NormalType, Triangle};
 use triangle_mesh::TriangleMesh;
 use materials::{DiffuseMaterial, SpecularMaterial, DisneyBRDFMaterial};
 use plane::Plane;
+use bounding_volume_hierarchy::BVHNode;
 fn main() {
     //let imported_cube_mesh = parse(make_vec3(&[0.0,0.0,0.0]), "models/cube.obj");
     let suzanne_mesh = parse(make_vec3(&[0.0,0.0,0.0]), "models/suzanne.obj");
@@ -140,31 +143,43 @@ fn main() {
     let disney_blue_diffuse_material = DisneyBRDFMaterial::create(RGB::create(0.0,0.0,255.0), 0.0,0.0,0.5);
     let disney_yellow_diffuse_material = DisneyBRDFMaterial::create(RGB::create(255.0,255.0, 0.0), 0.0,0.0,0.5);
     let disney_glossy_material = DisneyBRDFMaterial::create(RGB::create(255.0,255.0, 0.0), 0.0,0.1,0.1);
+    let mut mesh_primitives = vec![
+        Primitive::create_from_mesh(&transformed_suzanne_mesh, Box::new(disney_glossy_material.clone()))
+    ];
+    let mut other_primitives = 
+        vec![
+            //Primitive::create(Box::new(imported_cube_mesh), Box::new(disney_diffuse_material.clone()))
+            
+            //Primitive::create(Box::new(imported_tri_mesh), Box::new(diffuse_material.clone())),
+            //Primitive::create(Box::new(cube), Box::new(disney_diffuse_material.clone())),
+            // Primitive::create(Box::new(x), Box::new(disney_diffuse_material.clone())),
+            // Primitive::create(Box::new(x2), Box::new(disney_glossy_material.clone())),
+            // Primitive::create(Box::new(x3), Box::new(disney_red_diffuse_material.clone())),
+//                             Primitive::create(spherical_area_light.clone(), Box::new(white_diffuse_material.clone())),
+            //Primitive::create(Box::new(x), Box::new(diffuse_material.clone())),
+            //Primitive::create(Box::new(cube), Box::new(diffuse_material.clone())),
+            // Primitive::create(Box::new(p1), Box::new(disney_white_diffuse_material.clone())),
+          //   Primitive::create(Box::new(p2), Box::new(disney_red_diffuse_material.clone())),
 
-    let scene = Scene::create(vec![
-                              //Primitive::create(Box::new(imported_cube_mesh), Box::new(disney_diffuse_material.clone()))
-                              Primitive::create(Box::new(transformed_suzanne_mesh), Box::new(disney_glossy_material.clone())),
-                              //Primitive::create(Box::new(imported_tri_mesh), Box::new(diffuse_material.clone())),
-                              //Primitive::create(Box::new(cube), Box::new(disney_diffuse_material.clone())),
-                              // Primitive::create(Box::new(x), Box::new(disney_diffuse_material.clone())),
-                              // Primitive::create(Box::new(x2), Box::new(disney_glossy_material.clone())),
-                              // Primitive::create(Box::new(x3), Box::new(disney_red_diffuse_material.clone())),
- //                             Primitive::create(spherical_area_light.clone(), Box::new(white_diffuse_material.clone())),
-                              //Primitive::create(Box::new(x), Box::new(diffuse_material.clone())),
-                              //Primitive::create(Box::new(cube), Box::new(diffuse_material.clone())),
-                              // Primitive::create(Box::new(p1), Box::new(disney_white_diffuse_material.clone())),
-                            //   Primitive::create(Box::new(p2), Box::new(disney_red_diffuse_material.clone())),
+            //Primitive::create(Box::new(p3), Box::new(disney_green_diffuse_material.clone())),
+            //Primitive::create(Box::new(p4), Box::new(disney_blue_diffuse_material.clone())),
+            //Primitive::create(Box::new(p5), Box::new(disney_yellow_diffuse_material.clone())),
+            
 
-                              //Primitive::create(Box::new(p3), Box::new(disney_green_diffuse_material.clone())),
-                              //Primitive::create(Box::new(p4), Box::new(disney_blue_diffuse_material.clone())),
-                              //Primitive::create(Box::new(p5), Box::new(disney_yellow_diffuse_material.clone())),
-                              
+            //Box::new(triangle),
+            //Box::new(x),
+            //Box::new(x2)
 
-                              //Box::new(triangle),
-                              //Box::new(x),
-                              //Box::new(x2)
+        ];
+    
 
-    ], spherical_area_light);
+    for mesh_primitive in &mut mesh_primitives {
+        other_primitives.append(mesh_primitive);
+    }
+    let bvh_root = BVHNode::create(
+        &other_primitives
+    );
+    let scene = Scene::create(bvh_root, spherical_area_light);
 
     let mut pt = PathTracer::create(raster_res as i32, raster_res as i32, n_samples, chunk_size, roulette_threshold, scene, camera);
     let grid = pt.generate(); 

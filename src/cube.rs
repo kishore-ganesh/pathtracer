@@ -3,6 +3,7 @@ use crate::primitives::{transform_mesh, rotate_about_x, rotate_about_y, scale, t
 use crate::sphere::{Object, Ray, RayIntersection};
 use crate::triangle_mesh::TriangleMesh;
 use crate::color::RGB;
+use crate::bounding_box::BoundingBox;
 #[derive(Clone)]
 pub struct Cube{
     side: f32, 
@@ -125,6 +126,11 @@ impl Object for Cube{
    
     fn le(&self, p: &TVec3<f32>, v: &TVec3<f32>) -> RGB {
         return RGB::black();
+    }
+
+    fn bounds(&self) -> BoundingBox {
+        panic!("Not implemented");
+        
     }
 
 }

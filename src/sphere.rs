@@ -5,17 +5,18 @@
 use std::cmp::{Ord, PartialOrd, PartialEq, Eq, Ordering};
 use std::ops;
 use std::f32::consts::PI;
-use glm::{TMat4, TVec3, make_mat4x4, make_vec3,inverse, length2, matrix_comp_mult, comp_add, normalize, angle, dot, distance};
+use glm::{TMat4, TVec3, make_mat4x4, make_vec3,inverse, length2, matrix_comp_mult, comp_add, normalize, angle, dot, distance, vec4_to_vec3};
 use crate::color::RGB;
 use crate::materials::Material;
 use crate::primitives::{get_perp_vec, pointwise_mul_sum,reflect_about_vec,transform, transform_vec};
-
-
+use crate::bounding_box::{BoundingBox};
+use crate::triangle_mesh::TriangleMesh;
 pub trait Object: ObjectClone{
 
     fn intersection(&self, r: &Ray) -> Option<RayIntersection>;
     fn color(&self, p: &TVec3<f32>) -> RGB;
     fn le(&self, p: &TVec3<f32>, v: &TVec3<f32>) -> RGB;
+    fn bounds(&self) -> BoundingBox;
     
 }
 
@@ -49,6 +50,35 @@ impl Primitive{
     pub fn create(o: Box<dyn Object + Send>, m: Box<dyn Material + Send>) -> Self{
         return Primitive{object: o, material: m};
     }
+
+    pub fn create_from_mesh(o: &TriangleMesh, m: Box<dyn Material + Send>) -> Vec<Self> {
+        let mut v: Vec<Self> = vec![];
+        for t in &o.mesh {
+            v.push(Self::create(Box::new(t.clone()), m.clone()));
+        }
+        return v;
+    }
+
+    pub fn bounds(&self) -> BoundingBox{
+        return self.object.bounds();
+    }
+
+    pub fn le(&self, p: &TVec3<f32>, v: &TVec3<f32>) -> RGB{
+        return self.object.le(p, v);
+    }
+
+    pub fn brdf(&self, r: RayIntersection, v: TVec3<f32>) -> (RGB, Ray, f32){
+        return self.material.brdf(r, v);
+    }
+    pub fn brdf_eval(&self, r: &RayIntersection, v: &TVec3<f32>) -> RGB {
+        return self.material.brdf_eval(r, v);
+    }
+
+    pub fn color(&self, p: &TVec3<f32>) -> RGB{
+        return self.object.color(p);
+    }
+    
+    
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -72,6 +102,10 @@ impl Ray{
     pub fn create(origin: TVec3<f32>, direction: TVec3<f32>) -> Self{
         return Ray{origin: origin, direction: direction};
     }
+
+    pub fn create_empty() -> Self {
+        return Ray{origin: make_vec3(&[0.0,0.0,0.0]), direction: make_vec3(&[0.0,0.0,0.0])};
+    }
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -88,8 +122,29 @@ pub struct RayIntersection {
 }
 
 
+pub fn min_intersection(min_intersection_v: Option<RayIntersection>, b: Option<RayIntersection>) -> (Option<RayIntersection>, bool) {
+    match min_intersection_v {
+        None => {
+            return (b, true);
+            
+        },
+        Some(i) => {
+            match b{
+                Some(j) => {
+                    //println!("Triangle {} {} distances: {} {}, t's: {} {}", index,min_index,j.distance, i.distance, j.t, i.t);
+                    if j.distance < i.distance {
+                        return (b, true);
+                    
+                    }
+                }
+                None => {},
 
-
+            }
+        }
+    };
+    return (min_intersection_v, false);
+    
+}
 /*impl PartialEq for Option<RayIntersection> {
     fn eq(&self, other: &self)
 }(/)*/
@@ -130,7 +185,7 @@ impl Object for Sphere {
         //println!("b: {} 4ac: {}", b*b, 4.0*a*c);
         //TODO:  improve precision
         //println!("{:?}", t_direction);
-        if(b*b < 4.0*a*c){
+        if b*b < 4.0*a*c {
             return None;
         }
         else{
@@ -153,7 +208,7 @@ impl Object for Sphere {
                 //intersection = Some(RayIntersection{t: r1})
             }
 
-            if(t<=0.001){
+            if t<=0.001 {
                 return None;
             }
 
@@ -205,6 +260,27 @@ impl Object for Sphere {
 
     fn le(&self, p: &TVec3<f32>, v: &TVec3<f32>) -> RGB {
         return RGB::black();
+    }
+
+    fn bounds(&self) -> BoundingBox {
+        return BoundingBox::create(
+            glm::vec4_to_vec3(
+                &(self.object_to_world * glm::make_vec4(&[
+                    -self.r,
+                    -self.r,
+                    -self.r,
+                    1.0
+                ]))
+            ),
+            glm::vec4_to_vec3(
+                &(self.object_to_world * glm::make_vec4(&[
+                    self.r,
+                    self.r,
+                    self.r,
+                    1.0
+                ]))
+            )
+        )
     }
 
 }

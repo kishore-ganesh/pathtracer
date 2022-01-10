@@ -28,10 +28,10 @@ impl RGB {
 
 fn clamp(x: f32, l: f32, r: f32) -> f32{
     return x;
-    if(x < l){
+    if x < l {
         return l;
     } 
-    if(x > r){
+    if x > r {
         return r;
     } 
     return x;

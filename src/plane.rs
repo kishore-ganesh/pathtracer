@@ -1,8 +1,9 @@
 
-use glm::{angle, cross, distance, dot, make_vec3, TVec3};
+use glm::{angle, cross, distance, dot, TVec3};
 use crate::color::RGB;
 use crate::primitives::{get_perp_vec, reflect_about_vec};
 use crate::sphere::{Object, Ray, RayIntersection};
+use crate::bounding_box::BoundingBox;
 #[derive(Clone)]
 pub struct Plane{
     normal: TVec3<f32>,
@@ -30,7 +31,7 @@ impl Object for Plane{
         let v = r.origin - self.point; 
         let t = -dot(&self.normal, &v)/(dot(&self.normal, &r.direction));
         let err = 1e-5;
-        if(t< err){
+        if t < err {
             return None;
         }
         let incoming_vector = -t*r.direction;
@@ -55,6 +56,11 @@ impl Object for Plane{
 
     fn le(&self, p: &TVec3<f32>, v: &TVec3<f32>) -> RGB {
         return RGB::black();
+    }
+
+    fn bounds(&self) -> BoundingBox {
+        panic!("Unimplemented plane bounding box called");
+        
     }
 
 }

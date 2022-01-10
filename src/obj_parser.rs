@@ -1,4 +1,4 @@
-use glm::{cross, make_vec3, TVec3};
+use glm::{make_vec3, TVec3};
 use crate::triangle::{NormalType, Triangle};
 use crate::triangle_mesh::TriangleMesh;
 use std::fs::File;
