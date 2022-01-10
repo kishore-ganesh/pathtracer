@@ -39,7 +39,7 @@ impl Clone for Box<dyn Object + Send>{
         return self.clone_object();
     }
 }
-#[derive(Clone)]
+#[derive(Clone,)]
 pub struct Primitive{
     pub object: Box<dyn Object + Send>,
     pub material: Box<dyn Material + Send>

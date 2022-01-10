@@ -130,6 +130,7 @@ impl BVHNode {
 
     
     pub fn intersection_helper(&mut self, r: &Ray) -> (Option<RayIntersection>, Option<Primitive>) {
+        
         self.cached_primitive_old = self.cached_primitive.clone();
         self.cached_primitive = None;
         if self.is_terminal {
@@ -174,6 +175,9 @@ impl BVHNode {
                     if min_intersection_tuple.1 {
                         self.cached_primitive = right_intersection_tuple.1;
                     }
+                    else{
+                        //panic!("Test right intersection being smaller");
+                    }
                 }
                 
             }
@@ -187,20 +191,28 @@ impl BVHNode {
         if let Some(p) = &self.cached_primitive_old {
             return p.brdf(r, v);
         }
-        return (RGB::black(), Ray::create_empty(), 0.0);
+        return (RGB::create(255.0,0.0,0.0), Ray::create_empty(), 0.0);
     }
     pub fn brdf_eval_old(&self, r: &RayIntersection, v: &TVec3<f32>) -> RGB{
+        
         if let Some(p) = &self.cached_primitive_old {
+            //println!("Cached primitive old is valid");
             return p.brdf_eval(r, v);
         }
-        return RGB::black();
+        else{
+            //println!("Cached primitive old is invalid");
+        }
+        panic!("BRDF Eval old cached primitive missing");
+        return RGB::create(0.0,255.0,0.0);
     }
 
     pub fn intersection(&mut self, r: &Ray) -> Option<RayIntersection> {
+        //println!("Intersection requested");
         let (ray_intersection, _) = self.intersection_helper(r);
         return ray_intersection;
     }
-    pub fn color(&self, p: &TVec3<f32>) -> RGB {
+    pub fn color(&self, p: &TVec3<f32>) -> RGB
+     {
         if let Some(primitive) = &self.cached_primitive {
             return primitive.color(p);
         }
@@ -210,7 +222,7 @@ impl BVHNode {
         if let Some(primitive) = &self.cached_primitive  {
             return primitive.le(p, v);
         }
-        return RGB::black();
+        return RGB::create(255.0,255.0,255.0);
     }
     pub fn bounds(&self) -> BoundingBox {
         panic!("Unimplemented BVHNode box called");
@@ -244,13 +256,13 @@ impl Material for BVHNode {
         if let Some(p) = &self.cached_primitive {
             return p.brdf(r, v);
         }
-        return (RGB::black(), Ray::create_empty(), 0.0);
+        return (RGB::create(0.0,0.0,255.0), Ray::create_empty(), 0.0);
     }
     fn brdf_eval(&self, r: &RayIntersection, v: &TVec3<f32>) -> RGB{
         if let Some(p) = &self.cached_primitive {
             return p.brdf_eval(r, v);
         }
-        return RGB::black();
+        return RGB::create(255.0,255.0,0.0);
     }
 }
 

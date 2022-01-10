@@ -33,11 +33,12 @@ use triangle::{NormalType, Triangle};
 use triangle_mesh::TriangleMesh;
 use materials::{DiffuseMaterial, SpecularMaterial, DisneyBRDFMaterial};
 use plane::Plane;
-use bounding_box::BoundingBox;
+use bounding_box::{BoundingBox};
 use bounding_volume_hierarchy::BVHNode;
 
 fn main() {
     //let imported_cube_mesh = parse(make_vec3(&[0.0,0.0,0.0]), "models/cube.obj");
+    //println!("a: 123.0, b: nan, min(a, b): {}. max(a, b): {}", float_min(123.0, f32::NAN), float_max(123.0, f32::NAN));
     let bounding_box = BoundingBox::create(
         make_vec3(&[0.0,0.0,0.0],
         ),
@@ -127,7 +128,7 @@ fn main() {
         50.0
 
     ));
-    let n_samples = 1024;
+    let n_samples = 512;
     let chunk_size = 16;
     //println!("Chunk size: {}", chunk_size);
     let roulette_threshold = 0.01;

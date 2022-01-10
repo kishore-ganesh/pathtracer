@@ -8,21 +8,7 @@ pub struct BoundingBox {
     pMax: TVec3<f32>    
 }
 
-fn float_min(a: f32, b: f32) -> f32 {
-    if a < b {
-        return a;
-    }
-    return b;
 
-}
-
-fn float_max(a: f32, b: f32) -> f32 {
-    if a < b {
-        return b;
-    }
-    return a;
-
-}
 impl BoundingBox {
     pub fn create_empty() -> BoundingBox {
         return BoundingBox::create(
@@ -50,14 +36,14 @@ impl BoundingBox {
     pub fn union(a: BoundingBox, b: BoundingBox) -> BoundingBox {
         return BoundingBox{
             pMin: make_vec3(&[
-                float_min(a.pMin.x, b.pMin.x),
-                float_min(a.pMin.y, b.pMin.y),
-                float_min(a.pMin.z, b.pMin.z),
+                a.pMin.x.min(b.pMin.x),
+                a.pMin.y.min(b.pMin.y),
+                a.pMin.z.min(b.pMin.z),
             ]),
             pMax: make_vec3(&[
-                float_max(a.pMax.x, b.pMax.x),
-                float_max(a.pMax.y, b.pMax.y),
-                float_max(a.pMax.z, b.pMax.z),
+                a.pMax.x.max(b.pMax.x),
+                a.pMax.y.max(b.pMax.y),
+                a.pMax.z.max(b.pMax.z),
             ])
         };
     }
@@ -91,30 +77,41 @@ impl BoundingBox {
     }
 
     pub fn intersection(&self, r: &Ray) -> bool {
-        let mut tMin = 0.0;
-        let mut tMax = f32::MAX;
+        let mut tMin: f32 = 0.0;
+        let mut tMax: f32 = f32::MAX;
         //println!("Box is: {:?} {:?}, ray is: {:?}", self.pMin, self.pMax, r);
         assert!(self.pMin.x <= self.pMax.x && self.pMin.y <= self.pMax.y && self.pMin.z <= self.pMax.z);
         let mut res = true;
+        //return res;
         for i in 0..3 {
             let tCandidateMin = (self.pMin[i] - r.origin[i])/r.direction[i];
             let tCandidateMax = (self.pMax[i]-r.origin[i])/r.direction[i];
-            let (tCandidateMin, tCandidateMax) = (float_min(tCandidateMin, tCandidateMax), float_max(tCandidateMin, tCandidateMax));
-            if tCandidateMax < 0.0 {
+            if(tCandidateMin.is_nan() || tCandidateMax.is_nan()){
+                //println!("tCandidateMin is: {}, tCandidateMax is: {}, pMin: {:?}, pMax: {:?}", tCandidateMin, tCandidateMax, self.pMin, self.pMax);
+            }
+            
+            //println!("tCandidateMin: {}", tCandidateMin);
+            //println!("tCandidateMax: {}", tCandidateMax);
+        let (tCandidateMin, tCandidateMax) = (tCandidateMin.min(tCandidateMax), tCandidateMin.max(tCandidateMax));
+            //println!("tCandidateMinAF: {}", tCandidateMin);
+            //println!("tCandidateMaxAF: {}", tCandidateMax);
+            
+            tMin = tMin.max(tCandidateMin);
+            tMax = tMax.min(tCandidateMax);
+            if tMin>tMax {
+                //println!("{}  > {}", tMin, tMax);
                 res = false;
             } 
-            tMin = float_max(tMin, tCandidateMin);
-            tMax = float_min(tMax, tCandidateMax);
-            if tCandidateMin>tCandidateMax {
-                 res = false;
-            } 
         }
+        assert!(!tMin.is_nan() && !tMax.is_nan());
         if tMin>tMax {
             res = false;
         } 
         if tMax < 0.0 {
             res = false;
         } 
+
+        
         if res {
             //println!("Res is: {}", res);
         }

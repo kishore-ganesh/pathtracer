@@ -175,7 +175,7 @@ impl PathTracer{
 
         loop {
             ////println!("iterations: {}", n_iterations);
-            let  min_intersection = self.check_intersection(&r_c);
+            
              
             //Uncomment for debugging BRDF:
             /*match min_intersection {
@@ -217,6 +217,7 @@ impl PathTracer{
                          }
                      },
                      None => {
+                         //println!("No intersection");
                          visible = true;
                                               
                      }
@@ -251,13 +252,16 @@ impl PathTracer{
                     path_total = path_total / (1.0 - self.roulette_threshold);
                 }
             }
+
+            //NOTE: this should be after prev_intersection since we need the previous cached result within BVHNode
+            let  min_intersection = self.check_intersection(&r_c);
             match min_intersection {
                 Some(ray_intersection) => {
                     //TODO: pass incoming direction 
                     //TODO: return light sampling here. 
                     
-
-                    //println!("Object {} intersected at recursion depth {}", min_index, recursion_depth);
+                    
+                    //println!("Object intersected");
                     //println!("Ray intersection point: {:?}", ray_intersection.point);
                     //Light radiance to point then multiply by cos theta 
                     
@@ -293,7 +297,7 @@ impl PathTracer{
                 }*/ 
             }
 
-        }
+            }
             n_iterations += 1;
             prev_intersection = min_intersection;
             //prev_min_index = min_index
