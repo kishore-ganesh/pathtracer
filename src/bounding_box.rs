@@ -92,21 +92,34 @@ impl BoundingBox {
 
     pub fn intersection(&self, r: &Ray) -> bool {
         let mut tMin = 0.0;
-        let mut tMax = 0.0;
+        let mut tMax = f32::MAX;
+        //println!("Box is: {:?} {:?}, ray is: {:?}", self.pMin, self.pMax, r);
+        assert!(self.pMin.x <= self.pMax.x && self.pMin.y <= self.pMax.y && self.pMin.z <= self.pMax.z);
+        let mut res = true;
         for i in 0..3 {
             let tCandidateMin = (self.pMin[i] - r.origin[i])/r.direction[i];
             let tCandidateMax = (self.pMax[i]-r.origin[i])/r.direction[i];
             let (tCandidateMin, tCandidateMax) = (float_min(tCandidateMin, tCandidateMax), float_max(tCandidateMin, tCandidateMax));
+            if tCandidateMax < 0.0 {
+                res = false;
+            } 
             tMin = float_max(tMin, tCandidateMin);
             tMax = float_min(tMax, tCandidateMax);
-            if tMin>tMax {
-                return false;
+            if tCandidateMin>tCandidateMax {
+                 res = false;
             } 
         }
-        if tMax < 0.0 {
-            return false;
+        if tMin>tMax {
+            res = false;
         } 
-        return true;
+        if tMax < 0.0 {
+            res = false;
+        } 
+        if res {
+            //println!("Res is: {}", res);
+        }
+        
+        return res;
     }
 
     pub fn maximum_extent(&self) -> usize {

@@ -38,7 +38,7 @@ pub fn parse_line(l: String) -> ParseResult{
             split = split[1..].to_vec();
             let triangle_info: Vec<(usize, usize)> = split.iter().map(|x| { 
                                                              let mut point_info = x.split("/");
-                                                             //println!("Point info: {:?}", point_info);
+                                                             println!("Point info: {:?}", point_info);
                                                              let point_index = point_info.nth(0).unwrap().parse::<usize>().unwrap();
                                                              let normal_index = point_info.nth(1).unwrap().parse::<usize>().unwrap();
                                                             return (point_index, normal_index)

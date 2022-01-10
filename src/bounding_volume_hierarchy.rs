@@ -119,8 +119,8 @@ impl BVHNode {
             is_terminal: false,
             left: if left_primitives_len > 0 {Some(Box::new(left_node))} else  {None},
             right: if right_primitives_len >  0 {Some(Box::new(right_node))} else {None},
-            left_bounding_box: BoundingBox::create_empty(),
-            right_bounding_box: BoundingBox::create_empty(),
+            left_bounding_box: left_bounding_box,
+            right_bounding_box: right_bounding_box,
             cached_primitive: None,
             cached_primitive_old: None
         }
@@ -220,6 +220,8 @@ impl BVHNode {
         println!("depth is: {}", depth);
         println!("is_terminal: {}", self.is_terminal);
         println!("Primitives length: {}", self.primitives.len());
+        println!("Left box is: {:?}", self.left_bounding_box);
+        println!("Right box is: {:?}", self.right_bounding_box);
         if let Some(left) = &self.left {
             left.print_traverse_helper(depth+1);
         }

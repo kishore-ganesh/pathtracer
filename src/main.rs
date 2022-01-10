@@ -33,10 +33,30 @@ use triangle::{NormalType, Triangle};
 use triangle_mesh::TriangleMesh;
 use materials::{DiffuseMaterial, SpecularMaterial, DisneyBRDFMaterial};
 use plane::Plane;
+use bounding_box::BoundingBox;
 use bounding_volume_hierarchy::BVHNode;
+
 fn main() {
     //let imported_cube_mesh = parse(make_vec3(&[0.0,0.0,0.0]), "models/cube.obj");
+    let bounding_box = BoundingBox::create(
+        make_vec3(&[0.0,0.0,0.0],
+        ),
+        make_vec3(&[5.0,5.0,5.0],
+        )
+        
+    );
+
+    let ray = Ray::create(
+        make_vec3(&[0.0,0.0,0.0]),
+        make_vec3(&[1.0,1.0,1.0])
+    );
+
+    println!("Intersection with box is: {}", bounding_box.intersection(&ray));
+
+
+    //panic!("Bounding box test");
     let suzanne_mesh = parse(make_vec3(&[0.0,0.0,0.0]), "models/suzanne.obj");
+    
     //let imported_tri_mesh = parse(make_vec3(&[0.0,0.0,0.0]), "models/triangle.obj");
     let transformed_suzanne_mesh = transform_mesh(&(translate(0.0,0.0,-5.0) * scale(10.0,10.0,10.0)), &suzanne_mesh);
     //println!("Imported Cube mesh: {:?}", imported_cube_mesh);
@@ -91,8 +111,8 @@ fn main() {
     */
     //TODO: link up sphere and cam?
     //Need small region scale to control distortion
-    let screen_res = 256.0;
-    let raster_res = 256.0;
+    let screen_res = 512.0;
+    let raster_res = 512.0;
     let look_at_point = make_vec3(&[ 0.0,0.0,0.0 ]);
     let region_scale = 1.0;
     let fov = 60.0;
@@ -107,7 +127,7 @@ fn main() {
         50.0
 
     ));
-    let n_samples = 1;
+    let n_samples = 1024;
     let chunk_size = 16;
     //println!("Chunk size: {}", chunk_size);
     let roulette_threshold = 0.01;
