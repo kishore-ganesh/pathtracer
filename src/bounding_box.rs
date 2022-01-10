@@ -1,4 +1,4 @@
-use glm::{TVec3, make_vec3};
+use glm::{TVec3, make_vec3, abs};
 use std::cmp::{max, min};
 use crate::sphere::{Ray, RayIntersection};
 
@@ -55,9 +55,9 @@ impl BoundingBox {
                 float_min(a.pMin.z, b.pMin.z),
             ]),
             pMax: make_vec3(&[
-                float_max(a.pMin.x, b.pMin.x),
-                float_max(a.pMin.y, b.pMin.y),
-                float_max(a.pMin.z, b.pMin.z),
+                float_max(a.pMax.x, b.pMax.x),
+                float_max(a.pMax.y, b.pMax.y),
+                float_max(a.pMax.z, b.pMax.z),
             ])
         };
     }
@@ -67,16 +67,22 @@ impl BoundingBox {
     }
 
     pub fn offset(&self, p: TVec3<f32>) -> TVec3<f32> {
+        assert!(self.pMin.x <= self.pMax.x && self.pMin.y <= self.pMax.y && self.pMin.z <= self.pMax.z);
+        let offset_p = p - self.pMin;
         return make_vec3(
             &[
-                p.x/(self.pMax.x-self.pMin.x),
-                p.y/(self.pMax.y-self.pMin.y),
-                p.z/(self.pMax.z-self.pMin.z)
+                offset_p.x/(self.pMax.x-self.pMin.x),
+                offset_p.y/(self.pMax.y-self.pMin.y),
+                offset_p.z/(self.pMax.z-self.pMin.z)
             ]
         )
     }
 
     pub fn surface_area(&self) -> f32 {
+        println!("pMin is: {:?} and pMax is: {:?}", self.pMin, self.pMax);
+        if !(self.pMin.x <= self.pMax.x && self.pMin.y <= self.pMax.y && self.pMin.z <= self.pMax.z){
+            return 0.0;
+        }
         let d = self.pMax - self.pMin;
         let l = d.x;
         let b = d.y;
@@ -101,6 +107,19 @@ impl BoundingBox {
             return false;
         } 
         return true;
+    }
+
+    pub fn maximum_extent(&self) -> usize {
+        let extents = abs(&(self.pMax - self.pMin));
+        let mx = extents[2].max(extents[1].max(extents[0]));
+        if mx == extents[0] {
+            return 0;
+
+        }
+        if mx == extents[1] {
+            return 1;
+        }
+        return 2;
     }
 }
 

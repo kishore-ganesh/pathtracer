@@ -130,13 +130,15 @@ impl Object for Triangle{
         }
 
         fn bounds(&self) -> BoundingBox {
-            return BoundingBox::union_point(
+            let result = BoundingBox::union_point(
                 BoundingBox::union_point(
                     BoundingBox::create(
                         self.points[0], self.points[0]
                     ), 
                     self.points[1]), 
                 self.points[2]);
+            // println!("Bounding box for triangle with points: {:?} is {:?}", self.points, result);
+            return result;
         }
 
         

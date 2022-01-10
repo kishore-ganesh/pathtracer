@@ -1,9 +1,11 @@
+use std::cmp;
 use crate::bounding_box::BoundingBox;
 use crate::color::RGB;
 use crate::sphere::{Object, Ray, RayIntersection, Primitive, min_intersection};
 use glm::TVec3;
 use crate::materials::Material;
 const min_primitives:usize = 5;
+
 #[derive(Clone)]
 pub struct BVHNode {
     pub primitives: Vec<Primitive>,
@@ -25,10 +27,12 @@ pub struct Bucket {
 
 impl BVHNode {
     pub fn create(primitives: &Vec<Primitive>) -> BVHNode {
+        println!("Length of primitives is: {}", primitives.len());
         return BVHNode::recursive_helper(primitives.clone(), 0, (primitives.len() as i32) -1);
     }
     //TODO: use move
     pub fn recursive_helper(primitives: Vec<Primitive>, l: i32, r: i32) -> BVHNode {
+        println!("Recursive helper called");
         if primitives.len() <= min_primitives {
             let mut new_primitives = vec![];
             for i in l..r+1 {
@@ -47,15 +51,19 @@ impl BVHNode {
             }
         }
         let mut centroid_bounds = BoundingBox::create_empty();
+        let mut total_bounds = BoundingBox::create_empty();
         
-        let dim = 1; //Hardcoding splitting dimension to y
         for i in l..r+1 {
             centroid_bounds = BoundingBox::union_point(centroid_bounds, primitives[i as usize].bounds().centroid());
+            total_bounds = BoundingBox::union(total_bounds, primitives[i as usize].bounds());
         }
+        let dim = total_bounds.maximum_extent(); //NOTE: Hardcoding splitting dimension to y
         let n_buckets = 12;
         let mut buckets = vec![Bucket { count: 0, bound: BoundingBox::create_empty(), cost: 0.0 }; n_buckets];
         for i in l..r+1 {
             let b = (centroid_bounds.offset(primitives[i as usize].bounds().centroid())[dim] * (n_buckets as f32)).floor();
+            println!("Centroid bounds offset: {:?}", centroid_bounds.offset(primitives[i as usize].bounds().centroid()));
+            let b = cmp::min(b as i32, (n_buckets-1) as i32);
             buckets[b as usize].bound = BoundingBox::union(buckets[b as usize].bound, primitives[i as usize].bounds());
             buckets[b as usize].count += 1;
         }
@@ -76,7 +84,8 @@ impl BVHNode {
                 right = BoundingBox::union(right, buckets[right_index].bound);
                 right_count += buckets[right_index].count;
             }
-            buckets[i].cost = 0.125 + (left.surface_area() * (left_count as f32) + right.surface_area()*(right_count as f32))/(left.surface_area()+right.surface_area());
+            buckets[i].cost = 0.125 + (left.surface_area() * (left_count as f32) + right.surface_area()*(right_count as f32))/(total_bounds.surface_area());
+            println!("Cost of ith: {} bucket is: {}", i, buckets[i].cost);
             if min_cost > buckets[i].cost  {
                 min_cost = buckets[i].cost;
                 min_index = i as i32;
@@ -147,6 +156,7 @@ impl BVHNode {
         else {
             let mut ray_intersection: Option<RayIntersection> = None;
             if self.left_bounding_box.intersection(r) {
+                // println!("Left box intersected");
                 if let Some(left) = &mut self.left {
                     let left_intersection_tuple = left.intersection_helper(r);
                     ray_intersection = left_intersection_tuple.0;
@@ -155,6 +165,7 @@ impl BVHNode {
                 
             }
             if self.right_bounding_box.intersection(r) {
+                // println!("Right box intersected");
                 if let Some(right) = &mut self.right {
                     let right_intersection_tuple = right.intersection_helper(r);
                     let min_intersection_tuple = min_intersection ( ray_intersection, right_intersection_tuple.0);
@@ -204,6 +215,20 @@ impl BVHNode {
     pub fn bounds(&self) -> BoundingBox {
         panic!("Unimplemented BVHNode box called");
         return BoundingBox::create_empty()
+    }
+    pub fn print_traverse_helper(&self, depth: usize){
+        println!("depth is: {}", depth);
+        println!("is_terminal: {}", self.is_terminal);
+        println!("Primitives length: {}", self.primitives.len());
+        if let Some(left) = &self.left {
+            left.print_traverse_helper(depth+1);
+        }
+        if let Some(right) = &self.right {
+            right.print_traverse_helper(depth+1);
+        }
+    }
+    pub fn print_traverse(&self) {
+        self.print_traverse_helper(0);
     }
 
     

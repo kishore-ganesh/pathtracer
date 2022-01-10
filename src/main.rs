@@ -91,8 +91,8 @@ fn main() {
     */
     //TODO: link up sphere and cam?
     //Need small region scale to control distortion
-    let screen_res = 512.0;
-    let raster_res = 512.0;
+    let screen_res = 256.0;
+    let raster_res = 256.0;
     let look_at_point = make_vec3(&[ 0.0,0.0,0.0 ]);
     let region_scale = 1.0;
     let fov = 60.0;
@@ -107,7 +107,7 @@ fn main() {
         50.0
 
     ));
-    let n_samples = 256;
+    let n_samples = 1;
     let chunk_size = 16;
     //println!("Chunk size: {}", chunk_size);
     let roulette_threshold = 0.01;
@@ -179,6 +179,9 @@ fn main() {
     let bvh_root = BVHNode::create(
         &other_primitives
     );
+
+    bvh_root.print_traverse();
+    //panic!("Before scene creation");
     let scene = Scene::create(bvh_root, spherical_area_light);
 
     let mut pt = PathTracer::create(raster_res as i32, raster_res as i32, n_samples, chunk_size, roulette_threshold, scene, camera);

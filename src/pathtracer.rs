@@ -83,6 +83,7 @@ impl PathTracer{
     }
 
     pub fn generate(&mut self) -> Vec<Vec<RGB>>{
+        //panic!("Generate called");
         let progress_bar = ProgressBar::new( (self.xres * self.yres * self.n_samples) as u64);
         let mut thread_handles: Vec<Vec<Option<JoinHandle<Vec<Vec<RGB>>>>>> = vec![];
 
