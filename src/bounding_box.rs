@@ -79,7 +79,10 @@ impl BoundingBox {
     pub fn intersection(&self, r: &Ray) -> bool {
         let mut tMin: f32 = 0.0;
         let mut tMax: f32 = f32::MAX;
-        //println!("Box is: {:?} {:?}, ray is: {:?}", self.pMin, self.pMax, r);
+        
+        if !(self.pMin.x <= self.pMax.x && self.pMin.y <= self.pMax.y && self.pMin.z <= self.pMax.z) {
+            println!("Box is: {:?} {:?}, ray is: {:?}", self.pMin, self.pMax, r);
+        }
         assert!(self.pMin.x <= self.pMax.x && self.pMin.y <= self.pMax.y && self.pMin.z <= self.pMax.z);
         let mut res = true;
         //return res;

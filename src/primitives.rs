@@ -22,9 +22,7 @@ impl Rect{
         return Rect{bottom: bottom, top: top};
     }
 }
-pub fn pointwise_mul_sum(p1: TVec3<f32>, p2: TVec3<f32>) -> f32 {
-     return p1.x * p2.x + p1.y * p2.y + p1.z * p2.z;
-}
+
 pub fn scale(scalex: f32, scaley: f32, scalez: f32) -> TMat4<f32> {
     return make_mat4x4(&[scalex, 0.0,0.0,0.0,
                        0.0,scaley,0.0,0.0,

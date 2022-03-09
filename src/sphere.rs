@@ -8,7 +8,7 @@ use std::f32::consts::PI;
 use glm::{TMat4, TVec3, make_mat4x4, make_vec3,inverse, length2, matrix_comp_mult, comp_add, normalize, angle, dot, distance, vec4_to_vec3};
 use crate::color::RGB;
 use crate::materials::Material;
-use crate::primitives::{get_perp_vec, pointwise_mul_sum,reflect_about_vec,transform, transform_vec};
+use crate::primitives::{get_perp_vec,reflect_about_vec,transform, transform_vec};
 use crate::bounding_box::{BoundingBox};
 use crate::triangle_mesh::TriangleMesh;
 pub trait Object: ObjectClone{

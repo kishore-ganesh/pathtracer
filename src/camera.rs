@@ -50,10 +50,7 @@ impl Camera {
                                            0.0,0.0,f/(f-n),(-f*n)/(f-n),
                                            0.0, 0.0, 1.0, 0.0]) * scale(1.0/tangent,1.0/tangent,1.0);
         let screen_to_camera = inverse(&camera_to_screen);
-        //TODO: make this res a parameter
- //       let screen_res = 512.0;
-   //     let raster_res = 512.0;
-
+       
         //let (region_min_x, region_max_x, region_min_y, region_max_y) = (-50.0)
         let screen_to_raster = translate(-region.bottom.x, -region.top.y, 0.0) * scale(1.0/(region.top.x-region.bottom.x), -1.0/(region.top.y-region.bottom.y), 1.0) * scale(raster_res, raster_res, 1.0);
         let raster_to_screen = inverse(&screen_to_raster);

@@ -59,6 +59,7 @@ impl Object for Plane{
     }
 
     fn bounds(&self) -> BoundingBox {
+        
         panic!("Unimplemented plane bounding box called");
         
     }

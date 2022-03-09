@@ -20,7 +20,7 @@ mod bounding_volume_hierarchy;
 
 use std::f32::consts::PI;
 use glm::{dot, TMat4, TVec4, make_mat4x4, make_vec4, transpose, make_vec3, vec3_to_vec4, mat4_to_mat3};
-use cube::Cube;
+use cube::{create_cube};
 use sphere::{Sphere, Ray, Object, Primitive};
 use primitives::{Rect, reflect_about_vec, rotate_about_x, rotate_about_y, get_perp_vec, scale, translate, transform, transform_mesh, transform_vec};
 use color::RGB;
@@ -76,7 +76,7 @@ fn main() {
     let (reflected_v, _) = reflect_about_vec(&v, &normal);
     //println!("original: {}, reflected: {}", v, reflected_v);
     let rotate_angle = (0.0) * (PI/180.0);
-    let cube = Cube::create(make_vec3(&[ 0.0,0.0,0.0 ]), rotate_angle, 0.0, 0.5, false);
+    let cube_mesh = create_cube(make_vec3(&[ 0.0,0.0,0.0 ]), rotate_angle, 0.0, 20.0, true);
     let plane_rotate_angle = (50.0) * (PI/180.0);
     //let p1_vec = transform_vec(&rotate_about_x(plane_rotate_angle), &make_vec3(&[0.0,0.0,1.0]));
     let p1_vec = make_vec3(&[0.0,1.0,0.0]);
@@ -125,10 +125,10 @@ fn main() {
     let spherical_area_light = Box::new(SphericalAreaLight::create(
         Sphere::create(5.0, make_vec3(&[10.0,10.0,15.0])),
         RGB::create(255.0,255.0,255.0),
-        50.0
+        100.0
 
     ));
-    let n_samples = 512;
+    let n_samples = 1024;
     let chunk_size = 16;
     //println!("Chunk size: {}", chunk_size);
     let roulette_threshold = 0.01;
@@ -166,6 +166,7 @@ fn main() {
     let disney_glossy_material = DisneyBRDFMaterial::create(RGB::create(255.0,255.0, 0.0), 0.0,0.1,0.1);
     let mut mesh_primitives = vec![
         Primitive::create_from_mesh(&transformed_suzanne_mesh, Box::new(disney_glossy_material.clone()))
+        //Primitive::create_from_mesh(&cube_mesh, Box::new(disney_glossy_material.clone()))
     ];
     let mut other_primitives = 
         vec![
@@ -173,15 +174,16 @@ fn main() {
             
             //Primitive::create(Box::new(imported_tri_mesh), Box::new(diffuse_material.clone())),
             //Primitive::create(Box::new(cube), Box::new(disney_diffuse_material.clone())),
-            // Primitive::create(Box::new(x), Box::new(disney_diffuse_material.clone())),
-            // Primitive::create(Box::new(x2), Box::new(disney_glossy_material.clone())),
-            // Primitive::create(Box::new(x3), Box::new(disney_red_diffuse_material.clone())),
+             //Primitive::create(Box::new(x), Box::new(disney_diffuse_material.clone())),
+             //Primitive::create(Box::new(x2), Box::new(disney_glossy_material.clone())),
+             //Primitive::create(Box::new(x3), Box::new(disney_red_diffuse_material.clone())),
 //                             Primitive::create(spherical_area_light.clone(), Box::new(white_diffuse_material.clone())),
             //Primitive::create(Box::new(x), Box::new(diffuse_material.clone())),
-            //Primitive::create(Box::new(cube), Box::new(diffuse_material.clone())),
+             //Primitive::create(Box::new(cube), Box::new(diffuse_material.clone())),
             // Primitive::create(Box::new(p1), Box::new(disney_white_diffuse_material.clone())),
           //   Primitive::create(Box::new(p2), Box::new(disney_red_diffuse_material.clone())),
 
+          
             //Primitive::create(Box::new(p3), Box::new(disney_green_diffuse_material.clone())),
             //Primitive::create(Box::new(p4), Box::new(disney_blue_diffuse_material.clone())),
             //Primitive::create(Box::new(p5), Box::new(disney_yellow_diffuse_material.clone())),
@@ -207,6 +209,11 @@ fn main() {
 
     let mut pt = PathTracer::create(raster_res as i32, raster_res as i32, n_samples, chunk_size, roulette_threshold, scene, camera);
     let grid = pt.generate(); 
+    for row in 0..grid.len() {
+        for col in 0..grid[row].len() {
+            // println!("Value at {} {} is: {:?}", row, col, grid[row][col])
+        }
+    }
     color::write_ppm(&grid, "test.ppm".to_string());
     ////println!("Hello, world!");
 }

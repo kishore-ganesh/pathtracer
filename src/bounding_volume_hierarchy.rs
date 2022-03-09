@@ -62,7 +62,7 @@ impl BVHNode {
         let mut buckets = vec![Bucket { count: 0, bound: BoundingBox::create_empty(), cost: 0.0 }; n_buckets];
         for i in l..r+1 {
             let b = (centroid_bounds.offset(primitives[i as usize].bounds().centroid())[dim] * (n_buckets as f32)).floor();
-            println!("Centroid bounds offset: {:?}", centroid_bounds.offset(primitives[i as usize].bounds().centroid()));
+            //println!("Centroid bounds offset: {:?}", centroid_bounds.offset(primitives[i as usize].bounds().centroid()));
             let b = cmp::min(b as i32, (n_buckets-1) as i32);
             buckets[b as usize].bound = BoundingBox::union(buckets[b as usize].bound, primitives[i as usize].bounds());
             buckets[b as usize].count += 1;
@@ -70,7 +70,7 @@ impl BVHNode {
         let mut min_cost = f32::MAX;
         let mut min_index: i32 = -1;
         for i in 0..n_buckets {
-            println!("Count of ith: {} bucket is: {}", i, buckets[i].count);
+            //println!("Count of ith: {} bucket is: {}", i, buckets[i].count);
             let mut left = BoundingBox::create_empty();
             let mut right = BoundingBox::create_empty();
             let mut left_count = 0;
@@ -85,7 +85,7 @@ impl BVHNode {
                 right_count += buckets[right_index].count;
             }
             buckets[i].cost = 0.125 + (left.surface_area() * (left_count as f32) + right.surface_area()*(right_count as f32))/(total_bounds.surface_area());
-            println!("Cost of ith: {} bucket is: {}", i, buckets[i].cost);
+            //println!("Cost of ith: {} bucket is: {}", i, buckets[i].cost);
             if min_cost > buckets[i].cost  {
                 min_cost = buckets[i].cost;
                 min_index = i as i32;
@@ -95,7 +95,7 @@ impl BVHNode {
 
         }
 
-        println!("Min cost is: {} at index: {}", min_cost, min_index);
+        //println!("Min cost is: {} at index: {}", min_cost, min_index);
 
         let left_primitives: Vec<Primitive> = primitives.iter().cloned().filter(|x| ((n_buckets as f32) * centroid_bounds.offset(x.bounds().centroid())[dim]).floor() <= min_index as f32).collect();
         let right_primitives: Vec<Primitive> = primitives.iter().cloned().filter(|x|((n_buckets as f32) * centroid_bounds.offset(x.bounds().centroid())[dim]).floor() > min_index as f32).collect();

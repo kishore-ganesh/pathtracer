@@ -87,8 +87,8 @@ impl Light for SphericalAreaLight{
         let e2 = rng.gen::<f32>() * 2.0 * PI;
         let d_s = dist * e1.cos() - (self.sphere.r.powi(2) - dist.powi(2) * e1.sin().powi(2)).sqrt();
 
-        let cos_alpha = (self.sphere.r.powi(2) + dist.powi(2) - d_s.powi(2))/(2.0 * dist * self.sphere.r);
-        ////println!("Cos alpha: {}", cos_alpha * (180.0/PI));
+        let cos_alpha = ((self.sphere.r.powi(2) + dist.powi(2) - d_s.powi(2))/(2.0 * dist * self.sphere.r)).clamp(0.0,1.0);
+        
         let alpha = cos_alpha.acos();
         let normal = normalize(&(point - self.sphere.center));
         let tangent = normalize(&get_perp_vec(&normal));
@@ -101,6 +101,7 @@ impl Light for SphericalAreaLight{
         let intersection_point = (normal * cos_alpha + tangent * alpha.sin() * e2.sin() + bitangent * alpha.sin() * e2.cos()) * self.sphere.r + self.sphere.center;
         //println!("Normal: {}, Tangent: {}, Bitangent: {}, Intersection Point: {}", normal, tangent, bitangent, intersection_point);
         ////println!("Length: {}", length(&(intersection_point)));
+        //println!("Point: {:?}, Intersection Point: {:?}", point, intersection_point);
         let light_vec = -normalize(&(point - intersection_point));
         let theta_area = angle(&(intersection_point - self.sphere.center), &-light_vec);
         let theta_light = angle(&point_normal, &light_vec);

@@ -117,7 +117,7 @@ impl DisneyBRDFMaterial{
         let const_c = (const_l * const_r) / PI;
         let f_d = self.base_color * const_c;
         ////println!("theta_d: {}, theta_l: {}, theta_v: {}, res: {:?}", theta_d, theta_l, theta_v, f_d);
-        ////println!("fd90: {}, const_l: {}, const_r: {}, const_c: {}", fd_90, const_l, const_r, const_c);
+        //println!("fd90: {}, const_l: {}, const_r: {}, const_c: {}", fd_90, const_l, const_r, const_c);
         return f_d;
 
 
@@ -179,9 +179,10 @@ impl DisneyBRDFMaterial{
 
     fn eval(&self, theta_d: f32, theta_h: f32, theta_l: f32, theta_v: f32) -> (RGB, f32){
        //TODO: refactor alpha 
-        /*if (theta_l.cos() < 0.0 || theta_v.cos() < 0.0){
-            return RGB::black();
-        }*/
+        if (theta_l.cos() < 0.0 || theta_v.cos() < 0.0){
+                return (RGB::black(),1.0);
+        }
+        //println!("Theta_d: {}, theta_h: {}, theta_l: {}, theta_v: {}", theta_d, theta_h, theta_l, theta_v);
         let alpha = self.roughness.powi(2);
         let diffuse = self.diffuse(theta_d, theta_l, theta_v);
         let specular_d = self.specular_d(alpha, theta_h);
@@ -246,13 +247,13 @@ impl Material for DisneyBRDFMaterial{
     fn brdf_eval(&self, r: &RayIntersection, l: &TVec3<f32>) -> RGB{
         let v = normalize(&(r.origin - r.point));
         ////println!("LIGHT LENGTH: {}", length(&l))
-        ////println!("l: {}, v: {}", l, v);
+        //println!("l: {}, v: {}", l, v);
         let h = (l + v) / length(&(l + v));
         let theta_d = angle(&l, &h);
         let theta_l = angle(&l, &r.normal);
         let theta_h = angle(&h, &r.normal);
         let theta_v = angle(&v, &r.normal);
-
+        //println!("Ray origin: {:?}, Ray Point: {:?}", r.origin, r.point);
         ////println!("LIGHTS: Angle lh: {}, vh: {}", angle(&l, &h), angle(&v, &h));
         let (res_color, _) = self.eval(theta_d, theta_h, theta_l, theta_v);
         return res_color; 

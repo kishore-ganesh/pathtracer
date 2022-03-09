@@ -227,10 +227,16 @@ impl PathTracer{
                  //println!("Visible: {}", visible);
                  match visible{
                      true => {
+                        
                         let brdf = self.scene.bvh_root.brdf_eval_old(&ray_intersection, &light_vector);
-                        //println!("running_sum: {:?}, path_total: {:?}, light_color: {:?}", running_sum, prev_path_total, light_color);
+                        //println!("running_sum before: {:?}, path_total: {:?}, light_color: {:?} pdf: {}", running_sum, prev_path_total, light_color, pdf);
+                        
                         //TODO: should divide by cos theta
-                        running_sum +=  prev_path_total * brdf * light_color * (1.0/pdf); 
+                        running_sum +=  prev_path_total * brdf * light_color * (1.0/pdf);
+                        
+                        // /println!("running_sum after: {:?}, path_total: {:?}, light_color: {:?} pdf: {} brdf: {:?}", running_sum, prev_path_total, light_color, pdf, brdf);
+                        
+                        
 
                      },
                      false => {}
