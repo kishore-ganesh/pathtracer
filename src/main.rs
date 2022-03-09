@@ -58,10 +58,14 @@ fn main() {
 
     //panic!("Bounding box test");
     let suzanne_mesh = parse(make_vec3(&[0.0,0.0,0.0]), "models/suzanne.obj");
+    let teapot_mesh = parse(make_vec3(&[0.0,0.0,0.0]), "models/teapot.obj");
+    //let max_planck_mesh = parse(make_vec3(&[0.0,0.0,0.0]), "models/max_planck.obj");
     //let gopher_mesh = parse(make_vec3(&[0.0,0.0,0.0]), "models/gopher.obj");
     
     //let imported_tri_mesh = parse(make_vec3(&[0.0,0.0,0.0]), "models/triangle.obj");
     let transformed_suzanne_mesh = transform_mesh(&(translate(0.0,0.0,-5.0) * scale(10.0,10.0,10.0)), &suzanne_mesh);
+    let transformed_teapot_mesh = transform_mesh(&(translate(0.0,0.0,-5.0) * scale(10.0,10.0,10.0)), &teapot_mesh);
+    //let transformed_max_planck_mesh = transform_mesh(&(translate(0.0,0.0,-5.0) * scale(10.0,10.0,10.0)), &max_planck_mesh);
     //println!("Imported Cube mesh: {:?}", imported_cube_mesh);
     //println!("Transformed Suzanne mesh: {:?}", transformed_suzanne_mesh);
     let v1 = make_vec3(&[0.0,1.0,0.0]); 
@@ -130,7 +134,7 @@ fn main() {
         100.0
 
     ));
-    let n_samples = 16;
+    let n_samples = 1024;
     let chunk_size = 16;
     //println!("Chunk size: {}", chunk_size);
     let roulette_threshold = 0.01;
@@ -167,7 +171,9 @@ fn main() {
     let disney_yellow_diffuse_material = DisneyBRDFMaterial::create(RGB::create(255.0,255.0, 0.0), 0.0,0.0,0.5);
     let disney_glossy_material = DisneyBRDFMaterial::create(RGB::create(255.0,255.0, 0.0), 0.0,0.1,0.1);
     let mut mesh_primitives = vec![
-        Primitive::create_from_mesh(&transformed_suzanne_mesh, Box::new(disney_glossy_material.clone()))
+        //Primitive::create_from_mesh(&transformed_suzanne_mesh, Box::new(disney_glossy_material.clone())),
+        Primitive::create_from_mesh(&transformed_teapot_mesh, Box::new(disney_glossy_material.clone())),
+        //Primitive::create_from_mesh(&transformed_max_planck_mesh, Box::new(disney_glossy_material.clone()))
         //Primitive::create_from_mesh(&gopher_mesh, Box::new(disney_glossy_material.clone()))
         //Primitive::create_from_mesh(&cube_mesh, Box::new(disney_glossy_material.clone()))
     ];
@@ -214,7 +220,7 @@ fn main() {
     let grid = pt.generate(); 
     for row in 0..grid.len() {
         for col in 0..grid[row].len() {
-            // println!("Value at {} {} is: {:?}", row, col, grid[row][col])
+             //println!("Value at {} {} is: {:?}", row, col, grid[row][col])
         }
     }
     color::write_ppm(&grid, "test.ppm".to_string());
