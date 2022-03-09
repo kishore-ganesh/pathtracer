@@ -10,3 +10,5 @@ edition = "2018"
 nalgebra-glm="0.10.0"
 rand = "0.8.3"
 indicatif = "0.16.2"
+obj-rs = "0.7.0"
+
