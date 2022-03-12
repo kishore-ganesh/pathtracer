@@ -111,7 +111,7 @@ impl DisneyBRDFMaterial{
         };
     }
     fn diffuse(&self, theta_d: f32, theta_l: f32, theta_v: f32) -> RGB{
-        let fd_90 = 0.5 + 2.0 * (theta_d).powi(2).cos() * self.roughness;
+        let fd_90 = 0.5 + 2.0 * (theta_d).cos().powi(2) * self.roughness;
         let const_l = 1.0  + (fd_90 - 1.0 )*(1.0-theta_l.cos()).powi(5);
         let const_r = 1.0  + (fd_90 - 1.0 )*(1.0-theta_v.cos()).powi(5);
         let const_c = (const_l * const_r) / PI;
@@ -124,12 +124,8 @@ impl DisneyBRDFMaterial{
     }
 
     fn specular_d(&self,alpha: f32,theta_h: f32) -> f32{
-        let gamma = 2.0;
-        let numerator = (gamma-1.0) * (alpha.powf(2.0) -1.0);
-        let denom = PI * (1.0 - (alpha.powi(2).powf(1.0-gamma))) * (1.0 + (alpha.powi(2) - 1.0)*theta_h.cos().powi(2)).powf(gamma);
-        //println!("numerator: {}, denominator: {}", numerator, denom);
-        ////println!("theta_h: {}, cos(theta_h): {},  alpha^2: {}, term: {}, term * cos(theta_h): {}", theta_h, theta_h.cos(), alpha.powi(2), term, term * (theta_h.cos())); 
-        return numerator / denom; //TODO: have to use normalized form?
+        let res =  alpha.powi(2)/(PI *(1.0 + (alpha.powi(2)-1.0)*theta_h.cos().powi(2)).powi(2));
+        return res; //TODO: have to use normalized form?
     }
 
     fn specular_f(&self, theta_d: f32) -> RGB{
@@ -168,21 +164,23 @@ impl DisneyBRDFMaterial{
         let e1 = rng.gen::<f32>();
         let e2 = rng.gen::<f32>();
         let phi = 2.0 * PI * e1;
-        let gamma = 2.0;
-        let numerator = 1.0 - ((alpha.powi(2).powf(1.0-gamma)) * (1.0-e2) + e2).powf(1.0/(1.0-gamma));
-        let denominator = 1.0-alpha.powi(2);
         ////println!("alpha: {}, e1: {}, e2: {}, numerator: {}, denominator: {}", alpha, e1, e2, numerator, denominator);
-        let cos_theta_h = (numerator/denominator).sqrt();
+        let cos_theta_h = ((1.0-e2)/(1.0+((alpha.powi(2)-1.0)*e2))).sqrt();
+    
+
+        //println!("{} {}", cos_theta_h, alt_value_n);
         return (cos_theta_h, phi);
 
     }
 
     fn eval(&self, theta_d: f32, theta_h: f32, theta_l: f32, theta_v: f32) -> (RGB, f32){
        //TODO: refactor alpha 
+        // println!("Theta_d: {}, theta_h: {}, theta_l: {}, theta_v: {}", theta_d, theta_h, theta_l, theta_v);
+        // println!("Theta l.cos() {}, theta_v.cos() {}", theta_l.cos(), theta_v.cos());
         if (theta_l.cos() < 0.0 || theta_v.cos() < 0.0){
                 return (RGB::black(),1.0);
         }
-        //println!("Theta_d: {}, theta_h: {}, theta_l: {}, theta_v: {}", theta_d, theta_h, theta_l, theta_v);
+    
         let alpha = self.roughness.powi(2);
         let diffuse = self.diffuse(theta_d, theta_l, theta_v);
         let specular_d = self.specular_d(alpha, theta_h);
@@ -191,8 +189,14 @@ impl DisneyBRDFMaterial{
         let specular = specular_f * specular_d * specular_g / (4.0 * theta_l.cos() * theta_v.cos());
 
         //println!("Specular check: {:?} {:?}", specular, (specular_f*specular_d*specular_g)/(4.0 * theta_l.cos() * theta_v.cos()));
-        let res_color =  diffuse + specular;
+        //NOTE: for debugging, might be helpful to just check for diffuse
+        let res_color = diffuse + specular;
+        //TODO: check if there should be a sine here for solid sngle conversion: https://schuttejoe.github.io/post/ggximportancesamplingpart1/
         let pdf = specular_d * theta_h.cos() / (4.0 * theta_d.cos());
+        let alt_alt_pdf = (specular_d * theta_h.cos()) / (4.0 * theta_d.cos());
+        
+        let alt_pdf = (alpha.powi(2) * theta_h.cos()*theta_h.sin())/(PI *((alpha.powi(2)-1.0)*theta_h.cos().powi(2)+1.0).powi(2));
+        // println!("pdf: {}, alt pdf: {}", specular_d * theta_h.cos() * theta_h.sin(), alt_pdf);
         ////println!("Specular color is: {:?}", specular);
         ////println!("specular_d: {}, theta_h.cos(): {}, theta_d.cos(): {}", specular_d, theta_h.cos(), theta_d.cos());
         //println!("Diffuse: {:?}, Specular_D: {}, Specular f: {:?}, Specular g: {}", diffuse, specular_d, specular_f, specular_g);
@@ -216,13 +220,17 @@ impl Material for DisneyBRDFMaterial{
         // self.specular_f(theta_d)*self.specular_g/4*cos theta_h*costheta_d
         //TODO: currently independent of PHI
         let normalized_v = normalize(&v);
+        // println!("Normalized v = {}", normalized_v);
         let alpha = self.roughness.powi(2);
         let (cos_theta_h, phi) = self.sample_from_specular_d(alpha);
         let theta_h = cos_theta_h.acos();
+        assert!(!theta_h.is_nan());
         let bitangent = cross(&r.normal, &r.perp);
-        ////println!("normal: {}, tangent: {}, bitangent: {}", r.normal, r.perp, bitangent);
+        // println!("normal: {}, tangent: {}, bitangent: {}", r.normal, r.perp, bitangent);
         let h = r.normal * cos_theta_h + r.perp * theta_h.sin() * phi.cos() + bitangent * theta_h.sin() * phi.sin();
-        let (l, _) = reflect_about_vec(&normalized_v, &h);
+        // println!("Reflecting about within material");
+        let (l) = reflect_about_vec(&normalized_v, &h);
+        // println!("Non normalized l is: {}", l);
         ////println!("Length of l: {}, h: {}, v: {}", length(&l), length(&h), length(&v));
         ////println!("Length of h: {}", length(&h));
         ////println!("Angle lh: {}, vh: {}", angle(&l, &h), angle(&v, &h));
@@ -234,11 +242,18 @@ impl Material for DisneyBRDFMaterial{
         //NOTE: this is when the light ray goes inside. For refractive, may have to handle this
         //separately
         if theta_l.cos() < 0.0 {
-            ////println!("View vector inside");
+            // println!("View vector inside");
             return (RGB::black(), Ray::create(r.point, r.normal), pdf);
         }
 
+        //println!("l is: {}", normalize(&l));
+        //NOTE: we're starting the ray from a point slightly offset from the point. 
+        //TODO: Check later if this prevents the ray from intersecting the object it originated from
+        //NOTE: the above comment is now invalid
         let ray = Ray::create(r.point, normalize(&l));
+        if(res_color.is_nan()){
+            //panic!("Res Color is NaN");
+        }
         return (res_color, ray, pdf);
 
 
@@ -246,14 +261,16 @@ impl Material for DisneyBRDFMaterial{
     //TODO: refactor into just i, o
     fn brdf_eval(&self, r: &RayIntersection, l: &TVec3<f32>) -> RGB{
         let v = normalize(&(r.origin - r.point));
+        // println!("Normal is: {}", r.normal);
         ////println!("LIGHT LENGTH: {}", length(&l))
+        
         //println!("l: {}, v: {}", l, v);
         let h = (l + v) / length(&(l + v));
         let theta_d = angle(&l, &h);
         let theta_l = angle(&l, &r.normal);
         let theta_h = angle(&h, &r.normal);
         let theta_v = angle(&v, &r.normal);
-        //println!("Ray origin: {:?}, Ray Point: {:?}", r.origin, r.point);
+        //println!("Ray origin: {:?}, Ray Point: {:?}, Ray: {:?}", r.origin, r.point, r.origin - r.point);
         ////println!("LIGHTS: Angle lh: {}, vh: {}", angle(&l, &h), angle(&v, &h));
         let (res_color, _) = self.eval(theta_d, theta_h, theta_l, theta_v);
         return res_color; 

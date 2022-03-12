@@ -37,7 +37,7 @@ impl Object for Plane{
         let incoming_vector = -t*r.direction;
         let p_v = r.origin + t*r.direction;
         let normal_angle = angle(&self.normal, &incoming_vector);
-        let (reflection, perp) = reflect_about_vec(&incoming_vector, &self.normal);
+        let (reflection) = reflect_about_vec(&incoming_vector, &self.normal);
         return Some(RayIntersection{
             origin: r.origin.clone(),
             t: t,

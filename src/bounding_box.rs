@@ -57,15 +57,15 @@ impl BoundingBox {
         let offset_p = p - self.pMin;
         return make_vec3(
             &[
-                offset_p.x/(self.pMax.x-self.pMin.x),
-                offset_p.y/(self.pMax.y-self.pMin.y),
-                offset_p.z/(self.pMax.z-self.pMin.z)
+                offset_p.x/(self.pMax.x-self.pMin.x+1e-10),
+                offset_p.y/(self.pMax.y-self.pMin.y+1e-10),
+                offset_p.z/(self.pMax.z-self.pMin.z+1e-10)
             ]
         )
     }
 
     pub fn surface_area(&self) -> f32 {
-        println!("pMin is: {:?} and pMax is: {:?}", self.pMin, self.pMax);
+        //println!("pMin is: {:?} and pMax is: {:?}", self.pMin, self.pMax);
         if !(self.pMin.x <= self.pMax.x && self.pMin.y <= self.pMax.y && self.pMin.z <= self.pMax.z){
             return 0.0;
         }

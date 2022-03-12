@@ -112,7 +112,7 @@ impl Light for SphericalAreaLight{
         let pdf = 1.0 / ((1.0 - theta_max.cos()) *(2.0 * PI));
         let mut res_color = RGB::black();
         if theta_light.cos() > 0.0 {    
-            res_color =  self.color * theta_area.cos() * self.intensity * theta_light.cos();
+            res_color =  self.color * theta_area.cos() * self.intensity * theta_light.cos() / (point_distance.powi(2));
         }
         //println!("{:?} {:?}", res_color, pdf);
         return (res_color, light_vec, point_distance, pdf);

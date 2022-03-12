@@ -217,7 +217,7 @@ impl Object for Sphere {
             let incoming_vector = -t*t_direction;
             let normal_vec = normalize(&point);
             let normal_angle = angle(&normal_vec, &incoming_vector);
-            let (reflection, perp) = reflect_about_vec(&incoming_vector, &normal_vec);
+            let (reflection) = reflect_about_vec(&incoming_vector, &normal_vec);
             
             //TODO: handle refleciton case when perp = 0
             //let other_axis = cross(&normal_vec, &incoming_vector);
@@ -232,7 +232,6 @@ impl Object for Sphere {
             let world_normal_vec = transform_vec(&self.object_to_world, &normal_vec);
             let world_reflection = normalize(&transform_vec(&self.object_to_world, &reflection));
             let world_point = transform(&self.object_to_world, &point);
-            let world_perp = transform_vec(&self.object_to_world, &perp);
             //println!("reflection: {}, world: {}", reflection, world_reflection);
             return Some(RayIntersection{
                 origin: r.origin.clone(),

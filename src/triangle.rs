@@ -1,4 +1,4 @@
-use crate::primitives::reflect_about_vec;
+use crate::primitives::{reflect_about_vec, get_perp_vec};
 use crate::sphere::{Object, Ray, RayIntersection};
 use crate::color::RGB;
 use crate::bounding_box::BoundingBox;
@@ -59,11 +59,11 @@ impl Object for Triangle{
         u = approx(u, 0.0, 1.0);
         v = approx(v, 0.0, 1.0);
         t = approx(t, 0.0, 1.0);
-        let eps = 1e-5;
+        let eps = 1e-3;
         let w = approx(1.0-u-v, 0.0,1.0);
         if permitted_range.contains(&u) && permitted_range.contains(&v) && permitted_range.contains(&(w)) && t > eps {
             
-            //println!("u: {}, v: {}, t: {}", u, v, t);
+            // println!("u: {}, v: {}, t: {}", u, v, t);
             let point = (1.0-u-v) * self.points[0] + u*self.points[1] + v * self.points[2];
             let point_a = point - self.points[0];
             let point_b = point - self.points[1];
@@ -82,15 +82,16 @@ impl Object for Triangle{
             }
             
             let origin_vector = origin - point;
+            // println!("Origin vector is: {}, point is: {}", origin, point);
             let normal_angle = angle(&normal,&origin_vector);
-            let (reflection, perp) = reflect_about_vec(&origin_vector, &normal);
+            let (reflection) = reflect_about_vec(&origin_vector, &normal);
             //TODO: check when changing to triangle coordinates
             return Some(RayIntersection{
                 origin: r.origin.clone(),
                 t: t, 
                 point: point,
                 normal: normal, 
-                perp: perp,
+                perp: get_perp_vec(&normal),
                 normal_angle: normal_angle, 
                 reflection: reflection,
                 distance: distance(&point, &origin)

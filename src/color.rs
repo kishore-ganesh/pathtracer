@@ -23,6 +23,10 @@ impl RGB {
     pub fn is_black(&self) -> bool {
         return self.r<=0.0 && self.g<=0.0 && self.b <= 0.0;
     }
+
+    pub fn is_nan(&self) -> bool {
+        return self.r.is_nan() || self.g.is_nan() || self.b.is_nan();
+    }
      
 }
 
@@ -38,7 +42,7 @@ fn clamp(x: f32, l: f32, r: f32) -> f32{
 
 }
 
-fn clamp_rgb(x: RGB, l: f32, r: f32) -> RGB{
+pub fn clamp_rgb(x: RGB, l: f32, r: f32) -> RGB{
     return RGB::create(
         clamp(x.r, l, r),
         clamp(x.g, l, r),

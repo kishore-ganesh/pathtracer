@@ -4,12 +4,13 @@ use std::thread;
 use std::thread::JoinHandle;
 use rand::Rng;
 use crate::camera::Camera;
-use crate::color::RGB;
+use crate::color::{RGB, clamp_rgb};
 use crate::primitives::Rect;
 use crate::scene::Scene;
 use crate::sphere::{RayIntersection, Ray, Object};
 
 use crate::materials::Material;
+
 use indicatif::ProgressBar;
 //TODO: make rng part of pathtracer. 
 #[derive(Clone)]
@@ -39,9 +40,10 @@ fn generate_chunk(p: &mut PathTracer, r: Rect, bar: ProgressBar) -> Vec<Vec<RGB>
             let y = yindex + (r.top.y as i32);
             let x = xindex + (r.bottom.x as i32);
             let mut radiance = RGB::black();
+            // println!("x: {}, y: {}", x, y);
             for sample_index in 0..p.n_samples {
                  //sample = sampler.generate_sample();
-                //  println!("x: {}, y: {}, sample_index: {}", x, y, sample_index);
+                // println!("x: {}, y: {}, sample_index: {}", x, y, sample_index);
                  let sample = [x as f32, y as f32];
                  let e1 = rng.gen::<f32>();
                  let e2 = rng.gen::<f32>();
@@ -204,6 +206,7 @@ impl PathTracer{
                  let (light_color, light_vector, light_distance, pdf) = self.scene.light.sample_radiance(ray_intersection.point, ray_intersection.normal);
                  let shadow_ray = Ray::create(ray_intersection.point, light_vector);
                  let shadow_intersection  = self.check_intersection(&shadow_ray);
+                 //println!("Light distance is: {}", light_distance);
                  //TODO: if hits emissive object?
                  //println!("Ray Intersection is: {:?}, Shadow intersection: {:?}  Light vector: {}", ray_intersection,shadow_intersection, light_vector);
                  let mut visible = false;
@@ -229,12 +232,12 @@ impl PathTracer{
                      true => {
                         
                         let brdf = self.scene.bvh_root.brdf_eval_old(&ray_intersection, &light_vector);
-                        //println!("running_sum before: {:?}, path_total: {:?}, light_color: {:?} pdf: {}", running_sum, prev_path_total, light_color, pdf);
+                        // println!("running_sum before: {:?}, path_total: {:?}, light_color: {:?} pdf: {}", running_sum, prev_path_total, light_color, pdf);
                         
                         //TODO: should divide by cos theta
                         running_sum +=  prev_path_total * brdf * light_color * (1.0/pdf);
                         
-                        // /println!("running_sum after: {:?}, path_total: {:?}, light_color: {:?} pdf: {} brdf: {:?}", running_sum, prev_path_total, light_color, pdf, brdf);
+                        // println!("running_sum after: {:?}, path_total: {:?}, light_color: {:?} pdf: {} brdf: {:?}", running_sum, prev_path_total, light_color, pdf, brdf);
                         
                         
 
@@ -247,15 +250,18 @@ impl PathTracer{
 
             if n_iterations > 8 {
                 //TODO: Bounce or roulette threshold?
-                break;
+                 break;
                 let rand_value = rand.gen::<f32>();
                 //println!("Rand value: {}, threshold: {}", rand_value, self.roulette_threshold);
                 if rand_value <= self.roulette_threshold {
                     //running_sum = (running_sum) / (1.0-self.roulette_threshold);
                     break;
                 }
-                else{
+                else{ 
                     path_total = path_total / (1.0 - self.roulette_threshold);
+                    //println!("Clamping path");
+                    path_total = clamp_rgb(path_total, -255.0,255.0);
+
                 }
             }
 
@@ -267,11 +273,12 @@ impl PathTracer{
                     //TODO: return light sampling here. 
                     
                     
-                    //println!("Object intersected");
+                    // println!("Object intersected");
                     //println!("Ray intersection point: {:?}", ray_intersection.point);
                     //Light radiance to point then multiply by cos theta 
                     
                     let view_vector = r_c.origin - ray_intersection.point;
+                    // println!("Origin: {}, point: {}, view_vector: {}", r_c.origin, ray_intersection.point, view_vector);
                     if n_iterations==0 {
                         running_sum += self.scene.bvh_root.le(&ray_intersection.point, &view_vector);
                     }

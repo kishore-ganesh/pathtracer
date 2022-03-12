@@ -58,6 +58,7 @@ impl BVHNode {
             total_bounds = BoundingBox::union(total_bounds, primitives[i as usize].bounds());
         }
         let dim = total_bounds.maximum_extent(); //NOTE: Hardcoding splitting dimension to y
+        println!("dim is: {} for total_bounds: {:?}", dim, total_bounds);
         let n_buckets = 12;
         let mut buckets = vec![Bucket { count: 0, bound: BoundingBox::create_empty(), cost: 0.0 }; n_buckets];
         for i in l..r+1 {
@@ -85,7 +86,7 @@ impl BVHNode {
                 right_count += buckets[right_index].count;
             }
             buckets[i].cost = 0.125 + (left.surface_area() * (left_count as f32) + right.surface_area()*(right_count as f32))/(total_bounds.surface_area());
-            //println!("Cost of ith: {} bucket is: {}", i, buckets[i].cost);
+            println!("Cost of ith: {} bucket is: {}", i, buckets[i].cost);
             if min_cost > buckets[i].cost  {
                 min_cost = buckets[i].cost;
                 min_index = i as i32;
@@ -95,10 +96,18 @@ impl BVHNode {
 
         }
 
-        //println!("Min cost is: {} at index: {}", min_cost, min_index);
+        println!("Min cost is: {} at index: {}", min_cost, min_index);
 
-        let left_primitives: Vec<Primitive> = primitives.iter().cloned().filter(|x| ((n_buckets as f32) * centroid_bounds.offset(x.bounds().centroid())[dim]).floor() <= min_index as f32).collect();
-        let right_primitives: Vec<Primitive> = primitives.iter().cloned().filter(|x|((n_buckets as f32) * centroid_bounds.offset(x.bounds().centroid())[dim]).floor() > min_index as f32).collect();
+        for primitive in primitives.iter().cloned() {
+            println!("Primitive bounds is: {:?}, primitive centroid is: {:?}", primitive.bounds(), primitive.bounds().centroid());
+            println!("Offset is: {:?}", centroid_bounds.offset(primitive.bounds().centroid()));
+            println!("Index is: {}", (n_buckets as f32) * centroid_bounds.offset(primitive.bounds().centroid())[dim].floor());
+        }
+        let left_primitives: Vec<Primitive> = primitives.iter().cloned().filter(|x| ((n_buckets as f32) * centroid_bounds.offset(x.bounds().centroid())[dim]).floor() <= (min_index as f32)).collect();
+        let right_primitives: Vec<Primitive> = primitives.iter().cloned().filter(|x|((n_buckets as f32) * centroid_bounds.offset(x.bounds().centroid())[dim]).floor() > (min_index as f32)).collect();
+        println!("Centroid bounds: {:?}", centroid_bounds);
+        println!("Left length is: {}, Right length is: {}, Primitives length is: {}", left_primitives.len(), right_primitives.len(), primitives.len());
+        assert!((left_primitives.len() + right_primitives.len())==primitives.len());
         let mut left_bounding_box = BoundingBox::create_empty();
         let mut right_bounding_box = BoundingBox::create_empty();
         for primitive in left_primitives.iter() {
@@ -108,17 +117,30 @@ impl BVHNode {
             right_bounding_box = BoundingBox::union(right_bounding_box, primitive.bounds());
         }
         if left_primitives.len()==primitives.len() || right_primitives.len()==primitives.len() {
-            panic!("Size of reduced sprimitives array is the same as the original - no splitting occurring");
+            //No splitting occurring here
+            println!("Size of reduced sprimitives array is the same as the original - no splitting occurring");
+            return BVHNode {
+                primitives: primitives.clone(), 
+                is_terminal: true,
+                left: None,
+                right: None,
+                left_bounding_box: BoundingBox::create_empty(),
+                right_bounding_box: BoundingBox::create_empty(),
+                cached_primitive: None,
+                cached_primitive_old: None,
+            };
+            //panic!("Size of reduced sprimitives array is the same as the original - no splitting occurring");
         }
         let left_primitives_len = left_primitives.len();
         let right_primitives_len = right_primitives.len();
-        let left_node = BVHNode::recursive_helper(left_primitives, l, left_primitives_len as i32 -1);
-        let right_node = BVHNode::recursive_helper(right_primitives, l, right_primitives_len as i32 -1);
+    
+        let left_node = if left_primitives_len > 0  {Some(Box::new(BVHNode::recursive_helper(left_primitives, l, left_primitives_len as i32 -1)))} else  {None};
+        let right_node = if right_primitives_len > 0 {Some(Box::new(BVHNode::recursive_helper(right_primitives, l, right_primitives_len as i32 -1)))} else {None};
         return BVHNode{
             primitives: vec![],
             is_terminal: false,
-            left: if left_primitives_len > 0 {Some(Box::new(left_node))} else  {None},
-            right: if right_primitives_len >  0 {Some(Box::new(right_node))} else {None},
+            left: left_node,
+            right: right_node,
             left_bounding_box: left_bounding_box,
             right_bounding_box: right_bounding_box,
             cached_primitive: None,
