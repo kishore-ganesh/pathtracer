@@ -87,7 +87,7 @@ impl Light for SphericalAreaLight{
         let e2 = rng.gen::<f32>() * 2.0 * PI;
         let d_s = dist * e1.cos() - (self.sphere.r.powi(2) - dist.powi(2) * e1.sin().powi(2)).sqrt();
 
-        let cos_alpha = ((self.sphere.r.powi(2) + dist.powi(2) - d_s.powi(2))/(2.0 * dist * self.sphere.r)).clamp(0.0,1.0);
+        let cos_alpha = ((self.sphere.r.powi(2) + dist.powi(2) - d_s.powi(2))/(2.0 * dist * self.sphere.r));
         
         let alpha = cos_alpha.acos();
         let normal = normalize(&(point - self.sphere.center));
@@ -112,7 +112,7 @@ impl Light for SphericalAreaLight{
         let pdf = 1.0 / ((1.0 - theta_max.cos()) *(2.0 * PI));
         let mut res_color = RGB::black();
         if theta_light.cos() > 0.0 {    
-            res_color =  self.color * theta_area.cos() * self.intensity * theta_light.cos() / (point_distance.powi(2));
+            res_color =  self.color * theta_area.cos() * self.intensity * theta_light.cos() / 1.0;
         }
         //println!("{:?} {:?}", res_color, pdf);
         return (res_color, light_vec, point_distance, pdf);

@@ -120,8 +120,8 @@ fn main() {
     */
     //TODO: link up sphere and cam?
     //Need small region scale to control distortion
-    let screen_res = 512.0;
-    let raster_res = 512.0;
+    let screen_res = 1280.0;
+    let raster_res = 1280.0;
     let look_at_point = make_vec3(&[ 0.0,0.0,0.0 ]);
     let region_scale = 1.0;
     let fov = 60.0;
@@ -131,12 +131,11 @@ fn main() {
             3.0
             ));
     let spherical_area_light = Box::new(SphericalAreaLight::create(
-        Sphere::create(10.0, make_vec3(&[0.0,25.0,0.0])),
+        Sphere::create(5.0, make_vec3(&[0.0,5.0,0.0])),
         RGB::create(255.0,255.0,255.0),
-        500.0
-
+        4.0
     ));
-    let n_samples = 64;
+    let n_samples = 1;
     let chunk_size = 16;
     //println!("Chunk size: {}", chunk_size);
     let roulette_threshold = 0.01;
@@ -164,7 +163,7 @@ fn main() {
     let white_diffuse_material = DiffuseMaterial::create(RGB::create(255.0,255.0,255.0));
     let specular_material = SpecularMaterial::create();
 
-    let disney_diffuse_material = DisneyBRDFMaterial::create(RGB::create(255.0,120.0,120.0), 0.0,0.2,0.8);
+    let disney_diffuse_material = DisneyBRDFMaterial::create(RGB::create(255.0,120.0,120.0), 0.0,0.2,0.8); //NOTE: names may no longer match material properties
     let disney_violet_diffuse_material = DisneyBRDFMaterial::create(RGB::create(40.0, 12.0, 148.0), 0.0,0.7,0.3);
     let disney_white_diffuse_material = DisneyBRDFMaterial::create(RGB::create(200.0, 200.0, 200.0), 0.0,0.04,0.9);
     let disney_red_diffuse_material = DisneyBRDFMaterial::create(RGB::create(255.0,0.0,0.0), 0.0,0.0,0.5);
@@ -177,7 +176,7 @@ fn main() {
         //Primitive::create_from_mesh(&transformed_teapot_mesh, Box::new(disney_glossy_material.clone())),
         //Primitive::create_from_mesh(&transformed_max_planck_mesh, Box::new(disney_glossy_material.clone()))
         //Primitive::create_from_mesh(&gopher_mesh, Box::new(disney_glossy_material.clone()))
-        Primitive::create_from_mesh(&cube_mesh, Box::new(disney_glossy_material.clone()))
+        Primitive::create_from_mesh(&cube_mesh, Box::new(disney_diffuse_material.clone()))
         //Primitive::create_from_mesh(&imported_cube_mesh, Box::new(disney_diffuse_material.clone()))
     ];
     let mut other_primitives = 
@@ -186,7 +185,7 @@ fn main() {
             
             //Primitive::create(Box::new(imported_tri_mesh), Box::new(diffuse_material.clone())),
             //Primitive::create(Box::new(cube), Box::new(disney_diffuse_material.clone())),
-              Primitive::create(Box::new(x), Box::new(disney_diffuse_material.clone())),
+              Primitive::create(Box::new(x), Box::new(disney_glossy_material.clone())),
              //Primitive::create(Box::new(x2), Box::new(disney_glossy_material.clone())),
              //Primitive::create(Box::new(x3), Box::new(disney_red_diffuse_material.clone())),
 //                             Primitive::create(spherical_area_light.clone(), Box::new(white_diffuse_material.clone())),
@@ -223,7 +222,7 @@ fn main() {
     let grid = pt.generate(); 
     for row in 0..grid.len() {
         for col in 0..grid[row].len() {
-             println!("Value at {} {} is: {:?}", row, col, grid[row][col])
+            //  println!("Value at {} {} is: {:?}", row, col, grid[row][col])
         }
     }
     color::write_ppm(&grid, "test.ppm".to_string());

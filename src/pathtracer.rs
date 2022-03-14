@@ -317,7 +317,7 @@ impl PathTracer{
 
         }
 //            //println!("Final running sum: {:?}", running_sum);
-            return running_sum;
+            return clamp_rgb(running_sum, -255.0,255.0);
 
     }
 }

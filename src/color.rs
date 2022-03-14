@@ -31,7 +31,6 @@ impl RGB {
 }
 
 fn clamp(x: f32, l: f32, r: f32) -> f32{
-    return x;
     if x < l {
         return l;
     } 
@@ -63,11 +62,11 @@ impl Add for RGB{
 impl Sub<f32> for RGB{
     type Output = RGB;
     fn sub(self, other: f32) -> Self{
-        return clamp_rgb(Self{
+        return Self{
             r: ((self.r-other)),
             g: ((self.g-other)),
             b: ((self.b-other)),
-        }, 0.0,255.0);
+        };
     }
 }
 
@@ -75,11 +74,11 @@ impl AddAssign for RGB{
     fn add_assign(&mut self, other: Self){
         //TODO: handle overflow
         //TODO: check this syntax
-        *self = clamp_rgb(Self{
+        *self = Self{
             r: self.r + other.r,
             g: self.g + other.g,
             b: self.b + other.b
-        }, 0.0,255.0);
+        };
     }
 }
 
@@ -87,43 +86,43 @@ impl AddAssign for RGB{
 impl Div<f32> for RGB {
     type Output = Self;
     fn div(self, rhs: f32) -> Self{
-        return clamp_rgb(Self{
+        return Self{
             r: self.r/rhs,
             g: self.g/rhs,
             b: self.b/rhs
-        }, 0.0, 255.0);
+        };
     }
 }
 
 
 impl DivAssign<f32> for RGB {
     fn div_assign(&mut self, rhs: f32){
-        *self = clamp_rgb(Self{
+        *self = Self{
             r: self.r/rhs,
             g: self.g/rhs,
             b: self.b/rhs
-        }, 0.0, 255.0);
+        };
     }
 }
 
 impl Mul<f32> for RGB{
     type Output = Self;
     fn mul(self, rhs: f32) -> Self{
-        return clamp_rgb(Self{
+        return Self{
             r: self.r * rhs,
             g: self.g * rhs,
             b: self.b * rhs
-        }, 0.0, 255.0);
+        };
     }
 }
 impl Mul<RGB> for RGB{
     type Output = Self;
     fn mul(self, rhs: Self) -> Self{
-        return clamp_rgb(Self{
+        return Self{
             r: (self.r * rhs.r)/255.0,
             g: (self.g * rhs.g)/255.0,
             b: (self.b * rhs.b)/255.0
-        }, 0.0, 255.0);
+        };
     }
 }
 //TODO: Find more idiomatic way to do this 
