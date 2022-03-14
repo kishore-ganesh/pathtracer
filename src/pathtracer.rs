@@ -232,7 +232,7 @@ impl PathTracer{
                  let shadow_ray = Ray::create(ray_intersection.point, light_vector);
                  let (shadow_intersection, shadow_min_index) = self.check_intersection(&shadow_ray);
                  //TODO: if hits emissive object?
-                 //println!("Ray Intersection is: {:?}, Shadow intersection: {:?}  Light vector: {}", ray_intersection,shadow_intersection, light_vector);
+                //  println!("Ray Intersection is: {:?}, Shadow intersection: {:?}  Light vector: {}", ray_intersection,shadow_intersection, light_vector);
                  let mut visible = false;
                  match shadow_intersection {
                      Some(s) => {
