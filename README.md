@@ -39,6 +39,8 @@ Note that this is a recursive process - To know how much light is coming in step
 ## Sample Renders
 #### 1280 x 1280, 1024 samples
 ![1280 x 1280, 1024 samples](readme_images/1024_samples_clamped.jpg)
+#### 1280 x 1280, Almost fully reflective, 512 samples
+![1280 x 1280, Almost fully reflective, 512 samples](readme_images/512_samples_almost_fully_reflective.jpg)
 #### 1280 x 1280, 16 samples
 ![1280 x 1280, 16 samples](./readme_images/1_16_sample.jpg)
 #### 1280 x 1280, 64 samples
