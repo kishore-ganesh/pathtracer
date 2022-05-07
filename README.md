@@ -37,28 +37,24 @@ Overall flow: We start on the image grid and draw a ray from each pixel of the g
 Note that this is a recursive process - To know how much light is coming in step 2, we recurse into the object and try to calculate the radiance at tha tpoint.
 
 ## Sample Renders
-#### 512 x 512, 500 samples
-![512 x 512, 500 samples](readme_images/512_512_500_sample.png)
-#### 512 x 512, 1024 samples
-![512 x 512, 1024 samples](./readme_images/512_512_1024_samples.png)
-#### 1280 x 1280, 1 sample
-![1280 x 720, 1 sample](./readme_images/1280_720_1_sample.png)
 #### 1280 x 1280, 1024 samples
-![1280 x 720, 1024 samples](./readme_images/disney_materials_55_1280_res_1024_samples.png)
-#### 512 x 512 (older version)
-![512 x 512 (older version)](./readme_images/disney_materials_44_area_lights.png)
-#### 512 x 512, 10 samples (older version)
-![512 x 512 (older version)](./readme_images/disney_materials_45_area_lights_10_samples.png)
-#### 512 x 512(older version)
-![](./readme_images/disney_materials_47.png)
-#### 512 x 512, 1024 samples
-![512 x 512, 1024 samples](./readme_images/disney_materials_54_1024_samples.png)
-#### 512 x 512, 1024 samples
-![512 x 512, 1024 samples](./readme_images/disney_materials_55_1024_samples.png)
-#### 512 x 512, (slightly) Glossy Material
-![Slightly glossy material](readme_images/glossier.png)
-#### 1280 x 1280, Imported Suzanne Mesh, 256 samples 
-![Imported Mesh](readme_images/suzanne_256_samples_1280_res_1.png)
+![1280 x 1280, 1024 samples](readme_images/1024_samples_clamped.jpg)
+#### 1280 x 1280, 16 samples
+![1280 x 1280, 16 samples](./readme_images/1_16_sample.jpg)
+#### 1280 x 1280, 64 samples
+![1280 x 1280, 64 samples](./readme_images/2_64_sample.jpg)
+#### 1280 x 1280, 128 samples
+![1280 x 1280, 128 samples](./readme_images/3_128_sample.jpg)
+#### 1280 x 1280, Lower Roughness, 16 samples
+![1280 x 1280, Lower Roughness, 16 samples](./readme_images/16_samples_lower_roughness.jpg)
+#### 1280 x 1280, Higher Roughness, 16 samples
+![1280 x 1280, Higher Roughness, 16 samples](./readme_images/16_samples_higher_roughness.jpg)
+#### 1280 x 1280, Suzanne Mesh, 64 samples
+![1280 x 1280, Suzanne Mesh, 64 samples](./readme_images/suzanne.jpg)
+#### 1280 x 1280, Suzanne Mesh, 128 samples (Notice the black dots - these are due to NANs appearing [needs to be fixed])
+![1280 x 1280, Suzanne Mesh, 128 samples](./readme_images/suzanne_nan.jpg)
+
+
 
 ## Things to think about
 1. Noise Reduction - There's a lot of noise in the rendered images. This can be reduced by doing better sampling (stratified sampling?) for the image pixels, cosine weighted sampling and implementing multiple importance sampling 
