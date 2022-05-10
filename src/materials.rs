@@ -131,9 +131,9 @@ impl DisneyBRDFMaterial{
     fn specular_f(&self, theta_d: f32) -> RGB{
         //TODO: need to handle specular tint
         //is f0 a color?
-        let remapped_specular = self.specular;
+        let remapped_specular = self.specular * 0.08 ;
         let tint = RGB::create(1.0,1.0,1.0);
-        let f0 = tint * remapped_specular;
+        let f0 = (tint * remapped_specular) * (1.0 - self.metallic) + (self.base_color  * self.metallic / 255.0);
         let res = f0 +  (f0-1.0) * (-1.0) * (1.0-theta_d.cos()).powi(5);
 
         return res * 255.0;
@@ -190,7 +190,7 @@ impl DisneyBRDFMaterial{
 
         //println!("Specular check: {:?} {:?}", specular, (specular_f*specular_d*specular_g)/(4.0 * theta_l.cos() * theta_v.cos()));
         //NOTE: for debugging, might be helpful to just check for diffuse
-        let res_color = diffuse + specular;
+        let res_color = diffuse*(1.0-self.metallic) + specular;
         //TODO: check if there should be a sine here for solid sngle conversion: https://schuttejoe.github.io/post/ggximportancesamplingpart1/
         let pdf = specular_d * theta_h.cos() / (4.0 * theta_d.cos());
         let alt_alt_pdf = (specular_d * theta_h.cos()) / (4.0 * theta_d.cos());
