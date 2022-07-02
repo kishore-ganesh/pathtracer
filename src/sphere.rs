@@ -11,6 +11,7 @@ use crate::materials::Material;
 use crate::primitives::{get_perp_vec,reflect_about_vec,transform, transform_vec};
 use crate::bounding_box::{BoundingBox};
 use crate::triangle_mesh::TriangleMesh;
+use std::sync::Arc;
 pub trait Object: ObjectClone{
 
     fn intersection(&self, r: &Ray) -> Option<RayIntersection>;
@@ -41,20 +42,20 @@ impl Clone for Box<dyn Object + Send>{
 }
 #[derive(Clone,)]
 pub struct Primitive{
-    pub object: Box<dyn Object + Send>,
-    pub material: Box<dyn Material + Send>
+    pub object: Arc<dyn Object + Send + Sync>,
+    pub material: Arc<dyn Material + Send + Sync>
 }
 
 
 impl Primitive{
-    pub fn create(o: Box<dyn Object + Send>, m: Box<dyn Material + Send>) -> Self{
+    pub fn create(o: Arc<dyn Object + Send + Sync>, m: Arc<dyn Material + Send + Sync>) -> Self{
         return Primitive{object: o, material: m};
     }
 
-    pub fn create_from_mesh(o: &TriangleMesh, m: Box<dyn Material + Send>) -> Vec<Self> {
+    pub fn create_from_mesh(o: &TriangleMesh, m: Arc<dyn Material + Send + Sync>) -> Vec<Self> {
         let mut v: Vec<Self> = vec![];
         for t in &o.mesh {
-            v.push(Self::create(Box::new(t.clone()), m.clone()));
+            v.push(Self::create(Arc::new(t.clone()), m.clone()));
         }
         return v;
     }

@@ -4,6 +4,7 @@ use crate::color::RGB;
 use crate::sphere::{Object, Ray, RayIntersection, Primitive, min_intersection};
 use glm::TVec3;
 use crate::materials::Material;
+use std::mem::swap;
 const min_primitives:usize = 5;
 
 #[derive(Clone)]
@@ -107,7 +108,7 @@ impl BVHNode {
         let right_primitives: Vec<Primitive> = primitives.iter().cloned().filter(|x|((n_buckets as f32) * centroid_bounds.offset(x.bounds().centroid())[dim]).floor() > (min_index as f32)).collect();
         println!("Centroid bounds: {:?}", centroid_bounds);
         println!("Left length is: {}, Right length is: {}, Primitives length is: {}", left_primitives.len(), right_primitives.len(), primitives.len());
-        assert!((left_primitives.len() + right_primitives.len())==primitives.len());
+        debug_assert!((left_primitives.len() + right_primitives.len())==primitives.len());
         let mut left_bounding_box = BoundingBox::create_empty();
         let mut right_bounding_box = BoundingBox::create_empty();
         for primitive in left_primitives.iter() {
@@ -153,7 +154,8 @@ impl BVHNode {
     
     pub fn intersection_helper(&mut self, r: &Ray) -> (Option<RayIntersection>, Option<Primitive>) {
         
-        self.cached_primitive_old = self.cached_primitive.clone();
+        swap(&mut self.cached_primitive_old, &mut self.cached_primitive);
+        // self.cached_primitive_old = self.cached_primitive;
         self.cached_primitive = None;
         if self.is_terminal {
             let mut min_intersection_v: Option<RayIntersection> = None;

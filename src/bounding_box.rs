@@ -53,7 +53,7 @@ impl BoundingBox {
     }
 
     pub fn offset(&self, p: TVec3<f32>) -> TVec3<f32> {
-        assert!(self.pMin.x <= self.pMax.x && self.pMin.y <= self.pMax.y && self.pMin.z <= self.pMax.z);
+        debug_assert!(self.pMin.x <= self.pMax.x && self.pMin.y <= self.pMax.y && self.pMin.z <= self.pMax.z);
         let offset_p = p - self.pMin;
         return make_vec3(
             &[
@@ -83,7 +83,7 @@ impl BoundingBox {
         if !(self.pMin.x <= self.pMax.x && self.pMin.y <= self.pMax.y && self.pMin.z <= self.pMax.z) {
             println!("Box is: {:?} {:?}, ray is: {:?}", self.pMin, self.pMax, r);
         }
-        assert!(self.pMin.x <= self.pMax.x && self.pMin.y <= self.pMax.y && self.pMin.z <= self.pMax.z);
+        debug_assert!(self.pMin.x <= self.pMax.x && self.pMin.y <= self.pMax.y && self.pMin.z <= self.pMax.z);
         let mut res = true;
         //return res;
         for i in 0..3 {
@@ -106,7 +106,7 @@ impl BoundingBox {
                 res = false;
             } 
         }
-        assert!(!tMin.is_nan() && !tMax.is_nan());
+        debug_assert!(!tMin.is_nan() && !tMax.is_nan());
         if tMin>tMax {
             res = false;
         } 

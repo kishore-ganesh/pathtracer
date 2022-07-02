@@ -224,7 +224,7 @@ impl Material for DisneyBRDFMaterial{
         let alpha = self.roughness.powi(2);
         let (cos_theta_h, phi) = self.sample_from_specular_d(alpha);
         let theta_h = cos_theta_h.acos();
-        assert!(!theta_h.is_nan());
+        debug_assert!(!theta_h.is_nan());
         let bitangent = cross(&r.normal, &r.perp);
         // println!("normal: {}, tangent: {}, bitangent: {}", r.normal, r.perp, bitangent);
         let h = r.normal * cos_theta_h + r.perp * theta_h.sin() * phi.cos() + bitangent * theta_h.sin() * phi.sin();

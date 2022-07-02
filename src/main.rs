@@ -36,9 +36,9 @@ use materials::{DiffuseMaterial, SpecularMaterial, DisneyBRDFMaterial};
 use plane::Plane;
 use bounding_box::{BoundingBox};
 use bounding_volume_hierarchy::BVHNode;
-
+use std::sync::Arc;
 fn main() {
-    let imported_cube_mesh = parse(make_vec3(&[0.0,0.0,0.0]), "models/cube.obj");
+    // let imported_cube_mesh = parse(make_vec3(&[0.0,0.0,0.0]), "models/cube.obj");
     //println!("a: 123.0, b: nan, min(a, b): {}. max(a, b): {}", float_min(123.0, f32::NAN), float_max(123.0, f32::NAN));
     let bounding_box = BoundingBox::create(
         make_vec3(&[0.0,0.0,0.0],
@@ -59,13 +59,13 @@ fn main() {
     //panic!("Bounding box test");
     
     let suzanne_mesh = parse(make_vec3(&[0.0,0.0,0.0]), "models/suzanne.obj");
-    //let teapot_mesh = parse(make_vec3(&[0.0,0.0,0.0]), "models/teapot.obj");
+    // let teapot_mesh = parse(make_vec3(&[0.0,0.0,0.0]), "models/teapot.obj");
     //let max_planck_mesh = parse(make_vec3(&[0.0,0.0,0.0]), "models/max_planck.obj");
     //let gopher_mesh = parse(make_vec3(&[0.0,0.0,0.0]), "models/gopher.obj");
     
     //let imported_tri_mesh = parse(make_vec3(&[0.0,0.0,0.0]), "models/triangle.obj");
     let transformed_suzanne_mesh = transform_mesh(&(translate(0.0,0.0,0.0) * scale(2.0,2.0,2.0)), &suzanne_mesh);
-    //let transformed_teapot_mesh = transform_mesh(&(translate(0.0,0.0,-5.0) * scale(10.0,10.0,10.0)), &teapot_mesh);
+    // let transformed_teapot_mesh = transform_mesh(&(translate(0.0,0.0,-5.0) * scale(10.0,10.0,10.0)), &teapot_mesh);
     //let transformed_max_planck_mesh = transform_mesh(&(translate(0.0,0.0,-5.0) * scale(10.0,10.0,10.0)), &max_planck_mesh);
     //println!("Imported Cube mesh: {:?}", imported_cube_mesh);
     //println!("Transformed Suzanne mesh: {:?}", transformed_suzanne_mesh);
@@ -74,7 +74,7 @@ fn main() {
     //println!("perp vec to: {} is: {}", &v1, get_perp_vec(&v1));
     //println!("perp vec to: {} is: {}, dot is: {}", &v2, get_perp_vec(&v2), dot(&v2, &get_perp_vec(&v2)));
 
-    let center = make_vec3(&[ 0.0,2.0,0.0 ]);
+    let center = make_vec3(&[ 0.0,1.0,0.0 ]);
     let x: Sphere = Sphere::create(1.0, center.clone());
     let r: Ray = Ray{origin: make_vec3(&[ 1.0,1.0,1.0 ]), direction: make_vec3(&[1.0,1.0,1.0])};
     x.intersection(&r);
@@ -125,17 +125,17 @@ fn main() {
     let look_at_point = make_vec3(&[ 0.0,0.0,0.0 ]);
     let region_scale = 1.0;
     let fov = 60.0;
-    let point_light = Box::new(PointLight::create(
+    let point_light = Arc::new(PointLight::create(
             make_vec3(&[ 0.0, 20.0,2.0 ]),
             RGB::create(255.0,255.0,255.0),
             3.0
             ));
-    let spherical_area_light = Box::new(SphericalAreaLight::create(
-        Sphere::create(5.0, make_vec3(&[0.0,5.0,0.0])),
+    let spherical_area_light = Arc::new(SphericalAreaLight::create(
+        Sphere::create(10.0, make_vec3(&[0.0,0.0,20.0])),
         RGB::create(255.0,255.0,255.0),
-        4.0
+        10.0
     ));
-    let n_samples = 1;
+    let n_samples = 1024;
     let chunk_size = 16;
     //println!("Chunk size: {}", chunk_size);
     let roulette_threshold = 0.01;
@@ -143,10 +143,10 @@ fn main() {
 //    let look_at_point = make_vec3(&[ 0.0,0.0,1.0 ]);
     let camera = Camera::look_at(make_vec3(&[ 0.0,0.0,10.0 ]), look_at_point, 0.1, 1000.0, screen_res, raster_res, fov,region);
     let relative_point = transform(&camera.camera_to_world, &make_vec3(&[ 0.0,0.0,50.0 ]));
-    // let x2: Sphere = Sphere::create(1.0, make_vec3(&[ 1.0,-1.0,0.0 ]));
+    // let x2: Sphere = Sphere::crea te(1.0, make_vec3(&[ 1.0,-1.0,0.0 ]));
     // let x3: Sphere = Sphere::create(1.0, make_vec3(&[-1.0, -1.0, 3.0]));
     let x2: Sphere = Sphere::create(1.0, make_vec3(&[ 1.0,-1.0, 2.0 ]));
-    let x3: Sphere = Sphere::create(1.0, make_vec3(&[ -1.0,-1.0, 4.0 ]));
+    let x3: Sphere = Sphere::create(1.0, make_vec3(&[ -1.0,-1.0, 3.0 ]));
     
     let triangle = Triangle::create([
                                     make_vec3(&[ -2.0,0.0,0.0 ]),
@@ -163,46 +163,47 @@ fn main() {
     let white_diffuse_material = DiffuseMaterial::create(RGB::create(255.0,255.0,255.0));
     let specular_material = SpecularMaterial::create();
 
-    let disney_diffuse_material = DisneyBRDFMaterial::create(RGB::create(255.0,120.0,120.0), 0.0,0.2,0.8); //NOTE: names may no longer match material properties
-    let disney_violet_diffuse_material = DisneyBRDFMaterial::create(RGB::create(40.0, 12.0, 148.0), 0.0,0.7,0.3);
-    let disney_white_diffuse_material = DisneyBRDFMaterial::create(RGB::create(200.0, 200.0, 200.0), 0.0,0.04,0.9);
-    let disney_red_diffuse_material = DisneyBRDFMaterial::create(RGB::create(255.0,0.0,0.0), 0.0,0.0,0.5);
+    let disney_diffuse_material = DisneyBRDFMaterial::create(RGB::create(255.0,120.0,120.0), 0.0,0.01,0.8); //NOTE: names may no longer match material properties
+    let disney_violet_diffuse_material = DisneyBRDFMaterial::create(RGB::create(40.0, 12.0, 148.0), 0.0,0.9,0.2);
+    let disney_white_diffuse_material = DisneyBRDFMaterial::create(RGB::create(255.0, 255.0, 255.0), 0.0,0.9,0.02);
+    let disney_red_diffuse_material = DisneyBRDFMaterial::create(RGB::create(255.0,0.0,0.0), 0.0,0.9,0.5);
     let disney_green_diffuse_material = DisneyBRDFMaterial::create(RGB::create(0.0,255.0,0.0), 0.0,0.0,0.5);
     let disney_blue_diffuse_material = DisneyBRDFMaterial::create(RGB::create(0.0,0.0,255.0), 0.0,0.0,0.5);
     let disney_yellow_diffuse_material = DisneyBRDFMaterial::create(RGB::create(255.0,255.0, 0.0), 0.0,0.0,0.5);
-    let disney_glossy_material = DisneyBRDFMaterial::create(RGB::create(255.0,255.0, 0.0), 0.0,0.1,0.2);
+    let disney_glossy_material = DisneyBRDFMaterial::create(RGB::create(255.0,255.0, 0.0), 0.0,0.5,0.5);
+    let disney_silver_material = DisneyBRDFMaterial::create(RGB::create(211.0,211.0,211.0), 0.2, 0.9,0.02);
     let mut mesh_primitives = vec![
-        //Primitive::create_from_mesh(&transformed_suzanne_mesh, Box::new(disney_glossy_material.clone())),
-        //Primitive::create_from_mesh(&transformed_teapot_mesh, Box::new(disney_glossy_material.clone())),
-        //Primitive::create_from_mesh(&transformed_max_planck_mesh, Box::new(disney_glossy_material.clone()))
-        //Primitive::create_from_mesh(&gopher_mesh, Box::new(disney_glossy_material.clone()))
-        Primitive::create_from_mesh(&cube_mesh, Box::new(disney_diffuse_material.clone()))
-        //Primitive::create_from_mesh(&imported_cube_mesh, Box::new(disney_diffuse_material.clone()))
+        // Primitive::create_from_mesh(&transformed_suzanne_mesh, Arc::new(disney_glossy_material.clone())),
+        // Primitive::create_from_mesh(&transformed_teapot_mesh, Arc::new(disney_glossy_material.clone())),
+        //Primitive::create_from_mesh(&transformed_max_planck_mesh, Arc::new(disney_glossy_material.clone()))
+        //Primitive::create_from_mesh(&gopher_mesh, Arc::new(disney_glossy_material.clone()))
+        Primitive::create_from_mesh(&cube_mesh, Arc::new(disney_diffuse_material.clone()))
+        //Primitive::create_from_mesh(&imported_cube_mesh, Arc::new(disney_diffuse_material.clone()))
     ];
     let mut other_primitives = 
         vec![
             
             
-            //Primitive::create(Box::new(imported_tri_mesh), Box::new(diffuse_material.clone())),
-            //Primitive::create(Box::new(cube), Box::new(disney_diffuse_material.clone())),
-              Primitive::create(Box::new(x), Box::new(disney_glossy_material.clone())),
-             //Primitive::create(Box::new(x2), Box::new(disney_glossy_material.clone())),
-             //Primitive::create(Box::new(x3), Box::new(disney_red_diffuse_material.clone())),
-//                             Primitive::create(spherical_area_light.clone(), Box::new(white_diffuse_material.clone())),
-            //Primitive::create(Box::new(x), Box::new(diffuse_material.clone())),
-             //Primitive::create(Box::new(cube), Box::new(diffuse_material.clone())),
-            // Primitive::create(Box::new(p1), Box::new(disney_white_diffuse_material.clone())),
-          //   Primitive::create(Box::new(p2), Box::new(disney_red_diffuse_material.clone())),
+            //Primitive::create(Arc::new(imported_tri_mesh), Arc::new(diffuse_material.clone())),
+            // Primitive::create(Arc::new(cube), Arc::new(disney_diffuse_material.clone())),
+             Primitive::create(Arc::new(x), Arc::new(disney_glossy_material.clone())),
+             Primitive::create(Arc::new(x2), Arc::new(disney_white_diffuse_material.clone())),
+             Primitive::create(Arc::new(x3), Arc::new(disney_red_diffuse_material.clone())),
+            //  Primitive::create(spherical_area_light.clone(), Arc::new(white_diffuse_material.clone())),
+            //Primitive::create(Arc::new(x), Arc::new(diffuse_material.clone())),
+             //Primitive::create(Arc::new(cube), Arc::new(diffuse_material.clone())),
+            // Primitive::create(Arc::new(p1), Arc::new(disney_white_diffuse_material.clone())),
+          //   Primitive::create(Arc::new(p2), Arc::new(disney_red_diffuse_material.clone())),
 
           
-            //Primitive::create(Box::new(p3), Box::new(disney_green_diffuse_material.clone())),
-            //Primitive::create(Box::new(p4), Box::new(disney_blue_diffuse_material.clone())),
-            //Primitive::create(Box::new(p5), Box::new(disney_yellow_diffuse_material.clone())),
+            //Primitive::create(Arc::new(p3), Arc::new(disney_green_diffuse_material.clone())),
+            //Primitive::create(Arc::new(p4), Arc::new(disney_blue_diffuse_material.clone())),
+            //Primitive::create(Arc::new(p5), Arc::new(disney_yellow_diffuse_material.clone())),
             
 
-            //Box::new(triangle),
-            //Box::new(x),
-            //Box::new(x2)
+            //Arc::new(triangle),
+            //Arc::new(x),
+            //Arc::new(x2)
 
         ];
     
