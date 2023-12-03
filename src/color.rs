@@ -136,13 +136,12 @@ pub fn write_ppm(v: &Vec<Vec<RGB>>,s: String) -> Result<String, Error>{
     let header = format!("P6 {} {} 255\n", v[0].len(), v.len());
     file.write_all(header.as_bytes())?;
     for row in v {
-        let mut col_str = String::from("");
         for col in row {
-            file.write_all(&[col.r as u8]);
+            file.write_all(&[col.r as u8])?;
             //file.write_all(" ".as_bytes());
-            file.write_all(&[col.g as u8]);
+            file.write_all(&[col.g as u8])?;
             //file.write_all(" ".as_bytes());
-            file.write_all(&[col.b as u8]);
+            file.write_all(&[col.b as u8])?;
             //file.write_all(" ".as_bytes());
         }
         //file.write_all("\n".as_bytes());

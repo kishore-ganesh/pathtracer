@@ -1,18 +1,12 @@
-use glm::{TMat4, make_mat4x4, inverse, cross, normalize, transpose, vec3_to_vec4, mat4_to_mat3, TVec3, make_vec3, length};
+use glm::{TMat4, make_mat4x4, inverse, cross, normalize, TVec3, make_vec3};
 
 use crate::sphere::Ray;
 use crate::primitives::{Rect,scale, translate, transform};
 use std::f32::consts::PI;
 #[derive(Debug, Copy, Clone)]
 pub struct Camera {
-    from: TVec3<f32>,
-    pub camera_to_world: TMat4<f32>,
-    world_to_camera: TMat4<f32>,
-    raster_to_screen: TMat4<f32>,
-    screen_to_raster: TMat4<f32>,
+    camera_to_world: TMat4<f32>,
     raster_to_world: TMat4<f32>,
-
-
 }
 
 /*
@@ -30,7 +24,7 @@ impl Camera {
 
 //NOTE: glm already has functions, we are reimplementing some for learning purposes
 impl Camera {
-    pub fn look_at(from: TVec3<f32>, to: TVec3<f32>, f: f32, n: f32, screen_res: f32, raster_res: f32, fov: f32,region: Rect) -> Self{
+    pub fn look_at(from: TVec3<f32>, to: TVec3<f32>, f: f32, n: f32, _: f32, raster_res: f32, fov: f32,region: Rect) -> Self{
         let z = normalize(&(to-from));
         let up = make_vec3(&[ 0.0,1.0,0.0 ]);
         //Should we normalize?
@@ -43,7 +37,6 @@ impl Camera {
                                         x.y, n_up.y, z.y, from.y as f32, 
                                         x.z, n_up.z, z.z, from.z as f32, 
                                         0.0, 0.0, 0.0, 1.0]);
-        let world_to_camera = inverse(&camera_to_world);
         let camera_to_screen = make_mat4x4(&[
                                            1.0,0.0,0.0,0.0,
                                            0.0,1.0,0.0,0.0,
@@ -61,11 +54,7 @@ impl Camera {
         //println!("Raster to world is: {:?}", raster_to_world);
         //TODO: check nice way to return it correctly
         return Camera{
-            from: from,
             camera_to_world: camera_to_world,
-            world_to_camera: world_to_camera,
-            raster_to_screen: raster_to_screen,
-            screen_to_raster: screen_to_raster,
             raster_to_world: raster_to_world
         }
 
@@ -102,5 +91,9 @@ impl Camera {
 
        return Ray{origin: transformed_origin, direction: direction}; 
     } 
+
+    pub fn get_camera_to_world(&self) -> TMat4<f32> {
+        self.camera_to_world
+    }
 
 }

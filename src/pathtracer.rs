@@ -1,5 +1,4 @@
 use glm::{angle, make_vec3};
-use std::f32::consts::PI;
 use std::thread;
 use std::thread::JoinHandle;
 use rand::Rng;
@@ -7,7 +6,7 @@ use crate::camera::Camera;
 use crate::color::{RGB, clamp_rgb};
 use crate::primitives::Rect;
 use crate::scene::Scene;
-use crate::sphere::{RayIntersection, Ray, Object};
+use crate::sphere::{RayIntersection, Ray};
 
 use crate::materials::Material;
 
@@ -41,7 +40,7 @@ fn generate_chunk(p: &mut PathTracer, r: Rect, bar: ProgressBar) -> Vec<Vec<RGB>
             let x = xindex + (r.bottom.x as i32);
             let mut radiance = RGB::black();
             // println!("x: {}, y: {}", x, y);
-            for sample_index in 0..p.n_samples {
+            for _ in 0..p.n_samples {
                  //sample = sampler.generate_sample();
                 // println!("x: {}, y: {}, sample_index: {}", x, y, sample_index);
                  let sample = [x as f32, y as f32];
@@ -90,9 +89,9 @@ impl PathTracer{
         let mut thread_handles: Vec<Vec<Option<JoinHandle<Vec<Vec<RGB>>>>>> = vec![];
 
         // Cannot use vec! initialization since JoinHandle is not cloneable
-        for y in 0..self.yres/self.chunk_size {
+        for _ in 0..self.yres/self.chunk_size {
             let mut v: Vec<Option<JoinHandle<Vec<Vec<RGB>>>>> = vec![]; 
-            for x in 0..self.xres / self.chunk_size {
+            for _ in 0..self.xres / self.chunk_size {
                 v.push(None);
             }
 
@@ -162,7 +161,7 @@ impl PathTracer{
         return self.scene.bvh_root.intersection(r);
 
     }
-    fn li(&mut self, r: Ray, rand: &mut impl Rng, recursion_depth: i32) -> RGB{
+    fn li(&mut self, r: Ray, rand: &mut impl Rng, _: i32) -> RGB{
 
         ////println!("Calculating Li");
         let emitted_radiance = RGB::black();
@@ -170,7 +169,6 @@ impl PathTracer{
         let mut prev_path_total = RGB::create(255.0,255.0,255.0);
         let mut running_sum = emitted_radiance;
         let mut prev_intersection: Option<RayIntersection> = None;
-        let mut prev_min_index: i32 = -1;
         let mut r_c = r.clone();
         let mut n_iterations = 0;
         
@@ -260,7 +258,7 @@ impl PathTracer{
                 else{ 
                     path_total = path_total / (1.0 - self.roulette_threshold);
                     //println!("Clamping path");
-                    path_total = clamp_rgb(path_total, -255.0,255.0);
+                    path_total = clamp_rgb(path_total, -255.0,510.0);
 
                 }
             }

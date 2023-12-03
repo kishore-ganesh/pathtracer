@@ -2,10 +2,7 @@
 //TODO: Implement Disp trait
 //
 //Implement cube
-use std::cmp::{Ord, PartialOrd, PartialEq, Eq, Ordering};
-use std::ops;
-use std::f32::consts::PI;
-use glm::{TMat4, TVec3, make_mat4x4, make_vec3,inverse, length2, matrix_comp_mult, comp_add, normalize, angle, dot, distance, vec4_to_vec3};
+use glm::{TMat4, TVec3, make_mat4x4, make_vec3,inverse, length2, matrix_comp_mult, comp_add, normalize, angle, distance};
 use crate::color::RGB;
 use crate::materials::Material;
 use crate::primitives::{get_perp_vec,reflect_about_vec,transform, transform_vec};
@@ -186,6 +183,13 @@ impl Object for Sphere {
         //println!("b: {} 4ac: {}", b*b, 4.0*a*c);
         //TODO:  improve precision
         //println!("{:?}", t_direction);
+
+        //Check which one is closer
+        // We now know x, y, z Use it to find theta and phi.
+        // z = rcostheta, use to find theta 
+        // x = rsinthetacosphi, use to find phi 
+
+
         if b*b < 4.0*a*c {
             return None;
         }
@@ -195,19 +199,17 @@ impl Object for Sphere {
             let res: f32 =  ((b*b - 4.0*a*c) as f32).sqrt();
             let r1: f32 = (-b as f32 + res)/((2.0*a) as f32);
             let r2: f32 = (-b as f32 - res) /((2.0*a) as f32); //Find better way to do this
-            let mut t = 0.0;
+            
             //println!("r1: {}, r2: {}", r1, r2);
             if r1 <= 0.0 {
                 return None;
             }
-            if r2 > 0.0 {
-                t = r2;
-                //intersection = Some(RayIntersection{t:r2}) 
+            let t = if r2 > 0.0 {
+                r2
             }
             else {
-                t = r1;
-                //intersection = Some(RayIntersection{t: r1})
-            }
+                r1
+            };
 
             if t<=0.001 {
                 return None;
@@ -218,7 +220,7 @@ impl Object for Sphere {
             let incoming_vector = -t*t_direction;
             let normal_vec = normalize(&point);
             let normal_angle = angle(&normal_vec, &incoming_vector);
-            let (reflection) = reflect_about_vec(&incoming_vector, &normal_vec);
+            let reflection = reflect_about_vec(&incoming_vector, &normal_vec);
             
             //TODO: handle refleciton case when perp = 0
             //let other_axis = cross(&normal_vec, &incoming_vector);
@@ -244,21 +246,16 @@ impl Object for Sphere {
                 distance: distance(&world_point, &t_origin)});
 
         }
-            //Check which one is closer
-            // We now know x, y, z Use it to find theta and phi.
-            // z = rcostheta, use to find theta 
-            // x = rsinthetacosphi, use to find phi 
-            //return intersection;
-        
-        return None;
+            
+    
     }
 
-    fn color(&self, p: &TVec3<f32>) -> RGB{
+    fn color(&self, _: &TVec3<f32>) -> RGB{
         return RGB::black();
     }
 
 
-    fn le(&self, p: &TVec3<f32>, v: &TVec3<f32>) -> RGB {
+    fn le(&self, _: &TVec3<f32>, _: &TVec3<f32>) -> RGB {
         return RGB::black();
     }
 

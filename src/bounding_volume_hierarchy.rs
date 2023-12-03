@@ -1,11 +1,11 @@
 use std::cmp;
 use crate::bounding_box::BoundingBox;
 use crate::color::RGB;
-use crate::sphere::{Object, Ray, RayIntersection, Primitive, min_intersection};
+use crate::sphere::{Ray, RayIntersection, Primitive, min_intersection};
 use glm::TVec3;
 use crate::materials::Material;
 use std::mem::swap;
-const min_primitives:usize = 5;
+const MIN_PRIMITIVES:usize = 5;
 
 #[derive(Clone)]
 pub struct BVHNode {
@@ -34,7 +34,7 @@ impl BVHNode {
     //TODO: use move
     pub fn recursive_helper(primitives: Vec<Primitive>, l: i32, r: i32) -> BVHNode {
         println!("Recursive helper called");
-        if primitives.len() <= min_primitives {
+        if primitives.len() <= MIN_PRIMITIVES {
             let mut new_primitives = vec![];
             for i in l..r+1 {
                 //TODO: prevent unnecessary copies
@@ -159,7 +159,8 @@ impl BVHNode {
         self.cached_primitive = None;
         if self.is_terminal {
             let mut min_intersection_v: Option<RayIntersection> = None;
-            for (index, primitive) in (&self.primitives).into_iter().enumerate() {
+            // println!("Number of primitives at base level: {}", self.primitives.len());
+            for (_, primitive) in (&self.primitives).into_iter().enumerate() {
                 ////println!("Before ray object intersection test");
     
                 let intersection = primitive.object.intersection(&r);
@@ -179,9 +180,10 @@ impl BVHNode {
 
         }
         else {
+            println!("Non terminal");
             let mut ray_intersection: Option<RayIntersection> = None;
             if self.left_bounding_box.intersection(r) {
-                // println!("Left box intersected");
+                println!("Left box intersected");
                 if let Some(left) = &mut self.left {
                     let left_intersection_tuple = left.intersection_helper(r);
                     ray_intersection = left_intersection_tuple.0;
@@ -190,7 +192,7 @@ impl BVHNode {
                 
             }
             if self.right_bounding_box.intersection(r) {
-                // println!("Right box intersected");
+                println!("Right box intersected");
                 if let Some(right) = &mut self.right {
                     let right_intersection_tuple = right.intersection_helper(r);
                     let min_intersection_tuple = min_intersection ( ray_intersection, right_intersection_tuple.0);
@@ -211,12 +213,7 @@ impl BVHNode {
 
     }
 
-    pub fn brdf_old(&self, r: RayIntersection, v: TVec3<f32>) -> (RGB, Ray, f32){
-        if let Some(p) = &self.cached_primitive_old {
-            return p.brdf(r, v);
-        }
-        return (RGB::create(255.0,0.0,0.0), Ray::create_empty(), 0.0);
-    }
+
     pub fn brdf_eval_old(&self, r: &RayIntersection, v: &TVec3<f32>) -> RGB{
         
         if let Some(p) = &self.cached_primitive_old {
@@ -227,7 +224,6 @@ impl BVHNode {
             //println!("Cached primitive old is invalid");
         }
         panic!("BRDF Eval old cached primitive missing");
-        return RGB::create(0.0,255.0,0.0);
     }
 
     pub fn intersection(&mut self, r: &Ray) -> Option<RayIntersection> {
@@ -235,23 +231,14 @@ impl BVHNode {
         let (ray_intersection, _) = self.intersection_helper(r);
         return ray_intersection;
     }
-    pub fn color(&self, p: &TVec3<f32>) -> RGB
-     {
-        if let Some(primitive) = &self.cached_primitive {
-            return primitive.color(p);
-        }
-        return RGB::black();
-    }
+
     pub fn le(&self, p: &TVec3<f32>, v: &TVec3<f32>) -> RGB{
         if let Some(primitive) = &self.cached_primitive  {
             return primitive.le(p, v);
         }
         return RGB::create(255.0,255.0,255.0);
     }
-    pub fn bounds(&self) -> BoundingBox {
-        panic!("Unimplemented BVHNode box called");
-        return BoundingBox::create_empty()
-    }
+
     pub fn print_traverse_helper(&self, depth: usize){
         println!("depth is: {}", depth);
         println!("is_terminal: {}", self.is_terminal);

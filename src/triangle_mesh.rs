@@ -29,16 +29,13 @@ impl TriangleMesh{
 
 impl Object for TriangleMesh{
     fn intersection(&self, r: &Ray) -> Option<RayIntersection> {
-        let mut min_intersection = None;
-        let mut min_index:i32 = -1;
-        
-        for (index,triangle) in (&self.mesh).iter().enumerate(){
+        let mut min_intersection = None;        
+        for (_,triangle) in (&self.mesh).iter().enumerate(){
             //TODO: handle duplication of code
             //println!("Triangle index: {}", index);
             match min_intersection{
                 None => {
                     min_intersection = triangle.intersection(r);
-                    min_index = index as i32;
                 },
                 Some(i) => {
                     match triangle.intersection(r){
@@ -46,7 +43,6 @@ impl Object for TriangleMesh{
                             //println!("Triangle {} {} distances: {} {}, t's: {} {}", index,min_index,j.distance, i.distance, j.t, i.t);
                             if j.distance < i.distance {
                                 min_intersection = Some(j);
-                                min_index = index as i32;
                             }
                         }
                         None => {},
@@ -64,11 +60,11 @@ impl Object for TriangleMesh{
         return min_intersection;
     }
 
-    fn color(&self, p: &TVec3<f32>) -> RGB{
+    fn color(&self, _: &TVec3<f32>) -> RGB{
         return RGB::black();
     }
 
-    fn le(&self, p: &TVec3<f32>, v: &TVec3<f32>) -> RGB {
+    fn le(&self, _: &TVec3<f32>, _: &TVec3<f32>) -> RGB {
         return RGB::black();
     }
 

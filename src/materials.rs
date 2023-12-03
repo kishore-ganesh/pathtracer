@@ -1,6 +1,6 @@
 //
 use std::f32::consts::PI;
-use glm::{angle, cross, length, make_vec3, normalize, TVec3};
+use glm::{angle, cross, length, normalize, TVec3};
 use rand::Rng;
 use crate::color::RGB;
 use crate::sphere::{Ray, RayIntersection};
@@ -43,7 +43,7 @@ impl DiffuseMaterial{
 }
 
 impl Material for DiffuseMaterial{
-    fn brdf(&self, r: RayIntersection, v: TVec3<f32>) -> (RGB, Ray, f32){
+    fn brdf(&self, r: RayIntersection, _: TVec3<f32>) -> (RGB, Ray, f32){
         //TODO: make this random direction
         
         let mut rand = rand::thread_rng();
@@ -53,7 +53,7 @@ impl Material for DiffuseMaterial{
 
         return (self.fraction, Ray::create(r.point, direction), 1.0);
     }
-    fn brdf_eval(&self, r: &RayIntersection, v: &TVec3<f32>) -> RGB{
+    fn brdf_eval(&self, _: &RayIntersection, _: &TVec3<f32>) -> RGB{
         //TODO: fill in
         return self.fraction;
         //return RGB::black();
@@ -73,7 +73,7 @@ impl SpecularMaterial{
 }
 
 impl Material for SpecularMaterial{
-    fn brdf(&self, r: RayIntersection, v: TVec3<f32>) -> (RGB, Ray, f32){
+    fn brdf(&self, r: RayIntersection, _: TVec3<f32>) -> (RGB, Ray, f32){
         //TODO: extract out the reflection
         let ray = Ray::create(r.point, r.reflection);
         return (RGB::create(255.0,255.0,255.0), ray, 1.0);
@@ -177,7 +177,7 @@ impl DisneyBRDFMaterial{
        //TODO: refactor alpha 
         // println!("Theta_d: {}, theta_h: {}, theta_l: {}, theta_v: {}", theta_d, theta_h, theta_l, theta_v);
         // println!("Theta l.cos() {}, theta_v.cos() {}", theta_l.cos(), theta_v.cos());
-        if (theta_l.cos() < 0.0 || theta_v.cos() < 0.0){
+        if theta_l.cos() < 0.0 || theta_v.cos() < 0.0 {
                 return (RGB::black(),1.0);
         }
     
@@ -193,9 +193,9 @@ impl DisneyBRDFMaterial{
         let res_color = diffuse*(1.0-self.metallic) + specular;
         //TODO: check if there should be a sine here for solid sngle conversion: https://schuttejoe.github.io/post/ggximportancesamplingpart1/
         let pdf = specular_d * theta_h.cos() / (4.0 * theta_d.cos());
-        let alt_alt_pdf = (specular_d * theta_h.cos()) / (4.0 * theta_d.cos());
+        // let alt_alt_pdf = (specular_d * theta_h.cos()) / (4.0 * theta_d.cos());
         
-        let alt_pdf = (alpha.powi(2) * theta_h.cos()*theta_h.sin())/(PI *((alpha.powi(2)-1.0)*theta_h.cos().powi(2)+1.0).powi(2));
+        //let alt_pdf = (alpha.powi(2) * theta_h.cos()*theta_h.sin())/(PI *((alpha.powi(2)-1.0)*theta_h.cos().powi(2)+1.0).powi(2));
         // println!("pdf: {}, alt pdf: {}", specular_d * theta_h.cos() * theta_h.sin(), alt_pdf);
         ////println!("Specular color is: {:?}", specular);
         ////println!("specular_d: {}, theta_h.cos(): {}, theta_d.cos(): {}", specular_d, theta_h.cos(), theta_d.cos());
@@ -229,7 +229,7 @@ impl Material for DisneyBRDFMaterial{
         // println!("normal: {}, tangent: {}, bitangent: {}", r.normal, r.perp, bitangent);
         let h = r.normal * cos_theta_h + r.perp * theta_h.sin() * phi.cos() + bitangent * theta_h.sin() * phi.sin();
         // println!("Reflecting about within material");
-        let (l) = reflect_about_vec(&normalized_v, &h);
+        let l = reflect_about_vec(&normalized_v, &h);
         // println!("Non normalized l is: {}", l);
         ////println!("Length of l: {}, h: {}, v: {}", length(&l), length(&h), length(&v));
         ////println!("Length of h: {}", length(&h));
@@ -251,7 +251,7 @@ impl Material for DisneyBRDFMaterial{
         //TODO: Check later if this prevents the ray from intersecting the object it originated from
         //NOTE: the above comment is now invalid
         let ray = Ray::create(r.point, normalize(&l));
-        if(res_color.is_nan()){
+        if res_color.is_nan() {
             //panic!("Res Color is NaN");
         }
         return (res_color, ray, pdf);

@@ -1,9 +1,6 @@
 use glm::TVec3;
 use crate::primitives::{transform_mesh, rotate_about_x, rotate_about_y, scale, translate};
-use crate::sphere::{Object, Ray, RayIntersection};
 use crate::triangle_mesh::TriangleMesh;
-use crate::color::RGB;
-use crate::bounding_box::BoundingBox;
 
 
 
@@ -32,16 +29,16 @@ pub fn create_cube(location: TVec3<f32>, rx: f32, ry: f32, side: f32, inside: bo
         //     [-1.0,1.0,1.0]
         // ],
         // Back
-        [
-            [-1.0,-1.0,-1.0],
-            [-1.0,1.0,-1.0],
-            [1.0,-1.0,-1.0]
-        ],
-        [
-            [-1.0,1.0,-1.0],
-            [1.0,1.0,-1.0],
-            [1.0,-1.0,-1.0],
-        ],
+        // [
+        //     [-1.0,-1.0,-1.0],
+        //     [-1.0,1.0,-1.0],
+        //     [1.0,-1.0,-1.0]
+        // ],
+        // [
+        //     [-1.0,1.0,-1.0],
+        //     [1.0,1.0,-1.0],
+        //     [1.0,-1.0,-1.0],
+        // ],
         //Right
         //
         // [

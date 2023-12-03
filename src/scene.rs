@@ -1,7 +1,4 @@
-use std::boxed::Box;
-use crate::sphere::{Primitive};
 use crate::lights::{Light};
-use crate::materials::{Material};
 use crate::bounding_volume_hierarchy::BVHNode;
 use std::sync::Arc;
 #[derive(Clone)]

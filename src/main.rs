@@ -20,10 +20,10 @@ mod bounding_volume_hierarchy;
 
 
 use std::f32::consts::PI;
-use glm::{dot, TMat4, TVec4, make_mat4x4, make_vec4, transpose, make_vec3, vec3_to_vec4, mat4_to_mat3};
+use glm::make_vec3;
 use cube::{create_cube};
 use sphere::{Sphere, Ray, Object, Primitive};
-use primitives::{Rect, reflect_about_vec, rotate_about_x, rotate_about_y, get_perp_vec, scale, translate, transform, transform_mesh, transform_vec};
+use primitives::{Rect, reflect_about_vec, scale, translate, transform, transform_mesh};
 use color::RGB;
 use pathtracer::PathTracer;
 use scene::Scene;
@@ -80,7 +80,7 @@ fn main() {
     x.intersection(&r);
     let v = make_vec3(&[-1.0,1.0,0.0]);
     let normal = make_vec3(&[0.0,1.0,0.0]);
-    let (reflected_v) = reflect_about_vec(&v, &normal);
+    let reflected_v = reflect_about_vec(&v, &normal);
     //println!("original: {}, reflected: {}", v, reflected_v);
     let rotate_angle = (0.0) * (PI/180.0);
     let cube_mesh = create_cube(make_vec3(&[ 0.0,45.0,30.0 ]), rotate_angle, 0.0, 50.0, true);
@@ -135,14 +135,14 @@ fn main() {
         RGB::create(255.0,255.0,255.0),
         10.0
     ));
-    let n_samples = 1024;
-    let chunk_size = 16;
+    let n_samples = 256;
+    let chunk_size = 1280;
     //println!("Chunk size: {}", chunk_size);
     let roulette_threshold = 0.01;
     let region = Rect::create(make_vec3(&[ -region_scale,-region_scale,0.0 ]), make_vec3(&[ region_scale, region_scale,0.0 ]));
 //    let look_at_point = make_vec3(&[ 0.0,0.0,1.0 ]);
     let camera = Camera::look_at(make_vec3(&[ 0.0,0.0,10.0 ]), look_at_point, 0.1, 1000.0, screen_res, raster_res, fov,region);
-    let relative_point = transform(&camera.camera_to_world, &make_vec3(&[ 0.0,0.0,50.0 ]));
+    let relative_point = transform(&camera.get_camera_to_world(), &make_vec3(&[ 0.0,0.0,50.0 ]));
     // let x2: Sphere = Sphere::crea te(1.0, make_vec3(&[ 1.0,-1.0,0.0 ]));
     // let x3: Sphere = Sphere::create(1.0, make_vec3(&[-1.0, -1.0, 3.0]));
     let x2: Sphere = Sphere::create(1.0, make_vec3(&[ 1.0,-1.0, 2.0 ]));
@@ -173,7 +173,7 @@ fn main() {
     let disney_glossy_material = DisneyBRDFMaterial::create(RGB::create(255.0,255.0, 0.0), 0.0,0.5,0.5);
     let disney_silver_material = DisneyBRDFMaterial::create(RGB::create(211.0,211.0,211.0), 0.2, 0.9,0.02);
     let mut mesh_primitives = vec![
-        // Primitive::create_from_mesh(&transformed_suzanne_mesh, Arc::new(disney_glossy_material.clone())),
+        Primitive::create_from_mesh(&transformed_suzanne_mesh, Arc::new(disney_glossy_material.clone())),
         // Primitive::create_from_mesh(&transformed_teapot_mesh, Arc::new(disney_glossy_material.clone())),
         //Primitive::create_from_mesh(&transformed_max_planck_mesh, Arc::new(disney_glossy_material.clone()))
         //Primitive::create_from_mesh(&gopher_mesh, Arc::new(disney_glossy_material.clone()))
@@ -216,7 +216,7 @@ fn main() {
     );
 
     bvh_root.print_traverse();
-    //panic!("Before scene creation");
+    // panic!("Before scene creation");
     let scene = Scene::create(bvh_root, spherical_area_light);
 
     let mut pt = PathTracer::create(raster_res as i32, raster_res as i32, n_samples, chunk_size, roulette_threshold, scene, camera);
@@ -226,6 +226,6 @@ fn main() {
             //  println!("Value at {} {} is: {:?}", row, col, grid[row][col])
         }
     }
-    color::write_ppm(&grid, "test.ppm".to_string());
+    color::write_ppm(&grid, "test.ppm".to_string()).unwrap();
     ////println!("Hello, world!");
 }

@@ -1,4 +1,4 @@
-use glm::{transpose, mat4_to_mat3, make_mat4x4, make_vec3, vec3_to_vec4, TVec3, TMat4, dot, is_null, normalize, acos};
+use glm::{transpose, mat4_to_mat3, make_mat4x4, make_vec3, vec3_to_vec4, TVec3, TMat4, dot, is_null, normalize};
 use crate::{NormalType, Triangle, TriangleMesh};
 //TODO: rename to geometric primitives
 /*impl Display for TMat4<f32> {
@@ -108,13 +108,12 @@ pub fn transform_mesh(transform: &TMat4<f32>, m: &TriangleMesh) -> TriangleMesh{
     return TriangleMesh::create_from(mesh);
 }
 
-pub fn reflect_about_vec(v: &TVec3<f32>, about: &TVec3<f32>) -> (TVec3<f32>){
+pub fn reflect_about_vec(v: &TVec3<f32>, about: &TVec3<f32>) -> TVec3<f32> {
     //NOTE: this assumes both rooted in same point 
     //v is pointing in same direction of normal
     //println!("Reflecting {} about {}", v, about);
     let normalized_about = normalize(&about);
     let about_parallel = dot(&normalized_about, &v) * normalized_about;
-    let normalized_v = normalize(&v);
     
     //println!("Cosine angle is: {}", 57.29 * (dot(&normalized_about, &normalized_v)).acos());
     return 2.0 * about_parallel - v;

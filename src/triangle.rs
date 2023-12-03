@@ -25,18 +25,19 @@ impl Triangle {
 
 }
 
-fn approx(x: f32, l: f32, r: f32) -> f32{
+fn approx(x: f32, _: f32, _: f32) -> f32{
+    x
+    /*
     let l_dist = (x-l).abs();
     let r_dist = (x-r).abs();
-    return x;
-    /*
+
     let err = 1e-6;
     //println!("{}", err);
 
-    if(l_dist <= err){
+    if l_dist <= err {
         return l;
     }
-    if(r_dist <= err){
+    if r_dist <= err {
         return r;
     }
     return x;*/
@@ -84,7 +85,7 @@ impl Object for Triangle{
             let origin_vector = origin - point;
             // println!("Origin vector is: {}, point is: {}", origin, point);
             let normal_angle = angle(&normal,&origin_vector);
-            let (reflection) = reflect_about_vec(&origin_vector, &normal);
+            let reflection = reflect_about_vec(&origin_vector, &normal);
             //TODO: check when changing to triangle coordinates
             return Some(RayIntersection{
                 origin: r.origin.clone(),
@@ -126,7 +127,7 @@ impl Object for Triangle{
 
         }
 
-        fn le(&self, p: &TVec3<f32>, v: &TVec3<f32>) -> RGB {
+        fn le(&self, _: &TVec3<f32>, _: &TVec3<f32>) -> RGB {
             return RGB::black();
         }
 

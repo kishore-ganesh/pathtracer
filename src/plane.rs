@@ -37,7 +37,7 @@ impl Object for Plane{
         let incoming_vector = -t*r.direction;
         let p_v = r.origin + t*r.direction;
         let normal_angle = angle(&self.normal, &incoming_vector);
-        let (reflection) = reflect_about_vec(&incoming_vector, &self.normal);
+        let reflection = reflect_about_vec(&incoming_vector, &self.normal);
         return Some(RayIntersection{
             origin: r.origin.clone(),
             t: t,
@@ -50,11 +50,11 @@ impl Object for Plane{
         });
     }
 
-    fn color(&self, p: &TVec3<f32>) -> RGB{
+    fn color(&self, _: &TVec3<f32>) -> RGB{
         return RGB::black();
     }
 
-    fn le(&self, p: &TVec3<f32>, v: &TVec3<f32>) -> RGB {
+    fn le(&self, _: &TVec3<f32>, _: &TVec3<f32>) -> RGB {
         return RGB::black();
     }
 

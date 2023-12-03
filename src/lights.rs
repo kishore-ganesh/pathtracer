@@ -1,4 +1,4 @@
-use glm::{angle, cross, distance, dot, length, normalize, TVec3};
+use glm::{angle, cross, distance, normalize, TVec3};
 use std::f32::consts::PI;
 use rand::Rng;
 use crate::color::RGB;
@@ -87,7 +87,7 @@ impl Light for SphericalAreaLight{
         let e2 = rng.gen::<f32>() * 2.0 * PI;
         let d_s = dist * e1.cos() - (self.sphere.r.powi(2) - dist.powi(2) * e1.sin().powi(2)).sqrt();
 
-        let cos_alpha = ((self.sphere.r.powi(2) + dist.powi(2) - d_s.powi(2))/(2.0 * dist * self.sphere.r));
+        let cos_alpha = (self.sphere.r.powi(2) + dist.powi(2) - d_s.powi(2))/(2.0 * dist * self.sphere.r);
         
         let alpha = cos_alpha.acos();
         let normal = normalize(&(point - self.sphere.center));
@@ -125,7 +125,7 @@ impl Object for SphericalAreaLight{
     fn intersection(&self, r: &Ray) -> Option<RayIntersection>{
         return self.sphere.intersection(r);
     }
-    fn color(&self, p: &TVec3<f32>) -> RGB{
+    fn color(&self, _: &TVec3<f32>) -> RGB{
         return RGB::black();
     }
     fn le(&self, p: &TVec3<f32>, v: &TVec3<f32>) -> RGB {
