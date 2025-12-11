@@ -37,9 +37,11 @@ use plane::Plane;
 use bounding_box::{BoundingBox};
 use bounding_volume_hierarchy::BVHNode;
 use std::sync::Arc;
+use log::debug;
 fn main() {
+    env_logger::init();
     // let imported_cube_mesh = parse(make_vec3(&[0.0,0.0,0.0]), "models/cube.obj");
-    //println!("a: 123.0, b: nan, min(a, b): {}. max(a, b): {}", float_min(123.0, f32::NAN), float_max(123.0, f32::NAN));
+    //debug!("a: 123.0, b: nan, min(a, b): {}. max(a, b): {}", float_min(123.0, f32::NAN), float_max(123.0, f32::NAN));
     let bounding_box = BoundingBox::create(
         make_vec3(&[0.0,0.0,0.0],
         ),
@@ -53,7 +55,7 @@ fn main() {
         make_vec3(&[1.0,1.0,1.0])
     );
 
-    println!("Intersection with box is: {}", bounding_box.intersection(&ray));
+    debug!("Intersection with box is: {}", bounding_box.intersection(&ray));
 
 
     //panic!("Bounding box test");
@@ -67,12 +69,12 @@ fn main() {
     let transformed_suzanne_mesh = transform_mesh(&(translate(0.0,0.0,0.0) * scale(2.0,2.0,2.0)), &suzanne_mesh);
     // let transformed_teapot_mesh = transform_mesh(&(translate(0.0,0.0,-5.0) * scale(10.0,10.0,10.0)), &teapot_mesh);
     //let transformed_max_planck_mesh = transform_mesh(&(translate(0.0,0.0,-5.0) * scale(10.0,10.0,10.0)), &max_planck_mesh);
-    //println!("Imported Cube mesh: {:?}", imported_cube_mesh);
-    //println!("Transformed Suzanne mesh: {:?}", transformed_suzanne_mesh);
+    //debug!("Imported Cube mesh: {:?}", imported_cube_mesh);
+    //debug!("Transformed Suzanne mesh: {:?}", transformed_suzanne_mesh);
     let v1 = make_vec3(&[0.0,1.0,0.0]); 
     let v2 = make_vec3(&[1.2, 0.312, 2.4]);
-    //println!("perp vec to: {} is: {}", &v1, get_perp_vec(&v1));
-    //println!("perp vec to: {} is: {}, dot is: {}", &v2, get_perp_vec(&v2), dot(&v2, &get_perp_vec(&v2)));
+    //debug!("perp vec to: {} is: {}", &v1, get_perp_vec(&v1));
+    //debug!("perp vec to: {} is: {}, dot is: {}", &v2, get_perp_vec(&v2), dot(&v2, &get_perp_vec(&v2)));
 
     let center = make_vec3(&[ 0.0,1.0,0.0 ]);
     let x: Sphere = Sphere::create(1.0, center.clone());
@@ -81,10 +83,10 @@ fn main() {
     let v = make_vec3(&[-1.0,1.0,0.0]);
     let normal = make_vec3(&[0.0,1.0,0.0]);
     let reflected_v = reflect_about_vec(&v, &normal);
-    //println!("original: {}, reflected: {}", v, reflected_v);
+    //debug!("original: {}, reflected: {}", v, reflected_v);
     let rotate_angle = (0.0) * (PI/180.0);
     let cube_mesh = create_cube(make_vec3(&[ 0.0,45.0,30.0 ]), rotate_angle, 0.0, 50.0, true);
-    println!("Cube mesh is: {:?}", cube_mesh);
+    debug!("Cube mesh is: {:?}", cube_mesh);
     let plane_rotate_angle = (50.0) * (PI/180.0);
     //let p1_vec = transform_vec(&rotate_about_x(plane_rotate_angle), &make_vec3(&[0.0,0.0,1.0]));
     let p1_vec = make_vec3(&[0.0,1.0,0.0]);
@@ -111,17 +113,17 @@ fn main() {
     let c = make_vec3(&[1,2,3]);
     let mut d = vec3_to_vec4(&c);
     d[3] = 1;
-    //println!("{:?}", d);
+    //debug!("{:?}", d);
     let b_3 = mat4_to_mat3(&b);
-    //println!("{:?} {:?}", b, b_3);
-    ////println!("{:?}", transpose(&a) * b);
+    //debug!("{:?} {:?}", b, b_3);
+    ////debug!("{:?}", transpose(&a) * b);
     //color::write_ppm(&v, "test.ppm".to_string());
     //
     */
     //TODO: link up sphere and cam?
     //Need small region scale to control distortion
-    let screen_res = 1280.0;
-    let raster_res = 1280.0;
+    let screen_res = 512.0;
+    let raster_res = 512.0;
     let look_at_point = make_vec3(&[ 0.0,0.0,0.0 ]);
     let region_scale = 1.0;
     let fov = 60.0;
@@ -136,8 +138,8 @@ fn main() {
         10.0
     ));
     let n_samples = 256;
-    let chunk_size = 1280;
-    //println!("Chunk size: {}", chunk_size);
+    let chunk_size = 64;
+    //debug!("Chunk size: {}", chunk_size);
     let roulette_threshold = 0.01;
     let region = Rect::create(make_vec3(&[ -region_scale,-region_scale,0.0 ]), make_vec3(&[ region_scale, region_scale,0.0 ]));
 //    let look_at_point = make_vec3(&[ 0.0,0.0,1.0 ]);
@@ -223,9 +225,9 @@ fn main() {
     let grid = pt.generate(); 
     for row in 0..grid.len() {
         for col in 0..grid[row].len() {
-            //  println!("Value at {} {} is: {:?}", row, col, grid[row][col])
+            //  debug!("Value at {} {} is: {:?}", row, col, grid[row][col])
         }
     }
     color::write_ppm(&grid, "test.ppm".to_string()).unwrap();
-    ////println!("Hello, world!");
+    ////debug!("Hello, world!");
 }

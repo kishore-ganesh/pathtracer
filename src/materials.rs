@@ -5,6 +5,7 @@ use rand::Rng;
 use crate::color::RGB;
 use crate::sphere::{Ray, RayIntersection};
 use crate::primitives::{get_vec_at_angle, reflect_about_vec};
+use log::debug;
 pub trait Material: MaterialClone {
     //TODO: check for better interface
     //For now, this will return a spectrum and a ray in the direction
@@ -116,8 +117,8 @@ impl DisneyBRDFMaterial{
         let const_r = 1.0  + (fd_90 - 1.0 )*(1.0-theta_v.cos()).powi(5);
         let const_c = (const_l * const_r) / PI;
         let f_d = self.base_color * const_c;
-        ////println!("theta_d: {}, theta_l: {}, theta_v: {}, res: {:?}", theta_d, theta_l, theta_v, f_d);
-        //println!("fd90: {}, const_l: {}, const_r: {}, const_c: {}", fd_90, const_l, const_r, const_c);
+        ////debug!("theta_d: {}, theta_l: {}, theta_v: {}, res: {:?}", theta_d, theta_l, theta_v, f_d);
+        //debug!("fd90: {}, const_l: {}, const_r: {}, const_c: {}", fd_90, const_l, const_r, const_c);
         return f_d;
 
 
@@ -153,7 +154,7 @@ impl DisneyBRDFMaterial{
         let l_term = self.g1(theta_d, theta_l, alpha_g);
         let r_term = self.g1(theta_d, theta_v, alpha_g);
         let res =  l_term * r_term;
-        ////println!("l_term: {}, r_term: {}, res: {}", l_term, r_term, res);
+        ////debug!("l_term: {}, r_term: {}, res: {}", l_term, r_term, res);
         return res;
 
     } 
@@ -164,19 +165,19 @@ impl DisneyBRDFMaterial{
         let e1 = rng.gen::<f32>();
         let e2 = rng.gen::<f32>();
         let phi = 2.0 * PI * e1;
-        ////println!("alpha: {}, e1: {}, e2: {}, numerator: {}, denominator: {}", alpha, e1, e2, numerator, denominator);
+        ////debug!("alpha: {}, e1: {}, e2: {}, numerator: {}, denominator: {}", alpha, e1, e2, numerator, denominator);
         let cos_theta_h = ((1.0-e2)/(1.0+((alpha.powi(2)-1.0)*e2))).sqrt();
     
 
-        //println!("{} {}", cos_theta_h, alt_value_n);
+        //debug!("{} {}", cos_theta_h, alt_value_n);
         return (cos_theta_h, phi);
 
     }
 
     fn eval(&self, theta_d: f32, theta_h: f32, theta_l: f32, theta_v: f32) -> (RGB, f32){
        //TODO: refactor alpha 
-        // println!("Theta_d: {}, theta_h: {}, theta_l: {}, theta_v: {}", theta_d, theta_h, theta_l, theta_v);
-        // println!("Theta l.cos() {}, theta_v.cos() {}", theta_l.cos(), theta_v.cos());
+        // debug!("Theta_d: {}, theta_h: {}, theta_l: {}, theta_v: {}", theta_d, theta_h, theta_l, theta_v);
+        // debug!("Theta l.cos() {}, theta_v.cos() {}", theta_l.cos(), theta_v.cos());
         if theta_l.cos() < 0.0 || theta_v.cos() < 0.0 {
                 return (RGB::black(),1.0);
         }
@@ -188,7 +189,7 @@ impl DisneyBRDFMaterial{
         let specular_g = self.specular_g(theta_l, theta_v, theta_d);
         let specular = specular_f * specular_d * specular_g / (4.0 * theta_l.cos() * theta_v.cos());
 
-        //println!("Specular check: {:?} {:?}", specular, (specular_f*specular_d*specular_g)/(4.0 * theta_l.cos() * theta_v.cos()));
+        //debug!("Specular check: {:?} {:?}", specular, (specular_f*specular_d*specular_g)/(4.0 * theta_l.cos() * theta_v.cos()));
         //NOTE: for debugging, might be helpful to just check for diffuse
         let res_color = diffuse*(1.0-self.metallic) + specular;
         //TODO: check if there should be a sine here for solid sngle conversion: https://schuttejoe.github.io/post/ggximportancesamplingpart1/
@@ -196,10 +197,10 @@ impl DisneyBRDFMaterial{
         // let alt_alt_pdf = (specular_d * theta_h.cos()) / (4.0 * theta_d.cos());
         
         //let alt_pdf = (alpha.powi(2) * theta_h.cos()*theta_h.sin())/(PI *((alpha.powi(2)-1.0)*theta_h.cos().powi(2)+1.0).powi(2));
-        // println!("pdf: {}, alt pdf: {}", specular_d * theta_h.cos() * theta_h.sin(), alt_pdf);
-        ////println!("Specular color is: {:?}", specular);
-        ////println!("specular_d: {}, theta_h.cos(): {}, theta_d.cos(): {}", specular_d, theta_h.cos(), theta_d.cos());
-        //println!("Diffuse: {:?}, Specular_D: {}, Specular f: {:?}, Specular g: {}", diffuse, specular_d, specular_f, specular_g);
+        // debug!("pdf: {}, alt pdf: {}", specular_d * theta_h.cos() * theta_h.sin(), alt_pdf);
+        ////debug!("Specular color is: {:?}", specular);
+        ////debug!("specular_d: {}, theta_h.cos(): {}, theta_d.cos(): {}", specular_d, theta_h.cos(), theta_d.cos());
+        //debug!("Diffuse: {:?}, Specular_D: {}, Specular f: {:?}, Specular g: {}", diffuse, specular_d, specular_f, specular_g);
         return (res_color, pdf);
     }
 
@@ -220,21 +221,21 @@ impl Material for DisneyBRDFMaterial{
         // self.specular_f(theta_d)*self.specular_g/4*cos theta_h*costheta_d
         //TODO: currently independent of PHI
         let normalized_v = normalize(&v);
-        // println!("Normalized v = {}", normalized_v);
+        // debug!("Normalized v = {}", normalized_v);
         let alpha = self.roughness.powi(2);
         let (cos_theta_h, phi) = self.sample_from_specular_d(alpha);
         let theta_h = cos_theta_h.acos();
         debug_assert!(!theta_h.is_nan());
         let bitangent = cross(&r.normal, &r.perp);
-        // println!("normal: {}, tangent: {}, bitangent: {}", r.normal, r.perp, bitangent);
+        // debug!("normal: {}, tangent: {}, bitangent: {}", r.normal, r.perp, bitangent);
         let h = r.normal * cos_theta_h + r.perp * theta_h.sin() * phi.cos() + bitangent * theta_h.sin() * phi.sin();
-        // println!("Reflecting about within material");
+        // debug!("Reflecting about within material");
         let l = reflect_about_vec(&normalized_v, &h);
-        // println!("Non normalized l is: {}", l);
-        ////println!("Length of l: {}, h: {}, v: {}", length(&l), length(&h), length(&v));
-        ////println!("Length of h: {}", length(&h));
-        ////println!("Angle lh: {}, vh: {}", angle(&l, &h), angle(&v, &h));
-        ////println!("cos_theta_h: {}, h: {}, light_vector: {}", cos_theta_h, h, l);
+        // debug!("Non normalized l is: {}", l);
+        ////debug!("Length of l: {}, h: {}, v: {}", length(&l), length(&h), length(&v));
+        ////debug!("Length of h: {}", length(&h));
+        ////debug!("Angle lh: {}, vh: {}", angle(&l, &h), angle(&v, &h));
+        ////debug!("cos_theta_h: {}, h: {}, light_vector: {}", cos_theta_h, h, l);
         let theta_l = angle(&r.normal, &l);
         let theta_v = angle(&r.normal, &normalized_v);
         let theta_d = angle(&h, &normalized_v);
@@ -242,11 +243,11 @@ impl Material for DisneyBRDFMaterial{
         //NOTE: this is when the light ray goes inside. For refractive, may have to handle this
         //separately
         if theta_l.cos() < 0.0 {
-            // println!("View vector inside");
+            // debug!("View vector inside");
             return (RGB::black(), Ray::create(r.point, r.normal), pdf);
         }
 
-        //println!("l is: {}", normalize(&l));
+        //debug!("l is: {}", normalize(&l));
         //NOTE: we're starting the ray from a point slightly offset from the point. 
         //TODO: Check later if this prevents the ray from intersecting the object it originated from
         //NOTE: the above comment is now invalid
@@ -261,17 +262,17 @@ impl Material for DisneyBRDFMaterial{
     //TODO: refactor into just i, o
     fn brdf_eval(&self, r: &RayIntersection, l: &TVec3<f32>) -> RGB{
         let v = normalize(&(r.origin - r.point));
-        // println!("Normal is: {}", r.normal);
-        ////println!("LIGHT LENGTH: {}", length(&l))
+        // debug!("Normal is: {}", r.normal);
+        ////debug!("LIGHT LENGTH: {}", length(&l))
         
-        //println!("l: {}, v: {}", l, v);
+        //debug!("l: {}, v: {}", l, v);
         let h = (l + v) / length(&(l + v));
         let theta_d = angle(&l, &h);
         let theta_l = angle(&l, &r.normal);
         let theta_h = angle(&h, &r.normal);
         let theta_v = angle(&v, &r.normal);
-        //println!("Ray origin: {:?}, Ray Point: {:?}, Ray: {:?}", r.origin, r.point, r.origin - r.point);
-        ////println!("LIGHTS: Angle lh: {}, vh: {}", angle(&l, &h), angle(&v, &h));
+        //debug!("Ray origin: {:?}, Ray Point: {:?}, Ray: {:?}", r.origin, r.point, r.origin - r.point);
+        ////debug!("LIGHTS: Angle lh: {}, vh: {}", angle(&l, &h), angle(&v, &h));
         let (res_color, _) = self.eval(theta_d, theta_h, theta_l, theta_v);
         return res_color; 
         //return RGB::black();

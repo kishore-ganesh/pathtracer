@@ -3,6 +3,7 @@ use glm::{TMat4, make_mat4x4, inverse, cross, normalize, TVec3, make_vec3};
 use crate::sphere::Ray;
 use crate::primitives::{Rect,scale, translate, transform};
 use std::f32::consts::PI;
+use log::debug;
 #[derive(Debug, Copy, Clone)]
 pub struct Camera {
     camera_to_world: TMat4<f32>,
@@ -31,8 +32,8 @@ impl Camera {
         let x =  cross(&z,  &up);
         let n_up = cross(&x, &z);
         let tangent = ((PI/180.0) * (fov/2.0)).tan();
-        //println!("{} {} {}", x, n_up, z);
-        //println!("{:?} {:?} {:?}", length(&x), length(&up), length(&z));
+        //debug!("{} {} {}", x, n_up, z);
+        //debug!("{:?} {:?} {:?}", length(&x), length(&up), length(&z));
         let camera_to_world = make_mat4x4(&[x.x, n_up.x, z.x, from.x as f32, 
                                         x.y, n_up.y, z.y, from.y as f32, 
                                         x.z, n_up.z, z.z, from.z as f32, 
@@ -51,7 +52,7 @@ impl Camera {
         //Camera -> Screen -> NDC -> Raster 
         let raster_to_world = raster_to_screen * screen_to_camera * camera_to_world;
 
-        //println!("Raster to world is: {:?}", raster_to_world);
+        //debug!("Raster to world is: {:?}", raster_to_world);
         //TODO: check nice way to return it correctly
         return Camera{
             camera_to_world: camera_to_world,
@@ -83,7 +84,7 @@ impl Camera {
        let raster_point = make_vec3(&[ sample[0], sample[1], 0.0 ]);
        let transformed_point = transform(&self.raster_to_world, &raster_point);
        let transformed_origin = transform(&self.camera_to_world, &make_vec3(&[ 0.0,0.0,0.0 ]));
-       //println!("Transformed origin is: {:?}", transformed_origin);
+       //debug!("Transformed origin is: {:?}", transformed_origin);
 
        let direction = normalize(&(transformed_point - transformed_origin));
                                          

@@ -9,6 +9,8 @@ use crate::primitives::{get_perp_vec,reflect_about_vec,transform, transform_vec}
 use crate::bounding_box::{BoundingBox};
 use crate::triangle_mesh::TriangleMesh;
 use std::sync::Arc;
+use log::debug;
+
 pub trait Object: ObjectClone{
 
     fn intersection(&self, r: &Ray) -> Option<RayIntersection>;
@@ -129,7 +131,7 @@ pub fn min_intersection(min_intersection_v: Option<RayIntersection>, b: Option<R
         Some(i) => {
             match b{
                 Some(j) => {
-                    //println!("Triangle {} {} distances: {} {}, t's: {} {}", index,min_index,j.distance, i.distance, j.t, i.t);
+                    //debug!("Triangle {} {} distances: {} {}, t's: {} {}", index,min_index,j.distance, i.distance, j.t, i.t);
                     if j.distance < i.distance {
                         return (b, true);
                     
@@ -166,7 +168,7 @@ impl Sphere {
                                           0.0,0.0, 1.0, center.z as f32,
                                           0.0, 0.0, 0.0,1.0
         ]);
-        //println!("{:?} {:?}", object_to_world, inverse(&object_to_world));
+        //debug!("{:?} {:?}", object_to_world, inverse(&object_to_world));
         return Sphere{center: center, r: radius, object_to_world: object_to_world, world_to_object: inverse(&object_to_world)}
     }
 }
@@ -175,14 +177,14 @@ impl Object for Sphere {
         //This is wrong, fix this
         let t_origin = transform(&self.world_to_object, &r.origin);
         let t_direction = transform_vec(&self.world_to_object, &r.direction);
-        //println!("{:?}", r.direction);
-        //println!("{:?} {}", t_origin, t_direction);
+        //debug!("{:?}", r.direction);
+        //debug!("{:?} {}", t_origin, t_direction);
         let a = length2(&t_direction);
         let b = 2.0 * comp_add(&(matrix_comp_mult(&t_origin, &t_direction))); 
         let c = length2(&t_origin) - self.r*self.r;
-        //println!("b: {} 4ac: {}", b*b, 4.0*a*c);
+        //debug!("b: {} 4ac: {}", b*b, 4.0*a*c);
         //TODO:  improve precision
-        //println!("{:?}", t_direction);
+        //debug!("{:?}", t_direction);
 
         //Check which one is closer
         // We now know x, y, z Use it to find theta and phi.
@@ -195,12 +197,12 @@ impl Object for Sphere {
         }
         else{
             
-            //println!("Original origin: {:?}, Ray origin: {:?}, direction: {}", r.origin,t_origin, t_direction);
+            //debug!("Original origin: {:?}, Ray origin: {:?}, direction: {}", r.origin,t_origin, t_direction);
             let res: f32 =  ((b*b - 4.0*a*c) as f32).sqrt();
             let r1: f32 = (-b as f32 + res)/((2.0*a) as f32);
             let r2: f32 = (-b as f32 - res) /((2.0*a) as f32); //Find better way to do this
             
-            //println!("r1: {}, r2: {}", r1, r2);
+            //debug!("r1: {}, r2: {}", r1, r2);
             if r1 <= 0.0 {
                 return None;
             }
@@ -216,7 +218,7 @@ impl Object for Sphere {
             }
 
             let point  = t_origin + t * t_direction;
-            //println!("Direction is: {}", t_direction);
+            //debug!("Direction is: {}", t_direction);
             let incoming_vector = -t*t_direction;
             let normal_vec = normalize(&point);
             let normal_angle = angle(&normal_vec, &incoming_vector);
@@ -229,13 +231,13 @@ impl Object for Sphere {
              * rotate about other_axis 
              * inverse transform
              * */
-            //println!("{} {}", normal_vec, normal_angle * (180.0/PI));
-            //println!("{}", angle(&normal_vec, &point));
+            //debug!("{} {}", normal_vec, normal_angle * (180.0/PI));
+            //debug!("{}", angle(&normal_vec, &point));
             //TODO: change normal to world space
             let world_normal_vec = transform_vec(&self.object_to_world, &normal_vec);
             let world_reflection = normalize(&transform_vec(&self.object_to_world, &reflection));
             let world_point = transform(&self.object_to_world, &point);
-            //println!("reflection: {}, world: {}", reflection, world_reflection);
+            //debug!("reflection: {}, world: {}", reflection, world_reflection);
             return Some(RayIntersection{
                 origin: r.origin.clone(),
                 t: t, point: world_point, 

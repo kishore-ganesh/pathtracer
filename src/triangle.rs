@@ -3,6 +3,8 @@ use crate::sphere::{Object, Ray, RayIntersection};
 use crate::color::RGB;
 use crate::bounding_box::BoundingBox;
 use glm::{normalize, angle, dot, cross, TVec3, distance, length};
+use log::debug;
+
 #[derive(Debug, Copy, Clone)]
 pub enum NormalType{
     FaceNormal(TVec3<f32>),
@@ -32,7 +34,7 @@ fn approx(x: f32, _: f32, _: f32) -> f32{
     let r_dist = (x-r).abs();
 
     let err = 1e-6;
-    //println!("{}", err);
+    //debug!("{}", err);
 
     if l_dist <= err {
         return l;
@@ -56,7 +58,7 @@ impl Object for Triangle{
         let mut u = dot(&cross(&-direction, &o_a),&c_a)/denom;
         let mut v = dot(&cross(&-direction, &b_a), &o_a)/denom;
         let permitted_range = 0.0..=1.0;
-        //println!("Triangle u: {}, v: {} t: {}", u, v, t);
+        //debug!("Triangle u: {}, v: {} t: {}", u, v, t);
         u = approx(u, 0.0, 1.0);
         v = approx(v, 0.0, 1.0);
         t = approx(t, 0.0, 1.0);
@@ -64,7 +66,7 @@ impl Object for Triangle{
         let w = approx(1.0-u-v, 0.0,1.0);
         if permitted_range.contains(&u) && permitted_range.contains(&v) && permitted_range.contains(&(w)) && t > eps {
             
-            // println!("u: {}, v: {}, t: {}", u, v, t);
+            // debug!("u: {}, v: {}, t: {}", u, v, t);
             let point = (1.0-u-v) * self.points[0] + u*self.points[1] + v * self.points[2];
             let point_a = point - self.points[0];
             let point_b = point - self.points[1];
@@ -83,7 +85,7 @@ impl Object for Triangle{
             }
             
             let origin_vector = origin - point;
-            // println!("Origin vector is: {}, point is: {}", origin, point);
+            // debug!("Origin vector is: {}, point is: {}", origin, point);
             let normal_angle = angle(&normal,&origin_vector);
             let reflection = reflect_about_vec(&origin_vector, &normal);
             //TODO: check when changing to triangle coordinates
@@ -117,7 +119,7 @@ impl Object for Triangle{
             let u = u_area/total_area;
             let v = v_area/total_area;
             let w = 1.0-u-v;
-            //println!("u: {}, v: {}, w: {}", u, v, w);
+            //debug!("u: {}, v: {}, w: {}", u, v, w);
             let a_color = RGB::create(255.0,0.0,0.0);
             let b_color = RGB::create(0.0,255.0,0.0);
             let c_color = RGB::create(0.0,0.0,255.0);
@@ -139,7 +141,7 @@ impl Object for Triangle{
                     ), 
                     self.points[1]), 
                 self.points[2]);
-            // println!("Bounding box for triangle with points: {:?} is {:?}", self.points, result);
+            // debug!("Bounding box for triangle with points: {:?} is {:?}", self.points, result);
             return result;
         }
 

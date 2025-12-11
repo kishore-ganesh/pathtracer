@@ -1,5 +1,7 @@
 use glm::{transpose, mat4_to_mat3, make_mat4x4, make_vec3, vec3_to_vec4, TVec3, TMat4, dot, is_null, normalize};
 use crate::{NormalType, Triangle, TriangleMesh};
+use log::debug;
+
 //TODO: rename to geometric primitives
 /*impl Display for TMat4<f32> {
 
@@ -62,7 +64,7 @@ pub fn rotate_about_y(angle: f32) -> TMat4<f32>{
 pub fn transform(transform: &TMat4<f32>, p: &TVec3<f32>) -> TVec3<f32>{
     let mut v = vec3_to_vec4(&p);
     v[3] = 1.0;
-    //println!("{:?} {:?}", transform, v);
+    //debug!("{:?} {:?}", transform, v);
     let transformed = transpose(&v) * transform;
     //TODO: check for divide by zero
     
@@ -111,18 +113,18 @@ pub fn transform_mesh(transform: &TMat4<f32>, m: &TriangleMesh) -> TriangleMesh{
 pub fn reflect_about_vec(v: &TVec3<f32>, about: &TVec3<f32>) -> TVec3<f32> {
     //NOTE: this assumes both rooted in same point 
     //v is pointing in same direction of normal
-    //println!("Reflecting {} about {}", v, about);
+    //debug!("Reflecting {} about {}", v, about);
     let normalized_about = normalize(&about);
     let about_parallel = dot(&normalized_about, &v) * normalized_about;
     
-    //println!("Cosine angle is: {}", 57.29 * (dot(&normalized_about, &normalized_v)).acos());
+    //debug!("Cosine angle is: {}", 57.29 * (dot(&normalized_about, &normalized_v)).acos());
     return 2.0 * about_parallel - v;
     
 }
 
 pub fn get_perp_vec(n: &TVec3<f32>) -> TVec3<f32>{
     if is_null(&n, 0.0) {
-        // println!("All zero in perp");
+        // debug!("All zero in perp");
         panic!("All zero in perp");
     }
     let mut first_nz = 0;

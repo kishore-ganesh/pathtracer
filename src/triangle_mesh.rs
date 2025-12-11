@@ -3,6 +3,8 @@ use crate::sphere::{Object, Ray, RayIntersection};
 use crate::triangle::{NormalType, Triangle};
 use crate::color::RGB;
 use crate::bounding_box::BoundingBox;
+use log::debug;
+
 #[derive(Clone, Debug)]
 pub struct TriangleMesh{
     pub mesh: Vec<Triangle>
@@ -22,7 +24,7 @@ impl TriangleMesh{
         return TriangleMesh{mesh: mesh}
     }
     pub fn create_from(v: Vec<Triangle>) -> Self{
-        //println!("Number of triangles: {}", v.len());
+        //debug!("Number of triangles: {}", v.len());
         return TriangleMesh{mesh: v};
     }
 }
@@ -32,7 +34,7 @@ impl Object for TriangleMesh{
         let mut min_intersection = None;        
         for (_,triangle) in (&self.mesh).iter().enumerate(){
             //TODO: handle duplication of code
-            //println!("Triangle index: {}", index);
+            //debug!("Triangle index: {}", index);
             match min_intersection{
                 None => {
                     min_intersection = triangle.intersection(r);
@@ -40,7 +42,7 @@ impl Object for TriangleMesh{
                 Some(i) => {
                     match triangle.intersection(r){
                         Some(j) => {
-                            //println!("Triangle {} {} distances: {} {}, t's: {} {}", index,min_index,j.distance, i.distance, j.t, i.t);
+                            //debug!("Triangle {} {} distances: {} {}, t's: {} {}", index,min_index,j.distance, i.distance, j.t, i.t);
                             if j.distance < i.distance {
                                 min_intersection = Some(j);
                             }
@@ -54,7 +56,7 @@ impl Object for TriangleMesh{
 
         match min_intersection{
             None => {},
-            _ =>  {} //println!("Triangle {} intersected", min_index)
+            _ =>  {} //debug!("Triangle {} intersected", min_index)
             
         }
         return min_intersection;

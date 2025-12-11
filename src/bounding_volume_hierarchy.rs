@@ -6,6 +6,7 @@ use glm::TVec3;
 use crate::materials::Material;
 use std::mem::swap;
 const MIN_PRIMITIVES:usize = 5;
+use log::debug;
 
 #[derive(Clone)]
 pub struct BVHNode {
@@ -28,12 +29,12 @@ pub struct Bucket {
 
 impl BVHNode {
     pub fn create(primitives: &Vec<Primitive>) -> BVHNode {
-        println!("Length of primitives is: {}", primitives.len());
+        debug!("Length of primitives is: {}", primitives.len());
         return BVHNode::recursive_helper(primitives.clone(), 0, (primitives.len() as i32) -1);
     }
     //TODO: use move
     pub fn recursive_helper(primitives: Vec<Primitive>, l: i32, r: i32) -> BVHNode {
-        println!("Recursive helper called");
+        debug!("Recursive helper called");
         if primitives.len() <= MIN_PRIMITIVES {
             let mut new_primitives = vec![];
             for i in l..r+1 {
@@ -59,12 +60,12 @@ impl BVHNode {
             total_bounds = BoundingBox::union(total_bounds, primitives[i as usize].bounds());
         }
         let dim = total_bounds.maximum_extent(); //NOTE: Hardcoding splitting dimension to y
-        println!("dim is: {} for total_bounds: {:?}", dim, total_bounds);
+        debug!("dim is: {} for total_bounds: {:?}", dim, total_bounds);
         let n_buckets = 12;
         let mut buckets = vec![Bucket { count: 0, bound: BoundingBox::create_empty(), cost: 0.0 }; n_buckets];
         for i in l..r+1 {
             let b = (centroid_bounds.offset(primitives[i as usize].bounds().centroid())[dim] * (n_buckets as f32)).floor();
-            //println!("Centroid bounds offset: {:?}", centroid_bounds.offset(primitives[i as usize].bounds().centroid()));
+            //debug!("Centroid bounds offset: {:?}", centroid_bounds.offset(primitives[i as usize].bounds().centroid()));
             let b = cmp::min(b as i32, (n_buckets-1) as i32);
             buckets[b as usize].bound = BoundingBox::union(buckets[b as usize].bound, primitives[i as usize].bounds());
             buckets[b as usize].count += 1;
@@ -72,7 +73,7 @@ impl BVHNode {
         let mut min_cost = f32::MAX;
         let mut min_index: i32 = -1;
         for i in 0..n_buckets {
-            //println!("Count of ith: {} bucket is: {}", i, buckets[i].count);
+            //debug!("Count of ith: {} bucket is: {}", i, buckets[i].count);
             let mut left = BoundingBox::create_empty();
             let mut right = BoundingBox::create_empty();
             let mut left_count = 0;
@@ -87,7 +88,7 @@ impl BVHNode {
                 right_count += buckets[right_index].count;
             }
             buckets[i].cost = 0.125 + (left.surface_area() * (left_count as f32) + right.surface_area()*(right_count as f32))/(total_bounds.surface_area());
-            println!("Cost of ith: {} bucket is: {}", i, buckets[i].cost);
+            debug!("Cost of ith: {} bucket is: {}", i, buckets[i].cost);
             if min_cost > buckets[i].cost  {
                 min_cost = buckets[i].cost;
                 min_index = i as i32;
@@ -97,17 +98,17 @@ impl BVHNode {
 
         }
 
-        println!("Min cost is: {} at index: {}", min_cost, min_index);
+        debug!("Min cost is: {} at index: {}", min_cost, min_index);
 
         for primitive in primitives.iter().cloned() {
-            println!("Primitive bounds is: {:?}, primitive centroid is: {:?}", primitive.bounds(), primitive.bounds().centroid());
-            println!("Offset is: {:?}", centroid_bounds.offset(primitive.bounds().centroid()));
-            println!("Index is: {}", (n_buckets as f32) * centroid_bounds.offset(primitive.bounds().centroid())[dim].floor());
+            debug!("Primitive bounds is: {:?}, primitive centroid is: {:?}", primitive.bounds(), primitive.bounds().centroid());
+            debug!("Offset is: {:?}", centroid_bounds.offset(primitive.bounds().centroid()));
+            debug!("Index is: {}", (n_buckets as f32) * centroid_bounds.offset(primitive.bounds().centroid())[dim].floor());
         }
         let left_primitives: Vec<Primitive> = primitives.iter().cloned().filter(|x| ((n_buckets as f32) * centroid_bounds.offset(x.bounds().centroid())[dim]).floor() <= (min_index as f32)).collect();
         let right_primitives: Vec<Primitive> = primitives.iter().cloned().filter(|x|((n_buckets as f32) * centroid_bounds.offset(x.bounds().centroid())[dim]).floor() > (min_index as f32)).collect();
-        println!("Centroid bounds: {:?}", centroid_bounds);
-        println!("Left length is: {}, Right length is: {}, Primitives length is: {}", left_primitives.len(), right_primitives.len(), primitives.len());
+        debug!("Centroid bounds: {:?}", centroid_bounds);
+        debug!("Left length is: {}, Right length is: {}, Primitives length is: {}", left_primitives.len(), right_primitives.len(), primitives.len());
         debug_assert!((left_primitives.len() + right_primitives.len())==primitives.len());
         let mut left_bounding_box = BoundingBox::create_empty();
         let mut right_bounding_box = BoundingBox::create_empty();
@@ -119,7 +120,7 @@ impl BVHNode {
         }
         if left_primitives.len()==primitives.len() || right_primitives.len()==primitives.len() {
             //No splitting occurring here
-            println!("Size of reduced sprimitives array is the same as the original - no splitting occurring");
+            debug!("Size of reduced sprimitives array is the same as the original - no splitting occurring");
             return BVHNode {
                 primitives: primitives.clone(), 
                 is_terminal: true,
@@ -159,12 +160,12 @@ impl BVHNode {
         self.cached_primitive = None;
         if self.is_terminal {
             let mut min_intersection_v: Option<RayIntersection> = None;
-            // println!("Number of primitives at base level: {}", self.primitives.len());
+            // debug!("Number of primitives at base level: {}", self.primitives.len());
             for (_, primitive) in (&self.primitives).into_iter().enumerate() {
-                ////println!("Before ray object intersection test");
+                ////debug!("Before ray object intersection test");
     
                 let intersection = primitive.object.intersection(&r);
-                //println!("{:?}", intersection);
+                //debug!("{:?}", intersection);
                 //TODO: Add generic object type later 
                 //Closest
                 let min_intersection_tuple = min_intersection(min_intersection_v, intersection);
@@ -180,10 +181,10 @@ impl BVHNode {
 
         }
         else {
-            println!("Non terminal");
+            debug!("Non terminal");
             let mut ray_intersection: Option<RayIntersection> = None;
             if self.left_bounding_box.intersection(r) {
-                println!("Left box intersected");
+                debug!("Left box intersected");
                 if let Some(left) = &mut self.left {
                     let left_intersection_tuple = left.intersection_helper(r);
                     ray_intersection = left_intersection_tuple.0;
@@ -192,7 +193,7 @@ impl BVHNode {
                 
             }
             if self.right_bounding_box.intersection(r) {
-                println!("Right box intersected");
+                debug!("Right box intersected");
                 if let Some(right) = &mut self.right {
                     let right_intersection_tuple = right.intersection_helper(r);
                     let min_intersection_tuple = min_intersection ( ray_intersection, right_intersection_tuple.0);
@@ -217,17 +218,17 @@ impl BVHNode {
     pub fn brdf_eval_old(&self, r: &RayIntersection, v: &TVec3<f32>) -> RGB{
         
         if let Some(p) = &self.cached_primitive_old {
-            //println!("Cached primitive old is valid");
+            //debug!("Cached primitive old is valid");
             return p.brdf_eval(r, v);
         }
         else{
-            //println!("Cached primitive old is invalid");
+            //debug!("Cached primitive old is invalid");
         }
         panic!("BRDF Eval old cached primitive missing");
     }
 
     pub fn intersection(&mut self, r: &Ray) -> Option<RayIntersection> {
-        //println!("Intersection requested");
+        //debug!("Intersection requested");
         let (ray_intersection, _) = self.intersection_helper(r);
         return ray_intersection;
     }
@@ -240,11 +241,11 @@ impl BVHNode {
     }
 
     pub fn print_traverse_helper(&self, depth: usize){
-        println!("depth is: {}", depth);
-        println!("is_terminal: {}", self.is_terminal);
-        println!("Primitives length: {}", self.primitives.len());
-        println!("Left box is: {:?}", self.left_bounding_box);
-        println!("Right box is: {:?}", self.right_bounding_box);
+        debug!("depth is: {}", depth);
+        debug!("is_terminal: {}", self.is_terminal);
+        debug!("Primitives length: {}", self.primitives.len());
+        debug!("Left box is: {:?}", self.left_bounding_box);
+        debug!("Right box is: {:?}", self.right_bounding_box);
         if let Some(left) = &self.left {
             left.print_traverse_helper(depth+1);
         }

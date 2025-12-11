@@ -5,6 +5,7 @@ use crate::triangle_mesh::TriangleMesh;
 use std::fs::File;
 use std::io::BufReader;
 use std::path::Path;
+use log::debug;
 
 
 pub fn parse<P: AsRef<Path>>(_: TVec3<f32>, path: P) -> TriangleMesh{
@@ -39,7 +40,7 @@ pub fn parse<P: AsRef<Path>>(_: TVec3<f32>, path: P) -> TriangleMesh{
         }
     }
     
-    //println!("Normals are: {:?}", normals);
+    //debug!("Normals are: {:?}", normals);
     return TriangleMesh::create_from(triangles);
     
 }
