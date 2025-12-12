@@ -1,4 +1,4 @@
-use glm::{transpose, mat4_to_mat3, make_mat4x4, make_vec3, vec3_to_vec4, TVec3, TMat4, dot, is_null, normalize};
+use glm::{TMat4, TVec3, dot, is_null, make_mat4x4, make_vec3, mat4_to_mat3, normalize, transpose, vec3_to_vec4, vec4_to_vec3};
 use crate::{NormalType, Triangle, TriangleMesh};
 use log::debug;
 
@@ -67,12 +67,7 @@ pub fn transform(transform: &TMat4<f32>, p: &TVec3<f32>) -> TVec3<f32>{
     //debug!("{:?} {:?}", transform, v);
     let transformed = transpose(&v) * transform;
     //TODO: check for divide by zero
-    
-    if transformed[3] == 0.0{
-        panic!("Divide by zero in transform");
-    } 
-    
-    return make_vec3(&[ transformed[0]/transformed[3], transformed[1]/transformed[3], transformed[2]/transformed[3]]);
+    return vec4_to_vec3(&transpose(&(transformed / transformed[3])));
 }
 
 
@@ -97,7 +92,8 @@ pub fn transform_triangle(m: &TMat4<f32>, t: &Triangle) -> Triangle{
             //TODO: correct
             return Triangle::create(points, NormalType::VertexNormals(v));
 
-        }
+        },
+        NormalType::Inferred => unimplemented!()
     }
 }
 pub fn transform_mesh(transform: &TMat4<f32>, m: &TriangleMesh) -> TriangleMesh{

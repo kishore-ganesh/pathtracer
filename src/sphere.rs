@@ -2,7 +2,7 @@
 //TODO: Implement Disp trait
 //
 //Implement cube
-use glm::{TMat4, TVec3, make_mat4x4, make_vec3,inverse, length2, matrix_comp_mult, comp_add, normalize, angle, distance};
+use glm::{TMat4, TVec3, angle, comp_add, distance, dot, inverse, length2, make_mat4x4, make_vec3, matrix_comp_mult, normalize};
 use crate::color::RGB;
 use crate::materials::Material;
 use crate::primitives::{get_perp_vec,reflect_about_vec,transform, transform_vec};

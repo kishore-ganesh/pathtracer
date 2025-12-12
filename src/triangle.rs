@@ -7,6 +7,7 @@ use log::debug;
 
 #[derive(Debug, Copy, Clone)]
 pub enum NormalType{
+    Inferred,
     FaceNormal(TVec3<f32>),
     VertexNormals([TVec3<f32>; 3])
 }
@@ -19,6 +20,15 @@ pub struct Triangle{
 impl Triangle {
     pub fn create(points: [TVec3<f32>; 3], normal_direction: NormalType) -> Self
     {
+        if let NormalType::Inferred = normal_direction {
+            let a = points[1] - points[0];
+            let b = points[2] - points[0];
+            let normal_vec = normalize(&cross(&a, &b));
+            return Triangle {
+                points,
+                normal_direction: NormalType::FaceNormal(normal_vec)
+            }
+        }
         return Triangle{
             points: points,
             normal_direction: normal_direction
