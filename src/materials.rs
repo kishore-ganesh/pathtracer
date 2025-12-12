@@ -6,7 +6,7 @@ use crate::color::RGB;
 use crate::sphere::{Ray, RayIntersection};
 use crate::primitives::{get_vec_at_angle, reflect_about_vec};
 use log::debug;
-pub trait Material: MaterialClone {
+pub trait Material: Send + Sync + MaterialClone {
     //TODO: check for better interface
     //For now, this will return a spectrum and a ray in the direction
     fn brdf(&self, r: RayIntersection, v: TVec3<f32>) -> (RGB, Ray, f32);
@@ -21,17 +21,18 @@ pub trait MaterialClone{
     fn clone_material(&self) -> Box<dyn Material + Send>;
 }
 impl<T> MaterialClone for T
-where T: 'static + Material + Clone + Send{
+where T: 'static + Material + Clone{
     fn clone_material(&self) -> Box<dyn Material + Send>{
         return Box::new(self.clone());
     }
 }
 
-impl Clone for Box<dyn Material + Send>{
-    fn clone(&self) -> Box<dyn Material + Send>{
+impl Clone for Box<dyn Material>{
+    fn clone(&self) -> Box<dyn Material>{
         return self.clone_material();
     }
 }
+
 #[derive(Debug, Copy, Clone)]
 pub struct DiffuseMaterial {
     fraction: RGB

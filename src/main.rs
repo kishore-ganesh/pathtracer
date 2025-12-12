@@ -175,11 +175,11 @@ fn main() {
     let disney_glossy_material = DisneyBRDFMaterial::create(RGB::create(255.0,255.0, 0.0), 0.0,0.5,0.5);
     let disney_silver_material = DisneyBRDFMaterial::create(RGB::create(211.0,211.0,211.0), 0.2, 0.9,0.02);
     let mut mesh_primitives = vec![
-        Primitive::create_from_mesh(&transformed_suzanne_mesh, Arc::new(disney_glossy_material.clone())),
+        Primitive::create_from_mesh(&transformed_suzanne_mesh, Box::new(disney_glossy_material.clone())),
         // Primitive::create_from_mesh(&transformed_teapot_mesh, Arc::new(disney_glossy_material.clone())),
         //Primitive::create_from_mesh(&transformed_max_planck_mesh, Arc::new(disney_glossy_material.clone()))
         //Primitive::create_from_mesh(&gopher_mesh, Arc::new(disney_glossy_material.clone()))
-        Primitive::create_from_mesh(&cube_mesh, Arc::new(disney_diffuse_material.clone()))
+        // Primitive::create_from_mesh(&cube_mesh, Box::new(disney_diffuse_material.clone()))
         //Primitive::create_from_mesh(&imported_cube_mesh, Arc::new(disney_diffuse_material.clone()))
     ];
     let mut other_primitives = 
@@ -188,9 +188,9 @@ fn main() {
             
             //Primitive::create(Arc::new(imported_tri_mesh), Arc::new(diffuse_material.clone())),
             // Primitive::create(Arc::new(cube), Arc::new(disney_diffuse_material.clone())),
-             Primitive::create(Arc::new(x), Arc::new(disney_glossy_material.clone())),
-             Primitive::create(Arc::new(x2), Arc::new(disney_white_diffuse_material.clone())),
-             Primitive::create(Arc::new(x3), Arc::new(disney_red_diffuse_material.clone())),
+            //  Primitive::create(Box::new(x), Box::new(disney_glossy_material.clone())),
+            //  Primitive::create(Box::new(x2), Box::new(disney_white_diffuse_material.clone())),
+            //  Primitive::create(Box::new(x3), Box::new(disney_red_diffuse_material.clone())),
             //  Primitive::create(spherical_area_light.clone(), Arc::new(white_diffuse_material.clone())),
             //Primitive::create(Arc::new(x), Arc::new(diffuse_material.clone())),
              //Primitive::create(Arc::new(cube), Arc::new(diffuse_material.clone())),
