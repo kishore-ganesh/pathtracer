@@ -2,36 +2,38 @@
 use std::f32::consts::PI;
 use glm::{angle, cross, length, normalize, TVec3};
 use rand::Rng;
+use crate::bounding_volume_hierarchy::BVHNode;
 use crate::color::RGB;
 use crate::sphere::{Ray, RayIntersection};
 use crate::primitives::{get_vec_at_angle, reflect_about_vec};
 use log::debug;
-pub trait Material: MaterialClone {
+
+#[derive(Debug, Copy, Clone)]
+pub enum Material {
+    DiffuseMaterial(DiffuseMaterial),
+    SpecularMaterial(SpecularMaterial),
+    DisneyBRDFMaterial(DisneyBRDFMaterial),
+}
+impl Material {
     //TODO: check for better interface
     //For now, this will return a spectrum and a ray in the direction
-    fn brdf(&self, r: RayIntersection, v: TVec3<f32>) -> (RGB, Ray, f32);
-    fn brdf_eval(&self, r: &RayIntersection, v: &TVec3<f32>) -> RGB;
-}
+    pub fn brdf(&self, r: RayIntersection, v: TVec3<f32>) -> (RGB, Ray, f32) {
+        match self {
+            Material::DiffuseMaterial(m) => m.brdf(r, v),
+            Material::SpecularMaterial(m)=> m.brdf(r, v),
+            Material::DisneyBRDFMaterial(m) => m.brdf(r, v),
+        }
+    }
 
-/*
- * The following is a trick to get clone to work on dyn from:
- * https://stackoverflow.com/questions/30353462/how-to-clone-a-struct-storing-a-boxed-trait-object/30353928
- * */
-pub trait MaterialClone{
-    fn clone_material(&self) -> Box<dyn Material + Send>;
-}
-impl<T> MaterialClone for T
-where T: 'static + Material + Clone + Send{
-    fn clone_material(&self) -> Box<dyn Material + Send>{
-        return Box::new(self.clone());
+    pub fn brdf_eval(&self, r: &RayIntersection, v: &TVec3<f32>) -> RGB {
+        match self {
+            Material::DiffuseMaterial(m) => m.brdf_eval(r, v),
+            Material::SpecularMaterial(m)=> m.brdf_eval(r, v),
+            Material::DisneyBRDFMaterial(m) => m.brdf_eval(r, v),
+        }
     }
 }
 
-impl Clone for Box<dyn Material + Send>{
-    fn clone(&self) -> Box<dyn Material + Send>{
-        return self.clone_material();
-    }
-}
 #[derive(Debug, Copy, Clone)]
 pub struct DiffuseMaterial {
     fraction: RGB
@@ -41,10 +43,7 @@ impl DiffuseMaterial{
     pub fn create(f: RGB) -> Self{
         return DiffuseMaterial{fraction: f};
     }
-}
-
-impl Material for DiffuseMaterial{
-    fn brdf(&self, r: RayIntersection, _: TVec3<f32>) -> (RGB, Ray, f32){
+    pub fn brdf(&self, r: RayIntersection, _: TVec3<f32>) -> (RGB, Ray, f32){
         //TODO: make this random direction
         
         let mut rand = rand::thread_rng();
@@ -54,7 +53,7 @@ impl Material for DiffuseMaterial{
 
         return (self.fraction, Ray::create(r.point, direction), 1.0);
     }
-    fn brdf_eval(&self, _: &RayIntersection, _: &TVec3<f32>) -> RGB{
+    pub fn brdf_eval(&self, _: &RayIntersection, _: &TVec3<f32>) -> RGB{
         //TODO: fill in
         return self.fraction;
         //return RGB::black();
@@ -71,15 +70,12 @@ impl SpecularMaterial{
     pub fn create() -> Self{
         return SpecularMaterial{};
     }
-}
-
-impl Material for SpecularMaterial{
-    fn brdf(&self, r: RayIntersection, _: TVec3<f32>) -> (RGB, Ray, f32){
+    pub fn brdf(&self, r: RayIntersection, _: TVec3<f32>) -> (RGB, Ray, f32){
         //TODO: extract out the reflection
         let ray = Ray::create(r.point, r.reflection);
         return (RGB::create(255.0,255.0,255.0), ray, 1.0);
     }
-    fn brdf_eval(&self, r: &RayIntersection, v: &TVec3<f32>) -> RGB{
+    pub fn brdf_eval(&self, r: &RayIntersection, v: &TVec3<f32>) -> RGB{
         let ang = angle(&r.normal, &v);
         let err = 1e-5; //TODO: make error more global, new float class?
         if (ang-r.normal_angle).abs() < err {
@@ -207,10 +203,7 @@ impl DisneyBRDFMaterial{
 
     //Where to get theta_h? Sample from D(theta_h), for anisotropic, phi = 1/2pi. Use it to find
     //half vector orientation, then reflect view about halfway.
-}
-
-impl Material for DisneyBRDFMaterial{
-    fn brdf(&self, r: RayIntersection, v: TVec3<f32>) -> (RGB, Ray, f32){
+    pub fn brdf(&self, r: RayIntersection, v: TVec3<f32>) -> (RGB, Ray, f32){
         //Sample from D(theta_h) to get theta_h, phi 
         // Calculate h using theta_h, pi, three vectors (normal, tangent, bi tangent[r.normal,
         // r.perp, cross r.normal, r.perp?] 
@@ -260,7 +253,7 @@ impl Material for DisneyBRDFMaterial{
 
     }
     //TODO: refactor into just i, o
-    fn brdf_eval(&self, r: &RayIntersection, l: &TVec3<f32>) -> RGB{
+    pub fn brdf_eval(&self, r: &RayIntersection, l: &TVec3<f32>) -> RGB{
         let v = normalize(&(r.origin - r.point));
         // debug!("Normal is: {}", r.normal);
         ////debug!("LIGHT LENGTH: {}", length(&l))

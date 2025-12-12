@@ -8,7 +8,7 @@ use std::mem::swap;
 const MIN_PRIMITIVES:usize = 5;
 use log::{debug, info};
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct BVHNode {
     pub primitives: Vec<Primitive>,
     is_terminal: bool,
@@ -265,21 +265,13 @@ impl BVHNode {
     pub fn print_traverse(&self) {
         self.print_traverse_helper(0);
     }
-
-    
-
-
-}
-
-
-impl Material for BVHNode {
-    fn brdf(&self, r: RayIntersection, v: TVec3<f32>) -> (RGB, Ray, f32){
+    pub fn brdf(&self, r: RayIntersection, v: TVec3<f32>) -> (RGB, Ray, f32){
         if let Some(p) = &self.cached_primitive {
             return p.brdf(r, v);
         }
         return (RGB::create(0.0,0.0,255.0), Ray::create_empty(), 0.0);
     }
-    fn brdf_eval(&self, r: &RayIntersection, v: &TVec3<f32>) -> RGB{
+    pub fn brdf_eval(&self, r: &RayIntersection, v: &TVec3<f32>) -> RGB{
         if let Some(p) = &self.cached_primitive {
             return p.brdf_eval(r, v);
         }

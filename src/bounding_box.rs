@@ -77,6 +77,7 @@ impl BoundingBox {
     }
 
     pub fn intersection(&self, r: &Ray) -> bool {
+        let duration = std::time::Instant::now();
         let mut t_min: f32 = 0.0;
         let mut t_max: f32 = f32::MAX;
         

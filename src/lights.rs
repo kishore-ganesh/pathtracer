@@ -75,6 +75,21 @@ impl SphericalAreaLight{
             intensity: intensity
         };
     } 
+    pub fn intersection(&self, r: &Ray) -> Option<RayIntersection>{
+        return self.sphere.intersection(r);
+    }
+    pub fn color(&self, _: &TVec3<f32>) -> RGB{
+        return RGB::black();
+    }
+    pub fn le(&self, p: &TVec3<f32>, v: &TVec3<f32>) -> RGB {
+        let normal = p - self.sphere.center;
+        let theta_area = angle(&normal, &v);
+        return self.color * theta_area.cos() * self.intensity;
+    }
+    
+    pub fn bounds(&self) -> BoundingBox {
+        return self.sphere.bounds();
+    }
 }
 
 impl Light for SphericalAreaLight{
@@ -122,23 +137,5 @@ impl Light for SphericalAreaLight{
 
 }
 
-impl Object for SphericalAreaLight{
-    fn intersection(&self, r: &Ray) -> Option<RayIntersection>{
-        return self.sphere.intersection(r);
-    }
-    fn color(&self, _: &TVec3<f32>) -> RGB{
-        return RGB::black();
-    }
-    fn le(&self, p: &TVec3<f32>, v: &TVec3<f32>) -> RGB {
-        let normal = p - self.sphere.center;
-        let theta_area = angle(&normal, &v);
-        return self.color * theta_area.cos() * self.intensity;
-    }
-    
-    fn bounds(&self) -> BoundingBox {
-        return self.sphere.bounds();
-    }
-
-}
 
 
