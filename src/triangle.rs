@@ -58,6 +58,7 @@ fn approx(x: f32, _: f32, _: f32) -> f32{
 impl Object for Triangle{
 
         fn intersection(&self, r: &Ray) -> Option<RayIntersection> {
+        let duration = std::time::Instant::now();
         let origin = r.origin;
         let direction = r.direction;
         let b_a = self.points[1] - self.points[0];
@@ -92,13 +93,18 @@ impl Object for Triangle{
                 NormalType::VertexNormals(normals) => {
                     normal = w * normals[0] + u * normals[1] + v * normals[2]
                 }
+                NormalType::Inferred => unimplemented!()
             }
             
             let origin_vector = origin - point;
             // debug!("Origin vector is: {}, point is: {}", origin, point);
+            let interm = duration.elapsed();
             let normal_angle = angle(&normal,&origin_vector);
+            let interm1 = duration.elapsed();
             let reflection = reflect_about_vec(&origin_vector, &normal);
+            let interm2 = duration.elapsed();
             //TODO: check when changing to triangle coordinates
+            // println!("Triangle intersection interm, time: {:?} {:?} {:?} {:?}", interm, interm1, interm2, duration.elapsed());
             return Some(RayIntersection{
                 origin: r.origin.clone(),
                 t: t, 
@@ -110,9 +116,6 @@ impl Object for Triangle{
                 distance: distance(&point, &origin)
             });
             //Reflection
-
-
-            
         }
         return None;
 
