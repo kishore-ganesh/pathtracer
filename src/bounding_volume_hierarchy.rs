@@ -6,14 +6,14 @@ use glm::TVec3;
 use crate::materials::Material;
 use std::mem::swap;
 const MIN_PRIMITIVES:usize = 5;
-use log::debug;
+use log::{debug, info};
 
 #[derive(Clone)]
 pub struct BVHNode {
     pub primitives: Vec<Primitive>,
     is_terminal: bool,
-    left: Option<Box<BVHNode>>, 
-    right: Option<Box<BVHNode>>, 
+    left: Option<Box<BVHNode>>,
+    right: Option<Box<BVHNode>>,
     left_bounding_box: BoundingBox,
     right_bounding_box: BoundingBox,
     cached_primitive: Option<Primitive>,
@@ -152,21 +152,24 @@ impl BVHNode {
 
     }
 
-    
-    pub fn intersection_helper(&mut self, r: &Ray) -> (Option<RayIntersection>, Option<Primitive>) {
-        
+
+    pub fn intersection_helper(&mut self, r: &Ray) -> (Option<RayIntersection>, Option<Primitive>, usize) {
+
+        let mut intersection_count = 0;
         swap(&mut self.cached_primitive_old, &mut self.cached_primitive);
         // self.cached_primitive_old = self.cached_primitive;
         self.cached_primitive = None;
         if self.is_terminal {
             let mut min_intersection_v: Option<RayIntersection> = None;
-            // debug!("Number of primitives at base level: {}", self.primitives.len());
+            //debug!("Number of primitives at base level: {}", self.primitives.len());
+            intersection_count = self.primitives.len();
             for (_, primitive) in (&self.primitives).into_iter().enumerate() {
                 ////debug!("Before ray object intersection test");
-    
+
                 let intersection = primitive.object.intersection(&r);
+
                 //debug!("{:?}", intersection);
-                //TODO: Add generic object type later 
+                //TODO: Add generic object type later
                 //Closest
                 let min_intersection_tuple = min_intersection(min_intersection_v, intersection);
                 min_intersection_v = min_intersection_tuple.0;
@@ -174,23 +177,25 @@ impl BVHNode {
                 if is_min {
                     self.cached_primitive = Some(primitive.clone());
                 }
-            
+
             }
-            return (min_intersection_v, self.cached_primitive.clone());
-    
+            return (min_intersection_v, self.cached_primitive.clone(), intersection_count);
+
 
         }
         else {
             debug!("Non terminal");
             let mut ray_intersection: Option<RayIntersection> = None;
+            intersection_count += 2;
             if self.left_bounding_box.intersection(r) {
                 debug!("Left box intersected");
                 if let Some(left) = &mut self.left {
                     let left_intersection_tuple = left.intersection_helper(r);
                     ray_intersection = left_intersection_tuple.0;
                     self.cached_primitive = left_intersection_tuple.1;
+                    intersection_count += left_intersection_tuple.2;
                 }
-                
+
             }
             if self.right_bounding_box.intersection(r) {
                 debug!("Right box intersected");
@@ -198,17 +203,18 @@ impl BVHNode {
                     let right_intersection_tuple = right.intersection_helper(r);
                     let min_intersection_tuple = min_intersection ( ray_intersection, right_intersection_tuple.0);
 
-                    ray_intersection = min_intersection_tuple.0; 
+                    ray_intersection = min_intersection_tuple.0;
                     if min_intersection_tuple.1 {
                         self.cached_primitive = right_intersection_tuple.1;
                     }
                     else{
                         //panic!("Test right intersection being smaller");
                     }
+                    intersection_count += right_intersection_tuple.2;
                 }
-                
+
             }
-            return (ray_intersection, self.cached_primitive.clone());
+            return (ray_intersection, self.cached_primitive.clone(), intersection_count);
         }
 
 
@@ -228,8 +234,11 @@ impl BVHNode {
     }
 
     pub fn intersection(&mut self, r: &Ray) -> Option<RayIntersection> {
-        //debug!("Intersection requested");
-        let (ray_intersection, _) = self.intersection_helper(r);
+        debug!("Intersection requested");
+        let intersection_time = std::time::Instant::now();
+        let (ray_intersection, _, intersection_count) = self.intersection_helper(r);
+        info!("Intersection elapsed time: {:?}", intersection_time.elapsed());
+        debug!("Intersection count: {}", intersection_count);
         return ray_intersection;
     }
 
