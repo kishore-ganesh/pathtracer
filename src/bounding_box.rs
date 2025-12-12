@@ -84,42 +84,24 @@ impl BoundingBox {
             debug!("Box is: {:?} {:?}, ray is: {:?}", self.p_min, self.p_max, r);
         }
         debug_assert!(self.p_min.x <= self.p_max.x && self.p_min.y <= self.p_max.y && self.p_min.z <= self.p_max.z);
-        let mut res = true;
+        let res = true;
         //return res;
         for i in 0..3 {
-            let t_candidate_min = (self.p_min[i] - r.origin[i])/r.direction[i];
-            let t_candidate_max = (self.p_max[i]-r.origin[i])/r.direction[i];
-            if t_candidate_min.is_nan() || t_candidate_max.is_nan() {
-                //debug!("t_candidate_min is: {}, t_candidate_max is: {}, p_min: {:?}, p_max: {:?}", t_candidate_min, t_candidate_max, self.p_min, self.p_max);
-            }
-            
+            let t_candidate_min = (self.p_min[i] - r.origin[i]) * r.inv_direction[i];
+            let t_candidate_max = (self.p_max[i]-r.origin[i]) * r.inv_direction[i];
+
             //debug!("t_candidate_min: {}", t_candidate_min);
             //debug!("t_candidate_max: {}", t_candidate_max);
-        let (t_candidate_min, t_candidate_max) = (t_candidate_min.min(t_candidate_max), t_candidate_min.max(t_candidate_max));
+            let (t_candidate_min, t_candidate_max) = (t_candidate_min.min(t_candidate_max), t_candidate_min.max(t_candidate_max));
             //debug!("t_candidate_minAF: {}", t_candidate_min);
             //debug!("t_candidate_maxAF: {}", t_candidate_max);
             
             t_min = t_min.max(t_candidate_min);
             t_max = t_max.min(t_candidate_max);
-            if t_min>t_max {
-                //debug!("{}  > {}", t_min, t_max);
-                res = false;
-            } 
         }
         debug_assert!(!t_min.is_nan() && !t_max.is_nan());
-        if t_min>t_max {
-            res = false;
-        } 
-        if t_max < 0.0 {
-            res = false;
-        } 
-
-        
-        if res {
-            //debug!("Res is: {}", res);
-        }
-        
-        return res;
+        // println!("Bounding box intersection time: {:?}", duration.elapsed());
+        return t_min <= t_max && t_max > 0.0;
     }
 
     pub fn maximum_extent(&self) -> usize {

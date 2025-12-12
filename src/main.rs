@@ -78,7 +78,7 @@ fn main() {
 
     let center = make_vec3(&[ 0.0,1.0,0.0 ]);
     let x: Sphere = Sphere::create(1.0, center.clone());
-    let r: Ray = Ray{origin: make_vec3(&[ 1.0,1.0,1.0 ]), direction: make_vec3(&[1.0,1.0,1.0])};
+    let r: Ray = Ray::create(make_vec3(&[ 1.0,1.0,1.0 ]), make_vec3(&[1.0,1.0,1.0]));
     x.intersection(&r);
     let v = make_vec3(&[-1.0,1.0,0.0]);
     let normal = make_vec3(&[0.0,1.0,0.0]);

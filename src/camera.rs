@@ -90,7 +90,7 @@ impl Camera {
                                          
         //TODO: improve performance here
 
-       return Ray{origin: transformed_origin, direction: direction}; 
+       return Ray::create(transformed_origin, direction);
     } 
 
     pub fn get_camera_to_world(&self) -> TMat4<f32> {
