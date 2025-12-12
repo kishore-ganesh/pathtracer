@@ -96,15 +96,16 @@ pub struct Sphere {
 pub struct Ray {
      pub origin: TVec3<f32>,
      pub direction: TVec3<f32>,
+     pub inv_direction: TVec3<f32>
 }
 
 impl Ray{
     pub fn create(origin: TVec3<f32>, direction: TVec3<f32>) -> Self{
-        return Ray{origin: origin, direction: direction};
+        return Ray{origin: origin, direction: direction, inv_direction: make_vec3(&[1.0,1.0,1.0]).component_div(&direction)};
     }
 
     pub fn create_empty() -> Self {
-        return Ray{origin: make_vec3(&[0.0,0.0,0.0]), direction: make_vec3(&[0.0,0.0,0.0])};
+        return Ray{origin: make_vec3(&[0.0,0.0,0.0]), direction: make_vec3(&[0.0,0.0,0.0]), inv_direction: make_vec3(&[f32::INFINITY, f32::INFINITY, f32::INFINITY])};
     }
 }
 
@@ -174,13 +175,14 @@ impl Sphere {
 }
 impl Object for Sphere {
     fn intersection(&self, r: &Ray) -> Option<RayIntersection> {
+        let duration = std::time::Instant::now();
         //This is wrong, fix this
         let t_origin = transform(&self.world_to_object, &r.origin);
         let t_direction = transform_vec(&self.world_to_object, &r.direction);
         //debug!("{:?}", r.direction);
         //debug!("{:?} {}", t_origin, t_direction);
         let a = length2(&t_direction);
-        let b = 2.0 * comp_add(&(matrix_comp_mult(&t_origin, &t_direction))); 
+        let b = 2.0 * dot(&t_origin, &t_direction); 
         let c = length2(&t_origin) - self.r*self.r;
         //debug!("b: {} 4ac: {}", b*b, 4.0*a*c);
         //TODO:  improve precision
