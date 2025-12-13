@@ -167,7 +167,7 @@ impl DisneyBRDFMaterial{
         let e2 = rng.gen::<f32>();
         let phi = 2.0 * PI * e1;
         ////debug!("alpha: {}, e1: {}, e2: {}, numerator: {}, denominator: {}", alpha, e1, e2, numerator, denominator);
-        let cos_theta_h = ((1.0-e2)/(1.0+((alpha.powi(2)-1.0)*e2))).sqrt();
+        let cos_theta_h = ((1.0-e2)/(1.0+((alpha.powi(2)-1.0)*e2))).sqrt().clamp(-1.0,1.0);
     
 
         //debug!("{} {}", cos_theta_h, alt_value_n);

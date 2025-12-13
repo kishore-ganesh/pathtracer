@@ -81,14 +81,14 @@ impl Light for SphericalAreaLight{
     fn sample_radiance(&self, point: TVec3<f32>, point_normal: TVec3<f32>) -> (RGB, TVec3<f32>, f32, f32){
         //debug!("Sampling light at: {}", point);
         let dist = distance(&point, &self.sphere.center);
-        let sin_theta_max = self.sphere.r / dist;
+        let sin_theta_max = (self.sphere.r / dist).clamp(-1.0,1.0);
         let theta_max = sin_theta_max.asin();
         let mut rng = rand::thread_rng();
         let e1 = rng.gen::<f32>() * theta_max;
         let e2 = rng.gen::<f32>() * 2.0 * PI;
         let d_s = dist * e1.cos() - (self.sphere.r.powi(2) - dist.powi(2) * e1.sin().powi(2)).sqrt();
 
-        let cos_alpha = (self.sphere.r.powi(2) + dist.powi(2) - d_s.powi(2))/(2.0 * dist * self.sphere.r);
+        let cos_alpha = ((self.sphere.r.powi(2) + dist.powi(2) - d_s.powi(2))/(2.0 * dist * self.sphere.r)).clamp(-1.0,1.0);
         
         let alpha = cos_alpha.acos();
         let normal = normalize(&(point - self.sphere.center));
