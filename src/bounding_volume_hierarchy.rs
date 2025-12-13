@@ -31,7 +31,7 @@ pub struct Bucket {
 impl BVHNode<'_> {
     pub fn create<'a>(primitives: &'a Vec<Primitive>) -> BVHNode<'a> {
         debug!("Length of primitives is: {}", primitives.len());
-        return BVHNode::recursive_helper(primitives, (0..(primitives.len() - 1)).collect());
+        return BVHNode::recursive_helper(primitives, (0..primitives.len()).collect());
     }
     //TODO: use move
     pub fn recursive_helper<'a>(
@@ -164,10 +164,10 @@ impl BVHNode<'_> {
             right_bounding_box =
                 BoundingBox::union(right_bounding_box, primitives[*primitive_idx].bounds());
         }
-        if left_primitives.len() == primitives.len() || right_primitives.len() == primitives.len() {
+        if left_primitives.len() == primitives_at_level.len() || right_primitives.len() == primitives_at_level.len() {
             //No splitting occurring here
             debug!("Size of reduced sprimitives array is the same as the original - no splitting occurring");
-            let primitives_at_level = if left_primitives.len() == primitives.len() {
+            let primitives_at_level = if left_primitives.len() == primitives_at_level.len() {
                 left_primitives
             } else {
                 right_primitives
@@ -234,7 +234,7 @@ impl BVHNode<'_> {
                 let primitive = &self.primitives[*i];
                 let intersection = primitive.object.intersection(&r);
 
-                //debug!("{:?}", intersection);
+                debug!("{:?}", intersection);
                 //TODO: Add generic object type later
                 //Closest
                 let min_intersection_tuple = min_intersection(min_intersection_v, intersection);
@@ -319,11 +319,11 @@ impl BVHNode<'_> {
     }
 
     pub fn print_traverse_helper(&self, depth: usize) {
-        debug!("depth is: {}", depth);
-        debug!("is_terminal: {}", self.is_terminal);
-        debug!("Primitives length: {}", self.primitives.len());
-        debug!("Left box is: {:?}", self.left_bounding_box);
-        debug!("Right box is: {:?}", self.right_bounding_box);
+        println!("depth is: {}", depth);
+        println!("is_terminal: {}", self.is_terminal);
+        println!("Primitives length: {}", self.primitives_at_level.len());
+        println!("Left box is: {:?}", self.left_bounding_box);
+        println!("Right box is: {:?}", self.right_bounding_box);
         if let Some(left) = &self.left {
             left.print_traverse_helper(depth + 1);
         }
@@ -333,5 +333,33 @@ impl BVHNode<'_> {
     }
     pub fn print_traverse(&self) {
         self.print_traverse_helper(0);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use glm::{make_vec3, normalize};
+
+    use crate::{materials::DiffuseMaterial, sphere::Sphere};
+
+    use super::*;
+
+    fn init() {
+        env_logger::init();
+    }
+
+    #[test]
+    fn check_sphere_intersection() {
+        init();
+        let center = make_vec3(&[0.0, 1.0, 0.0]);
+        let x: Sphere = Sphere::create(1.0, center.clone());
+        let diffuse_material = DiffuseMaterial::create(RGB::create(0.0, 255.0, 127.0));
+        let primitives = vec![Primitive::create(Box::new(x), Box::new(diffuse_material))];
+        let mut bvh = BVHNode::create(&primitives);
+        bvh.print_traverse();
+        let ray_origin = make_vec3(&[0.0, 10.0, 0.0]);
+        let ray_direction = normalize(&(x.center - ray_origin));
+        let r = Ray::create(ray_origin, ray_direction);
+        assert!(bvh.intersection(&r).is_some());
     }
 }
