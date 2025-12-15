@@ -1,9 +1,10 @@
+use crate::bounding_volume_hierarchy::BVHIntersectionResult;
 use crate::camera::Camera;
 use crate::color::{clamp_rgb, RGB};
 use crate::primitives::Rect;
 use crate::scene::Scene;
-use crate::sphere::{Ray, RayIntersection};
-use glm::{angle, make_vec3};
+use crate::sphere::{Primitive, Ray, RayIntersection};
+use glm::{angle, make_vec3, TVec3};
 use rand::Rng;
 use std::thread::JoinHandle;
 use std::thread::{self, ScopedJoinHandle};
@@ -59,6 +60,17 @@ fn generate_chunk(p: &mut PathTracer, r: Rect, bar: ProgressBar) -> Vec<Vec<RGB>
     }
     bar.inc((p.chunk_size * p.chunk_size * p.n_samples) as u64);
     return grid;
+}
+
+fn importance_sample_weight(pdf_a: f32, pdf_b: f32) -> f32 {
+    return pdf_a.powi(2) / (pdf_a.powi(2) + pdf_b.powi(2));
+}
+
+#[derive(Debug)]
+struct SamplingInfo {
+    color: RGB,
+    light_pdf: f32,
+    brdf_pdf: f32,
 }
 
 impl PathTracer<'_> {
@@ -165,8 +177,74 @@ impl PathTracer<'_> {
     }
     //TODO: Special value for infinite intersection?
     //Mult by angle for first
-    fn check_intersection(&mut self, r: &Ray) -> Option<RayIntersection> {
+    fn check_intersection(&self, r: &Ray) -> Option<BVHIntersectionResult> {
         return self.scene.bvh_root.intersection(r);
+    }
+
+    fn is_point_visible_from_light(
+        &self,
+        point: TVec3<f32>,
+        light_vector: TVec3<f32>,
+        light_distance: f32,
+    ) -> bool {
+        let shadow_ray = Ray::create(point, light_vector);
+        let shadow_intersection = self.check_intersection(&shadow_ray);
+        match shadow_intersection {
+            Some(r) => r.intersection.distance > light_distance,
+            None => true,
+        }
+    }
+
+    fn sample_light(
+        &self,
+        ray_intersection: &RayIntersection,
+        primitive: &Primitive,
+        prev_path_total: RGB,
+    ) -> Option<SamplingInfo> {
+        let (light_color, light_vector, light_distance, light_pdf) = self
+            .scene
+            .light
+            .sample_radiance(ray_intersection.point, ray_intersection.normal);
+        let visible =
+            self.is_point_visible_from_light(ray_intersection.point, light_vector, light_distance);
+        if visible {
+            let (brdf, brdf_pdf) = primitive.brdf_eval(&ray_intersection, &light_vector);
+            Some(SamplingInfo {
+                color: prev_path_total * brdf * light_color * (1.0 / light_pdf), // TODO: extract this out into a function
+                light_pdf,
+                brdf_pdf,
+            })
+        } else {
+            None
+        }
+    }
+
+    fn sample_brdf(
+        &self,
+        ray_intersection: &RayIntersection,
+        primitive: &Primitive,
+        prev_path_total: RGB,
+    ) -> Option<SamplingInfo> {
+        let view_vector = ray_intersection.origin - ray_intersection.point;
+        let (brdf, ray, brdf_pdf) = primitive.brdf(*ray_intersection, view_vector);
+        let radiance_info = self
+            .scene
+            .light
+            .radiance_info(&ray, ray_intersection.normal)?;
+        let visible = self.is_point_visible_from_light(
+            ray_intersection.point,
+            radiance_info.light_vector,
+            radiance_info.light_distance,
+        );
+        if visible {
+            Some(SamplingInfo {
+                color: prev_path_total * brdf * radiance_info.light_color * (1.0 / brdf_pdf),
+                light_pdf: radiance_info.light_pdf,
+                brdf_pdf,
+            })
+        } else {
+            None
+        }
     }
     fn li(&mut self, r: Ray, rand: &mut impl Rng, _: i32) -> RGB {
         ////debug!("Calculating Li");
@@ -174,7 +252,7 @@ impl PathTracer<'_> {
         let mut path_total = RGB::create(255.0, 255.0, 255.0);
         let mut prev_path_total = RGB::create(255.0, 255.0, 255.0);
         let mut running_sum = emitted_radiance;
-        let mut prev_intersection: Option<RayIntersection> = None;
+        let mut prev_intersection: Option<BVHIntersectionResult> = None;
         let mut r_c = r.clone();
         let mut n_iterations = 0;
 
@@ -201,50 +279,69 @@ impl PathTracer<'_> {
                 //Need an evaluate function for that? -> need prev_theta and next_theta
                 //Till we have material: hack: if diffuse -> easy, if specular, just check if same
                 //dir else 0
-                Some(ray_intersection) => {
+                Some(bvh_intersection) => {
                     //Need to check light obstruction here
                     //debug!("Calculating for light");
-                    let (light_color, light_vector, light_distance, pdf) = self
+
+                    if self
                         .scene
-                        .light
-                        .sample_radiance(ray_intersection.point, ray_intersection.normal);
-                    let shadow_ray = Ray::create(ray_intersection.point, light_vector);
-                    let shadow_intersection = self.check_intersection(&shadow_ray);
-                    //debug!("Light distance is: {}", light_distance);
-                    //TODO: if hits emissive object?
-                    //debug!("Ray Intersection is: {:?}, Shadow intersection: {:?}  Light vector: {}", ray_intersection,shadow_intersection, light_vector);
-                    let mut visible = false;
-                    match shadow_intersection {
-                        Some(s) => {
-                            //debug!("Shadow intersected: {:?}", s);
-                            //debug!("Shadow min index: {}, Current min index: {}", shadow_min_index, prev_min_index);
-                            //debug!("Shadow distance: {}, Current distance: {}", s.distance, light_distance);
-                            if s.distance > light_distance {
-                                visible = true;
-                            }
-                        }
-                        None => {
-                            //debug!("No intersection");
-                            visible = true;
-                        }
-                    }
-                    //debug!("Min index: {}", shadow_min_index);
-                    //  visible = true;
-                    //debug!("Visible: {}", visible);
-                    match visible {
-                        true => {
-                            let brdf = self
-                                .scene
-                                .bvh_root
-                                .brdf_eval_old(&ray_intersection, &light_vector);
-                            // debug!("running_sum before: {:?}, path_total: {:?}, light_color: {:?} pdf: {}", running_sum, prev_path_total, light_color, pdf);
+                        .bvh_root
+                        .get_primitive(bvh_intersection.primitive_idx)
+                        .material
+                        .is_delta()
+                    {
+                        unimplemented!()
+                        // Get vector from BRDF
+                    } else if self.scene.light.is_delta() {
+                        unimplemented!()
+                        // Get vector from light source
+                    } else {
+                        // Importance sample
+                        let primitive = self
+                            .scene
+                            .bvh_root
+                            .get_primitive(bvh_intersection.primitive_idx);
+                        let light_res = self.sample_light(
+                            &bvh_intersection.intersection,
+                            primitive,
+                            prev_path_total,
+                        );
+                        let brdf_res = self.sample_brdf(
+                            &bvh_intersection.intersection,
+                            primitive,
+                            prev_path_total,
+                        );
 
-                            //TODO: should divide by cos theta
-                            running_sum += prev_path_total * brdf * light_color * (1.0 / pdf);
-
-                            // debug!("running_sum after: {:?}, path_total: {:?}, light_color: {:?} pdf: {} brdf: {:?}", running_sum, prev_path_total, light_color, pdf, brdf);
+                        if light_res.is_some() && brdf_res.is_some() {
+                            let light_res = light_res.unwrap();
+                            let brdf_res = brdf_res.unwrap();
+                            running_sum += light_res.color
+                                * importance_sample_weight(light_res.light_pdf, light_res.brdf_pdf);
+                            running_sum += brdf_res.color
+                                * importance_sample_weight(brdf_res.brdf_pdf, brdf_res.light_pdf)
+                        } else {
+                            // TODO: confirm if you do importance samplign with weight
+                            running_sum += light_res
+                                .map(|light_res| {
+                                    light_res.color
+                                        * importance_sample_weight(
+                                            light_res.light_pdf,
+                                            light_res.brdf_pdf,
+                                        )
+                                })
+                                .unwrap_or_default();
+                            running_sum += brdf_res
+                                .map(|brdf_res| {
+                                    brdf_res.color
+                                        * importance_sample_weight(
+                                            brdf_res.brdf_pdf,
+                                            brdf_res.light_pdf,
+                                        )
+                                })
+                                .unwrap_or_default();
                         }
-                        false => {}
+
+                        // 1. light
                     }
                 }
                 None => {}
@@ -268,7 +365,7 @@ impl PathTracer<'_> {
             //NOTE: this should be after prev_intersection since we need the previous cached result within BVHNode
             let min_intersection = self.check_intersection(&r_c);
             match min_intersection {
-                Some(ray_intersection) => {
+                Some(bvh_intersection) => {
                     //TODO: pass incoming direction
                     //TODO: return light sampling here.
 
@@ -276,17 +373,20 @@ impl PathTracer<'_> {
                     //debug!("Ray intersection point: {:?}", ray_intersection.point);
                     //Light radiance to point then multiply by cos theta
 
-                    let view_vector = r_c.origin - ray_intersection.point;
+                    let view_vector = r_c.origin - bvh_intersection.intersection.point;
                     // debug!("Origin: {}, point: {}, view_vector: {}", r_c.origin, ray_intersection.point, view_vector);
+                    let primitive = self
+                        .scene
+                        .bvh_root
+                        .get_primitive(bvh_intersection.primitive_idx);
                     if n_iterations == 0 {
-                        running_sum += self
-                            .scene
-                            .bvh_root
-                            .le(&ray_intersection.point, &view_vector);
+                        running_sum +=
+                            primitive.le(&bvh_intersection.intersection.point, &view_vector);
                     }
-                    //debug!("VIEW angle: {}", angle(&ray_intersection.normal, &view_vector) * 180.0 / PI);
-                    let (brdf, ray, pdf) = self.scene.bvh_root.brdf(ray_intersection, view_vector);
-                    let ray_angle = angle(&ray_intersection.normal, &ray.direction);
+
+                    let (brdf, ray, pdf) =
+                        primitive.brdf(bvh_intersection.intersection, view_vector);
+                    let ray_angle = angle(&bvh_intersection.intersection.normal, &ray.direction);
                     //debug!("BRDF is: {:?}", brdf);
                     //debug!("Ray angle: {}", ray_angle);
                     if ray_angle.cos() < 0.0 {

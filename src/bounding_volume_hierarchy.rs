@@ -3,7 +3,7 @@ use crate::color::RGB;
 use crate::materials::Material;
 use crate::sphere::{min_intersection, Primitive, Ray, RayIntersection};
 use glm::TVec3;
-use std::cmp;
+use std::cmp::{self, Ordering};
 use std::mem::swap;
 const MIN_PRIMITIVES: usize = 5;
 use log::{debug, info};
@@ -17,8 +17,6 @@ pub struct BVHNode<'a> {
     right: Option<Box<BVHNode<'a>>>,
     left_bounding_box: BoundingBox,
     right_bounding_box: BoundingBox,
-    cached_primitive: Option<usize>,
-    cached_primitive_old: Option<usize>,
 }
 
 #[derive(Clone)]
@@ -26,6 +24,23 @@ pub struct Bucket {
     count: i32,
     bound: BoundingBox,
     cost: f32,
+}
+
+#[derive(Debug, Copy, Clone)]
+pub struct BVHIntersectionResult {
+    pub intersection: RayIntersection,
+    pub primitive_idx: usize,
+}
+
+impl PartialEq<BVHIntersectionResult> for BVHIntersectionResult {
+    fn eq(&self, other: &BVHIntersectionResult) -> bool {
+        return self.intersection == other.intersection;
+    }
+}
+impl PartialOrd<BVHIntersectionResult> for BVHIntersectionResult {
+    fn partial_cmp(&self, other: &BVHIntersectionResult) -> Option<Ordering> {
+        return self.intersection.partial_cmp(&other.intersection);
+    }
 }
 
 impl BVHNode<'_> {
@@ -47,8 +62,6 @@ impl BVHNode<'_> {
                 right: None,
                 left_bounding_box: BoundingBox::create_empty(),
                 right_bounding_box: BoundingBox::create_empty(),
-                cached_primitive: None,
-                cached_primitive_old: None,
             };
         }
         let mut centroid_bounds = BoundingBox::create_empty();
@@ -164,7 +177,9 @@ impl BVHNode<'_> {
             right_bounding_box =
                 BoundingBox::union(right_bounding_box, primitives[*primitive_idx].bounds());
         }
-        if left_primitives.len() == primitives_at_level.len() || right_primitives.len() == primitives_at_level.len() {
+        if left_primitives.len() == primitives_at_level.len()
+            || right_primitives.len() == primitives_at_level.len()
+        {
             //No splitting occurring here
             debug!("Size of reduced sprimitives array is the same as the original - no splitting occurring");
             let primitives_at_level = if left_primitives.len() == primitives_at_level.len() {
@@ -180,8 +195,6 @@ impl BVHNode<'_> {
                 right: None,
                 left_bounding_box: BoundingBox::create_empty(),
                 right_bounding_box: BoundingBox::create_empty(),
-                cached_primitive: None,
-                cached_primitive_old: None,
             };
             //panic!("Size of reduced sprimitives array is the same as the original - no splitting occurring");
         }
@@ -212,110 +225,69 @@ impl BVHNode<'_> {
             right: right_node,
             left_bounding_box: left_bounding_box,
             right_bounding_box: right_bounding_box,
-            cached_primitive: None,
-            cached_primitive_old: None,
         };
     }
 
-    pub fn intersection_helper(
-        &mut self,
-        r: &Ray,
-    ) -> (Option<RayIntersection>, Option<usize>, usize) {
+    pub fn intersection_helper(&self, r: &Ray) -> (Option<BVHIntersectionResult>, usize) {
         let mut intersection_count = 0;
-        swap(&mut self.cached_primitive_old, &mut self.cached_primitive);
-        // self.cached_primitive_old = self.cached_primitive;
-        self.cached_primitive = None;
         if self.is_terminal {
-            let mut min_intersection_v: Option<RayIntersection> = None;
+            let mut min_intersection_v: Option<BVHIntersectionResult> = None;
             //debug!("Number of primitives at base level: {}", self.primitives.len());
             intersection_count = self.primitives.len();
             for i in &self.primitives_at_level {
-                ////debug!("Before ray object intersection test");
                 let primitive = &self.primitives[*i];
                 let intersection = primitive.object.intersection(&r);
 
-                debug!("{:?}", intersection);
                 //TODO: Add generic object type later
-                //Closest
-                let min_intersection_tuple = min_intersection(min_intersection_v, intersection);
-                min_intersection_v = min_intersection_tuple.0;
-                let is_min = min_intersection_tuple.1;
-                if is_min {
-                    self.cached_primitive = Some(*i);
-                }
+                (min_intersection_v, _) = min_intersection(
+                    min_intersection_v,
+                    intersection.map(|intersection| BVHIntersectionResult {
+                        intersection,
+                        primitive_idx: *i,
+                    }),
+                );
             }
-            return (
-                min_intersection_v,
-                self.cached_primitive,
-                intersection_count,
-            );
+            return (min_intersection_v, intersection_count);
         } else {
             debug!("Non terminal");
-            let mut ray_intersection: Option<RayIntersection> = None;
+            let mut min_intersection_v: Option<BVHIntersectionResult> = None;
             intersection_count += 2;
             if self.left_bounding_box.intersection(r) {
                 debug!("Left box intersected");
-                if let Some(left) = &mut self.left {
+                if let Some(left) = &self.left {
                     let left_intersection_tuple = left.intersection_helper(r);
-                    ray_intersection = left_intersection_tuple.0;
-                    self.cached_primitive = left_intersection_tuple.1;
-                    intersection_count += left_intersection_tuple.2;
+                    min_intersection_v = left_intersection_tuple.0;
+                    intersection_count += left_intersection_tuple.1;
                 }
             }
             if self.right_bounding_box.intersection(r) {
                 debug!("Right box intersected");
-                if let Some(right) = &mut self.right {
+                if let Some(right) = &self.right {
                     let right_intersection_tuple = right.intersection_helper(r);
-                    let min_intersection_tuple =
-                        min_intersection(ray_intersection, right_intersection_tuple.0);
-
-                    ray_intersection = min_intersection_tuple.0;
-                    if min_intersection_tuple.1 {
-                        self.cached_primitive = right_intersection_tuple.1;
-                    } else {
-                        //panic!("Test right intersection being smaller");
-                    }
-                    intersection_count += right_intersection_tuple.2;
+                    (min_intersection_v, _) =
+                        min_intersection(min_intersection_v, right_intersection_tuple.0);
+                    intersection_count += right_intersection_tuple.1;
                 }
             }
-            return (ray_intersection, self.cached_primitive, intersection_count);
+            return (min_intersection_v, intersection_count);
         }
     }
 
-    pub fn brdf_eval_old(&self, r: &RayIntersection, v: &TVec3<f32>) -> RGB {
-        if let Some(p) = self.cached_primitive_old {
-            //debug!("Cached primitive old is valid");
-            return self.primitives[p].brdf_eval(r, v);
-        } else {
-            //debug!("Cached primitive old is invalid");
-        }
-        panic!("BRDF Eval old cached primitive missing");
+    pub fn get_primitive(&self, idx: usize) -> &Primitive {
+        &self.primitives[idx]
     }
 
-    pub fn brdf(&self, r: RayIntersection, v: TVec3<f32>) -> (RGB, Ray, f32) {
-        if let Some(p) = self.cached_primitive {
-            return self.primitives[p].brdf(r, v);
-        }
-        return (RGB::create(0.0, 0.0, 255.0), Ray::create_empty(), 0.0);
-    }
-
-    pub fn intersection(&mut self, r: &Ray) -> Option<RayIntersection> {
+    pub fn intersection(&self, r: &Ray) -> Option<BVHIntersectionResult> {
         debug!("Intersection requested");
         let intersection_time = std::time::Instant::now();
-        let (ray_intersection, _, intersection_count) = self.intersection_helper(r);
+        let (ray_intersection, intersection_count) = self.intersection_helper(r);
         info!(
             "Intersection elapsed time: {:?}",
             intersection_time.elapsed()
         );
         debug!("Intersection count: {}", intersection_count);
-        return ray_intersection;
-    }
-
-    pub fn le(&self, p: &TVec3<f32>, v: &TVec3<f32>) -> RGB {
-        if let Some(primitive_idx) = self.cached_primitive {
-            return self.primitives[primitive_idx].le(p, v);
-        }
-        return RGB::create(255.0, 255.0, 255.0);
+        // TODO: this should rally be part of the intersection
+        ray_intersection
     }
 
     pub fn print_traverse_helper(&self, depth: usize) {

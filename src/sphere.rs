@@ -12,6 +12,7 @@ use glm::{
     normalize, TMat4, TVec3,
 };
 use log::debug;
+use std::cmp::Ordering;
 use std::sync::Arc;
 
 pub trait Object: Send + Sync + ObjectClone {
@@ -75,7 +76,7 @@ impl Primitive {
     pub fn brdf(&self, r: RayIntersection, v: TVec3<f32>) -> (RGB, Ray, f32) {
         return self.material.brdf(r, v);
     }
-    pub fn brdf_eval(&self, r: &RayIntersection, v: &TVec3<f32>) -> RGB {
+    pub fn brdf_eval(&self, r: &RayIntersection, v: &TVec3<f32>) -> (RGB, f32) {
         return self.material.brdf_eval(r, v);
     }
 
@@ -129,25 +130,34 @@ pub struct RayIntersection {
     pub distance: f32,
 }
 
-pub fn min_intersection(
-    min_intersection_v: Option<RayIntersection>,
-    b: Option<RayIntersection>,
-) -> (Option<RayIntersection>, bool) {
-    match min_intersection_v {
+impl PartialEq<RayIntersection> for RayIntersection {
+    fn eq(&self, other: &RayIntersection) -> bool {
+        return self.distance == other.distance;
+    }
+}
+
+impl PartialOrd<RayIntersection> for RayIntersection {
+    fn partial_cmp(&self, other: &RayIntersection) -> Option<Ordering> {
+        self.distance.partial_cmp(&other.distance)
+    }
+}
+
+pub fn min_intersection<T: PartialOrd>(
+    min_intersection_v: Option<T>,
+    b: Option<T>,
+) -> (Option<T>, bool) {
+    match min_intersection_v.as_ref() {
         None => {
             return (b, true);
         }
-        Some(i) => {
-            match b {
-                Some(j) => {
-                    //debug!("Triangle {} {} distances: {} {}, t's: {} {}", index,min_index,j.distance, i.distance, j.t, i.t);
-                    if j.distance < i.distance {
-                        return (b, true);
-                    }
+        Some(i) => match b.as_ref() {
+            Some(j) => {
+                if j < i {
+                    return (b, true);
                 }
-                None => {}
             }
-        }
+            None => {}
+        },
     };
     return (min_intersection_v, false);
 }
