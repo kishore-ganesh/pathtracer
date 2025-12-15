@@ -1,5 +1,8 @@
-use glm::{TMat4, TVec3, dot, is_null, make_mat4x4, make_vec3, mat4_to_mat3, normalize, transpose, vec3_to_vec4, vec4_to_vec3};
 use crate::{NormalType, Triangle, TriangleMesh};
+use glm::{
+    dot, is_null, make_mat4x4, make_vec3, mat4_to_mat3, normalize, transpose, vec3_to_vec4,
+    vec4_to_vec3, TMat4, TVec3,
+};
 use log::debug;
 
 //TODO: rename to geometric primitives
@@ -78,28 +81,27 @@ pub fn transform_vec(transform: &TMat4<f32>, v: &TVec3<f32>) -> TVec3<f32> {
     return transformed_vec;
 }
 
-pub fn transform_triangle(m: &TMat4<f32>, t: &Triangle) -> Triangle{
+pub fn transform_triangle(m: &TMat4<f32>, t: &Triangle) -> Triangle {
     let mut points = t.points.clone();
-    for (index, point) in (&t.points).iter().enumerate(){
+    for (index, point) in (&t.points).iter().enumerate() {
         points[index] = transform(m, point);
     }
     //iter().map(|x| transform(M, x)).collect();
-    match t.normal_direction{
+    match t.normal_direction {
         NormalType::FaceNormal(n) => {
             return Triangle::create(points, NormalType::FaceNormal(transform_vec(m, &n)));
-        },
+        }
         NormalType::VertexNormals(v) => {
             //TODO: correct
             return Triangle::create(points, NormalType::VertexNormals(v));
-
-        },
-        NormalType::Inferred => unimplemented!()
+        }
+        NormalType::Inferred => unimplemented!(),
     }
 }
-pub fn transform_mesh(transform: &TMat4<f32>, m: &TriangleMesh) -> TriangleMesh{
+pub fn transform_mesh(transform: &TMat4<f32>, m: &TriangleMesh) -> TriangleMesh {
     //TODO: make this better
     let mut mesh = m.mesh.clone();
-    for (index,triangle) in (&m.mesh).iter().enumerate(){
+    for (index, triangle) in (&m.mesh).iter().enumerate() {
         mesh[index] = transform_triangle(transform, triangle);
     }
 
@@ -107,18 +109,17 @@ pub fn transform_mesh(transform: &TMat4<f32>, m: &TriangleMesh) -> TriangleMesh{
 }
 
 pub fn reflect_about_vec(v: &TVec3<f32>, about: &TVec3<f32>) -> TVec3<f32> {
-    //NOTE: this assumes both rooted in same point 
+    //NOTE: this assumes both rooted in same point
     //v is pointing in same direction of normal
     //debug!("Reflecting {} about {}", v, about);
     let normalized_about = normalize(&about);
     let about_parallel = dot(&normalized_about, &v) * normalized_about;
-    
+
     //debug!("Cosine angle is: {}", 57.29 * (dot(&normalized_about, &normalized_v)).acos());
     return 2.0 * about_parallel - v;
-    
 }
 
-pub fn get_perp_vec(n: &TVec3<f32>) -> TVec3<f32>{
+pub fn get_perp_vec(n: &TVec3<f32>) -> TVec3<f32> {
     if is_null(&n, 0.0) {
         // debug!("All zero in perp");
         panic!("All zero in perp");
@@ -126,39 +127,30 @@ pub fn get_perp_vec(n: &TVec3<f32>) -> TVec3<f32>{
     let mut first_nz = 0;
     if n.x != 0.0 {
         first_nz = 0;
-    }
-    else if n.y != 0.0 {
+    } else if n.y != 0.0 {
         first_nz = 1;
-    }
-    else if n.z != 0.0 {
+    } else if n.z != 0.0 {
         first_nz = 2;
-    }
-
-    ;
+    };
     let (second_nz, third_nz) = match first_nz {
-        0 => (1,2), 
-        1 => (2,0),
-        2 => (0,1),
+        0 => (1, 2),
+        1 => (2, 0),
+        2 => (0, 1),
         _ => {
             panic!("First nz invalid")
         }
     };
-    let mut perp_n = [0.0,0.0,0.0];
+    let mut perp_n = [0.0, 0.0, 0.0];
     perp_n[second_nz] = 0.0;
     perp_n[first_nz] = n[third_nz];
     perp_n[third_nz] = -n[first_nz];
     return make_vec3(&perp_n);
-
-    
 }
 
-pub fn get_vec_at_angle(n: &TVec3<f32>, h: &TVec3<f32>,angle: f32) -> TVec3<f32>{
-
+pub fn get_vec_at_angle(n: &TVec3<f32>, h: &TVec3<f32>, angle: f32) -> TVec3<f32> {
     //TODO: look at left/right
     //Make coord system with n being the y axis, rotate by angle, get it back to our coordinat
-    //esystemi 
+    //esystemi
     //
     return n * angle.cos() + h * angle.sin();
-    
 }
-

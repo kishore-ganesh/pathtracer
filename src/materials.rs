@@ -229,7 +229,9 @@ impl Material for DisneyBRDFMaterial {
         debug_assert!(!theta_h.is_nan());
         let bitangent = cross(&r.normal, &r.perp);
         // debug!("normal: {}, tangent: {}, bitangent: {}", r.normal, r.perp, bitangent);
-        let h = r.normal * cos_theta_h + r.perp * theta_h.sin() * phi.cos() + bitangent * theta_h.sin() * phi.sin();
+        let h = r.normal * cos_theta_h
+            + r.perp * theta_h.sin() * phi.cos()
+            + bitangent * theta_h.sin() * phi.sin();
         // debug!("Reflecting about within material");
         let l = reflect_about_vec(&normalized_v, &h);
         // debug!("Non normalized l is: {}", l);
@@ -250,7 +252,7 @@ impl Material for DisneyBRDFMaterial {
         }
 
         //debug!("l is: {}", normalize(&l));
-        //NOTE: we're starting the ray from a point slightly offset from the point. 
+        //NOTE: we're starting the ray from a point slightly offset from the point.
         //TODO: Check later if this prevents the ray from intersecting the object it originated from
         //NOTE: the above comment is now invalid
         let ray = Ray::create(r.point, normalize(&l));
