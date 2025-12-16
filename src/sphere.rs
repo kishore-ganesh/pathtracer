@@ -6,7 +6,7 @@ use crate::bounding_box::BoundingBox;
 use crate::color::RGB;
 use crate::primitives::{Object, Ray, RayIntersection, get_perp_vec, reflect_about_vec, transform, transform_vec};
 use glm::{
-    angle, distance, dot, inverse, length2, make_mat4x4, make_vec3,
+    angle, distance, dot, inverse, length2, make_mat4x4,
     normalize, TMat4, TVec3,
 };
 

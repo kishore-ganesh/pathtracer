@@ -3,7 +3,6 @@ use crate::color::RGB;
 use crate::primitives::{Object, Ray, RayIntersection, min_intersection};
 use crate::triangle::{NormalType, Triangle};
 use glm::{make_vec3, TVec3};
-use log::debug;
 
 #[derive(Clone, Debug)]
 pub struct TriangleMesh {
