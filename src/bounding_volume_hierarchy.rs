@@ -306,7 +306,7 @@ impl BVHNode<'_> {
 mod tests {
     use glm::{make_vec3, normalize};
 
-    use crate::{materials::DiffuseMaterial, sphere::Sphere};
+    use crate::{color::RGB, materials::DiffuseMaterial, sphere::Sphere};
 
     use super::*;
 
