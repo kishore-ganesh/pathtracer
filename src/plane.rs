@@ -1,6 +1,6 @@
 use crate::bounding_box::BoundingBox;
 use crate::color::RGB;
-use crate::primitives::{get_perp_vec, reflect_about_vec, Object, Ray, RayIntersection};
+use crate::primitives::{reflect_about_vec, Object, Ray, RayIntersection};
 use glm::{angle, cross, distance, dot, TVec3};
 #[derive(Clone)]
 pub struct Plane {
@@ -42,7 +42,6 @@ impl Object for Plane {
             normal: self.normal,
             normal_angle,
             reflection,
-            perp: get_perp_vec(&self.normal),
             distance: distance(&p_v, &r.origin),
         })
     }

@@ -119,40 +119,27 @@ pub fn reflect_about_vec(v: &TVec3<f32>, about: &TVec3<f32>) -> TVec3<f32> {
     2.0 * about_parallel - v
 }
 
-pub fn get_perp_vec(n: &TVec3<f32>) -> TVec3<f32> {
-    if is_null(n, 0.0) {
-        // debug!("All zero in perp");
-        panic!("All zero in perp");
-    }
-    let mut first_nz = 0;
-    if n.x != 0.0 {
-        first_nz = 0;
-    } else if n.y != 0.0 {
-        first_nz = 1;
-    } else if n.z != 0.0 {
-        first_nz = 2;
-    };
-    let (second_nz, third_nz) = match first_nz {
-        0 => (1, 2),
-        1 => (2, 0),
-        2 => (0, 1),
-        _ => {
-            panic!("First nz invalid")
-        }
-    };
-    let mut perp_n = [0.0, 0.0, 0.0];
-    perp_n[second_nz] = 0.0;
-    perp_n[first_nz] = n[third_nz];
-    perp_n[third_nz] = -n[first_nz];
-    make_vec3(&perp_n)
-}
-
 pub fn get_vec_at_angle(n: &TVec3<f32>, h: &TVec3<f32>, angle: f32) -> TVec3<f32> {
     //TODO: look at left/right
     //Make coord system with n being the y axis, rotate by angle, get it back to our coordinat
     //esystemi
     //
     n * angle.cos() + h * angle.sin()
+}
+
+
+pub fn get_basis_vectors(v: TVec3<f32>) -> (TVec3<f32>, TVec3<f32>) {
+    let sign: f32 = if v.z .is_sign_negative() {
+        -1.0
+    }
+    else {
+        1.0
+    };
+    let a = -1.0 /(sign + v.z);
+    let b  = v.x * v.y * a;
+    let v1 = make_vec3(&[1.0+sign * v.x.powi(2) * a, sign * b, -sign * v.x]);
+    let v2 = make_vec3(&[b, sign + v.y.powi(2) * a, -v.y]);
+    return (v1, v2);
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -187,7 +174,6 @@ pub struct RayIntersection {
     pub origin: TVec3<f32>,
     pub point: TVec3<f32>,
     pub normal: TVec3<f32>,
-    pub perp: TVec3<f32>,
     pub normal_angle: f32,
     pub reflection: TVec3<f32>,
     pub distance: f32,

@@ -1,6 +1,6 @@
 //
 use crate::color::RGB;
-use crate::primitives::{get_vec_at_angle, reflect_about_vec, Ray, RayIntersection};
+use crate::primitives::{Ray, RayIntersection, get_basis_vectors, get_vec_at_angle, reflect_about_vec};
 use glm::{angle, cross, normalize, TVec3};
 use rand::Rng;
 use std::f32::consts::PI;
@@ -52,7 +52,9 @@ impl Material for DiffuseMaterial {
         let mut rand = rand::rng();
         let degree_angle = rand.gen_range(0.0..90.0);
         let rad_angle = (PI / 180.0) * degree_angle;
-        let direction = get_vec_at_angle(&r.normal, &r.perp, rad_angle);
+        let (tangent, bitangent) = get_basis_vectors(r.normal);
+        // TODO: fix
+        let direction = get_vec_at_angle(&r.normal, &tangent, rad_angle);
 
         (self.fraction, Ray::create(r.point, direction), 1.0)
     }
@@ -224,10 +226,10 @@ impl Material for DisneyBRDFMaterial {
         let (cos_theta_h, phi) = self.sample_from_specular_d(alpha);
         let theta_h = cos_theta_h.acos();
         debug_assert!(!theta_h.is_nan());
-        let bitangent = cross(&r.normal, &r.perp);
+        let (tangent, bitangent) = get_basis_vectors(r.normal);
         // debug!("normal: {}, tangent: {}, bitangent: {}", r.normal, r.perp, bitangent);
         let h = r.normal * cos_theta_h
-            + r.perp * theta_h.sin() * phi.cos()
+            + tangent * theta_h.sin() * phi.cos()
             + bitangent * theta_h.sin() * phi.sin();
         // debug!("Reflecting about within material");
         let l = reflect_about_vec(&normalized_v, &h);

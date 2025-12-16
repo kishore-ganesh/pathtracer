@@ -4,7 +4,7 @@
 //Implement cube
 use crate::bounding_box::BoundingBox;
 use crate::color::RGB;
-use crate::primitives::{Object, Ray, RayIntersection, get_perp_vec, reflect_about_vec, transform, transform_vec};
+use crate::primitives::{Object, Ray, RayIntersection, reflect_about_vec, transform, transform_vec};
 use glm::{
     angle, distance, dot, inverse, length2, make_mat4x4,
     normalize, TMat4, TVec3,
@@ -115,7 +115,7 @@ impl Object for Sphere {
             //debug!("{} {}", normal_vec, normal_angle * (180.0/PI));
             //debug!("{}", angle(&normal_vec, &point));
             //TODO: change normal to world space
-            let world_normal_vec = transform_vec(&self.object_to_world, &normal_vec);
+            let world_normal_vec = normalize(&transform_vec(&self.object_to_world, &normal_vec));
             let world_reflection = normalize(&transform_vec(&self.object_to_world, &reflection));
             let world_point = transform(&self.object_to_world, &point);
             //debug!("reflection: {}, world: {}", reflection, world_reflection);
@@ -124,7 +124,6 @@ impl Object for Sphere {
                 t,
                 point: world_point,
                 normal: world_normal_vec,
-                perp: get_perp_vec(&world_normal_vec),
                 normal_angle,
                 reflection: world_reflection,
                 distance: distance(&world_point, &r.origin),
