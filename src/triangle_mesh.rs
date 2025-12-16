@@ -1,6 +1,6 @@
 use crate::bounding_box::BoundingBox;
 use crate::color::RGB;
-use crate::sphere::{Object, Ray, RayIntersection};
+use crate::sphere::{Object, Ray, RayIntersection, min_intersection};
 use crate::triangle::{NormalType, Triangle};
 use glm::{make_vec3, TVec3};
 use log::debug;
@@ -34,33 +34,11 @@ impl TriangleMesh {
 
 impl Object for TriangleMesh {
     fn intersection(&self, r: &Ray) -> Option<RayIntersection> {
-        let mut min_intersection = None;
+        let mut min_intersection_v = None;
         for (_, triangle) in (&self.mesh).iter().enumerate() {
-            //TODO: handle duplication of code
-            //debug!("Triangle index: {}", index);
-            match min_intersection {
-                None => {
-                    min_intersection = triangle.intersection(r);
-                }
-                Some(i) => {
-                    match triangle.intersection(r) {
-                        Some(j) => {
-                            //debug!("Triangle {} {} distances: {} {}, t's: {} {}", index,min_index,j.distance, i.distance, j.t, i.t);
-                            if j.distance < i.distance {
-                                min_intersection = Some(j);
-                            }
-                        }
-                        None => {}
-                    }
-                }
-            }
+            (min_intersection_v, _) = min_intersection(min_intersection_v, triangle.intersection(r));
         }
-
-        match min_intersection {
-            None => {}
-            _ => {} //debug!("Triangle {} intersected", min_index)
-        }
-        return min_intersection;
+        min_intersection_v
     }
 
     fn color(&self, _: &TVec3<f32>) -> RGB {
