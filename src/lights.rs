@@ -148,8 +148,8 @@ impl Light for SphericalAreaLight {
         let sin_theta_max = (self.sphere.r / dist).clamp(-1.0, 1.0);
         let theta_max = sin_theta_max.asin();
         let mut rng = rand::thread_rng();
-        let e1 = rng.gen::<f32>() * theta_max;
-        let e2 = rng.gen::<f32>() * 2.0 * PI;
+        let e1 = rng.random::<f32>() * theta_max;
+        let e2 = rng.random::<f32>() * 2.0 * PI;
         let d_s =
             dist * e1.cos() - (self.sphere.r.powi(2) - dist.powi(2) * e1.sin().powi(2)).sqrt();
 
