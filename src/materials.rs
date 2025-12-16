@@ -49,7 +49,7 @@ impl Material for DiffuseMaterial {
     fn brdf(&self, r: RayIntersection, _: TVec3<f32>) -> (RGB, Ray, f32) {
         //TODO: make this random direction
 
-        let mut rand = rand::thread_rng();
+        let mut rand = rand::rng();
         let degree_angle = rand.gen_range(0.0..90.0);
         let rad_angle = (PI / 180.0) * degree_angle;
         let direction = get_vec_at_angle(&r.normal, &r.perp, rad_angle);
@@ -164,7 +164,7 @@ impl DisneyBRDFMaterial {
 
     fn sample_from_specular_d(&self, alpha: f32) -> (f32, f32) {
         //let mut rand =
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let e1 = rng.random::<f32>();
         let e2 = rng.random::<f32>();
         let phi = 2.0 * PI * e1;

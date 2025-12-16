@@ -20,7 +20,7 @@ pub struct PathTracer<'a> {
 }
 
 fn generate_chunk(p: &mut PathTracer, chunk_start_idx: usize, buf: &mut [RGB], bar: ProgressBar) {
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
     for idx in chunk_start_idx..chunk_start_idx + buf.len() {
         let y = idx / (p.xres as usize);
         let x = idx % (p.xres as usize);
