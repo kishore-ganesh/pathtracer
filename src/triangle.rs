@@ -1,6 +1,6 @@
 use crate::bounding_box::BoundingBox;
 use crate::color::RGB;
-use crate::primitives::{get_perp_vec, reflect_about_vec, Object, Ray, RayIntersection};
+use crate::primitives::{reflect_about_vec, Object, Ray, RayIntersection};
 use glm::{angle, cross, distance, dot, length, normalize, TVec3};
 
 #[derive(Debug, Copy, Clone)]
@@ -102,7 +102,6 @@ impl Object for Triangle {
                 t,
                 point,
                 normal,
-                perp: get_perp_vec(&normal),
                 normal_angle,
                 reflection,
                 distance: distance(&point, &origin),

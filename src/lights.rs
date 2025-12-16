@@ -1,6 +1,6 @@
 use crate::bounding_box::BoundingBox;
 use crate::color::RGB;
-use crate::primitives::{get_perp_vec, Object, Ray, RayIntersection};
+use crate::primitives::{Object, Ray, RayIntersection, get_basis_vectors};
 use crate::sphere::Sphere;
 use glm::{angle, cross, distance, normalize, TVec3};
 use rand::Rng;
@@ -111,7 +111,7 @@ impl SphericalAreaLight {
         point_normal: TVec3<f32>,
         intersection_point: TVec3<f32>,
     ) -> RGB {
-        let light_vec = -normalize(&(point - intersection_point));
+        let light_vec = normalize(&(intersection_point - point));
         let theta_area = angle(&(intersection_point - self.sphere.center), &-light_vec);
         let theta_light = angle(&point_normal, &light_vec);
         if theta_light.cos() > 0.0 {
@@ -159,25 +159,24 @@ impl Light for SphericalAreaLight {
 
         let alpha = cos_alpha.acos();
         let normal = normalize(&(point - self.sphere.center));
-        let tangent = normalize(&get_perp_vec(&normal));
-        let bitangent = cross(&normal, &tangent);
+        let (tangent, bitangent) = get_basis_vectors(normal);
         //debug!("Theta max: {} alpha: {}", theta_max, alpha);
         //debug!("numerator: {}, denom: {}", self.sphere.r, dist);
         ////debug!("Length of normal: {}, tangent: {}, bitangent: {}", length(&normal), length(&tangent), length(&bitangent));
         ////debug!("Dot of normal, tangent is: {}", dot(&normal, &tangent));
         //TODO: refactor out (same thing in Disney BRDF)
         let intersection_point = (normal * cos_alpha
-            + tangent * alpha.sin() * e2.sin()
-            + bitangent * alpha.sin() * e2.cos())
+            + tangent * alpha.sin() * e2.cos()
+            + bitangent * alpha.sin() * e2.sin())
             * self.sphere.r
             + self.sphere.center;
         //debug!("Normal: {}, Tangent: {}, Bitangent: {}, Intersection Point: {}", normal, tangent, bitangent, intersection_point);
         ////debug!("Length: {}", length(&(intersection_point)));
-        //debug!("Point: {:?}, Intersection Point: {:?}", point, intersection_point);
         let light_vec = -normalize(&(point - intersection_point));
+        //debug!("Point: {:?}, Intersection Point: {:?}", point, intersection_point);
         let res_color = self.res_color_at_point(point, point_normal, intersection_point);
         let point_distance = distance(&intersection_point, &point);
-        let pdf = 1.0 / ((1.0 - theta_max.cos()) * (2.0 * PI));
+        let pdf = 1.0 / ((1.0 - theta_max.cos().abs()) * (2.0 * PI));
         (res_color, light_vec, point_distance, pdf)
     }
 
