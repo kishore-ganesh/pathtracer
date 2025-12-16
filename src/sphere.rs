@@ -151,3 +151,20 @@ impl Object for Sphere {
         )
     }
 }
+
+
+#[cfg(test)]
+mod tests {
+    use glm::make_vec3;
+
+    use super::*;
+
+    #[test]
+    fn simple_intersection_test() {
+        let sphere = Sphere::create(10.0, make_vec3(&[10.0,10.0,10.0]));
+        let ray_origin = make_vec3(&[50.0,1.0,2.0]);
+        let ray = Ray::create(ray_origin, normalize(&(sphere.center - ray_origin)));
+        let intersection = sphere.intersection(&ray);
+        assert!(intersection.is_some());
+    }
+}
