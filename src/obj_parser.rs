@@ -1,7 +1,6 @@
 use crate::triangle::{NormalType, Triangle};
 use crate::triangle_mesh::TriangleMesh;
 use glm::{make_vec3, TVec3};
-use log::debug;
 use obj::{load_obj, Obj, Vertex};
 use obj_parser_external::{ObjResult, Position};
 use std::fs::File;
