@@ -14,7 +14,7 @@ pub struct RadianceInfo {
     pub light_pdf: f32,
 }
 
-pub trait Light: LightClone {
+pub trait Light: LightClone + Send + Sync {
     // TODO: light shouldn't be concerned with normal, should be handled externally
     fn radiance_info(&self, r: &Ray, normal: TVec3<f32>) -> Option<RadianceInfo>;
     fn sample_radiance(&self, point: TVec3<f32>, normal: TVec3<f32>)
@@ -27,19 +27,19 @@ pub trait Light: LightClone {
  * https://stackoverflow.com/questions/30353462/how-to-clone-a-struct-storing-a-boxed-trait-object/30353928
  * */
 pub trait LightClone {
-    fn clone_light(&self) -> Box<dyn Light + Send>;
+    fn clone_light(&self) -> Box<dyn Light>;
 }
 impl<T> LightClone for T
 where
     T: 'static + Light + Clone + Send,
 {
-    fn clone_light(&self) -> Box<dyn Light + Send> {
+    fn clone_light(&self) -> Box<dyn Light> {
         Box::new(self.clone())
     }
 }
 
-impl Clone for Box<dyn Light + Send> {
-    fn clone(&self) -> Box<dyn Light + Send> {
+impl Clone for Box<dyn Light> {
+    fn clone(&self) -> Box<dyn Light> {
         self.clone_light()
     }
 }
