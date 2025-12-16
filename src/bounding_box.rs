@@ -10,23 +10,23 @@ pub struct BoundingBox {
 
 impl BoundingBox {
     pub fn create_empty() -> BoundingBox {
-        return BoundingBox::create(
+        BoundingBox::create(
             glm::make_vec3(&[f32::MAX, f32::MAX, f32::MAX]),
             glm::make_vec3(&[f32::MIN, f32::MIN, f32::MIN]),
-        );
+        )
     }
     pub fn create(p_min: TVec3<f32>, p_max: TVec3<f32>) -> BoundingBox {
-        return BoundingBox {
-            p_min: p_min,
-            p_max: p_max,
-        };
+        BoundingBox {
+            p_min,
+            p_max,
+        }
     }
 
     pub fn centroid(&self) -> TVec3<f32> {
-        return (self.p_min + self.p_max) / 2.0;
+        (self.p_min + self.p_max) / 2.0
     }
     pub fn union(a: BoundingBox, b: BoundingBox) -> BoundingBox {
-        return BoundingBox {
+        BoundingBox {
             p_min: make_vec3(&[
                 a.p_min.x.min(b.p_min.x),
                 a.p_min.y.min(b.p_min.y),
@@ -37,11 +37,11 @@ impl BoundingBox {
                 a.p_max.y.max(b.p_max.y),
                 a.p_max.z.max(b.p_max.z),
             ]),
-        };
+        }
     }
 
     pub fn union_point(a: BoundingBox, b: TVec3<f32>) -> BoundingBox {
-        return BoundingBox::union(a, BoundingBox::create(b, b));
+        BoundingBox::union(a, BoundingBox::create(b, b))
     }
 
     pub fn offset(&self, p: TVec3<f32>) -> TVec3<f32> {
@@ -51,11 +51,11 @@ impl BoundingBox {
                 && self.p_min.z <= self.p_max.z
         );
         let offset_p = p - self.p_min;
-        return make_vec3(&[
+        make_vec3(&[
             offset_p.x / (self.p_max.x - self.p_min.x + 1e-10),
             offset_p.y / (self.p_max.y - self.p_min.y + 1e-10),
             offset_p.z / (self.p_max.z - self.p_min.z + 1e-10),
-        ]);
+        ])
     }
 
     pub fn surface_area(&self) -> f32 {
@@ -70,7 +70,7 @@ impl BoundingBox {
         let l = d.x;
         let b = d.y;
         let h = d.z;
-        return 2.0 * (l * b + b * h + h * l);
+        2.0 * (l * b + b * h + h * l)
     }
 
     pub fn intersection(&self, r: &Ray) -> bool {
@@ -108,7 +108,7 @@ impl BoundingBox {
         }
         debug_assert!(!t_min.is_nan() && !t_max.is_nan());
         // println!("Bounding box intersection time: {:?}", duration.elapsed());
-        return t_min <= t_max && t_max > 0.0;
+        t_min <= t_max && t_max > 0.0
     }
 
     pub fn maximum_extent(&self) -> usize {
@@ -120,6 +120,6 @@ impl BoundingBox {
         if mx == extents[1] {
             return 1;
         }
-        return 2;
+        2
     }
 }

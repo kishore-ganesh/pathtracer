@@ -32,9 +32,9 @@ impl Camera {
         let tangent = ((PI/180.0) * (fov/2.0)).tan();
         //debug!("{} {} {}", x, n_up, z);
         //debug!("{:?} {:?} {:?}", length(&x), length(&up), length(&z));
-        let camera_to_world = make_mat4x4(&[x.x, n_up.x, z.x, from.x as f32, 
-                                        x.y, n_up.y, z.y, from.y as f32, 
-                                        x.z, n_up.z, z.z, from.z as f32, 
+        let camera_to_world = make_mat4x4(&[x.x, n_up.x, z.x, from.x, 
+                                        x.y, n_up.y, z.y, from.y, 
+                                        x.z, n_up.z, z.z, from.z, 
                                         0.0, 0.0, 0.0, 1.0]);
         let camera_to_screen = make_mat4x4(&[
                                            1.0,0.0,0.0,0.0,
@@ -52,9 +52,9 @@ impl Camera {
 
         //debug!("Raster to world is: {:?}", raster_to_world);
         //TODO: check nice way to return it correctly
-        return Camera{
-            camera_to_world: camera_to_world,
-            raster_to_world: raster_to_world
+        Camera{
+            camera_to_world,
+            raster_to_world
         }
 
         /*
@@ -88,7 +88,7 @@ impl Camera {
                                          
         //TODO: improve performance here
 
-       return Ray::create(transformed_origin, direction);
+       Ray::create(transformed_origin, direction)
     } 
 
     pub fn get_camera_to_world(&self) -> TMat4<f32> {

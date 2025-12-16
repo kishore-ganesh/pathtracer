@@ -34,13 +34,13 @@ where
     T: 'static + Light + Clone + Send,
 {
     fn clone_light(&self) -> Box<dyn Light + Send> {
-        return Box::new(self.clone());
+        Box::new(self.clone())
     }
 }
 
 impl Clone for Box<dyn Light + Send> {
     fn clone(&self) -> Box<dyn Light + Send> {
-        return self.clone_light();
+        self.clone_light()
     }
 }
 //TODO: check light source interface
@@ -53,11 +53,11 @@ pub struct PointLight {
 }
 impl PointLight {
     pub fn create(location: TVec3<f32>, color: RGB, intensity: f32) -> Self {
-        return PointLight {
-            location: location,
-            color: color,
-            intensity: intensity,
-        };
+        PointLight {
+            location,
+            color,
+            intensity,
+        }
     }
 }
 
@@ -74,16 +74,16 @@ impl Light for PointLight {
         let light_vec = -normalize(&(point - self.location));
         let cos_angle = angle(&light_vec, &normal).cos();
         //////debug!("{}, {:?}, {:?}", cos_angle, self.color, self.color * cos_angle);
-        return (
+        (
             self.color * cos_angle * self.intensity,
             light_vec,
             dist,
             1.0,
-        );
+        )
         //* (self.intensity/dist.powi(2));
     }
     fn is_delta(&self) -> bool {
-        return true;
+        true
     }
 }
 
@@ -98,11 +98,11 @@ pub struct SphericalAreaLight {
 
 impl SphericalAreaLight {
     pub fn create(sphere: Sphere, color: RGB, intensity: f32) -> Self {
-        return SphericalAreaLight {
-            sphere: sphere,
-            color: color,
-            intensity: intensity,
-        };
+        SphericalAreaLight {
+            sphere,
+            color,
+            intensity,
+        }
     }
 
     fn res_color_at_point(
@@ -130,13 +130,13 @@ impl Light for SphericalAreaLight {
         // TODO: verify that this pdf is correct
         let light_pdf = 1.0 / ((1.0 - theta_max.cos()) * 2.0 * PI);
         let res_color = self.res_color_at_point(r.origin, normal, intersection.point);
-        return Some(RadianceInfo {
+        Some(RadianceInfo {
             light_color: res_color,
             light_vector: normalize(&(intersection.point - r.origin)),
             intersection_point: intersection.point,
             light_distance: distance(&intersection.point, &r.origin), // TODO: get this from RayIntersection
             light_pdf,
-        });
+        })
     }
     fn sample_radiance(
         &self,
@@ -178,29 +178,29 @@ impl Light for SphericalAreaLight {
         let res_color = self.res_color_at_point(point, point_normal, intersection_point);
         let point_distance = distance(&intersection_point, &point);
         let pdf = 1.0 / ((1.0 - theta_max.cos()) * (2.0 * PI));
-        return (res_color, light_vec, point_distance, pdf);
+        (res_color, light_vec, point_distance, pdf)
     }
 
     fn is_delta(&self) -> bool {
-        return false;
+        false
     }
 }
 
 // TODO: unification of emissive lights with regular lights
 impl Object for SphericalAreaLight {
     fn intersection(&self, r: &Ray) -> Option<RayIntersection> {
-        return self.sphere.intersection(r);
+        self.sphere.intersection(r)
     }
     fn color(&self, _: &TVec3<f32>) -> RGB {
-        return RGB::black();
+        RGB::black()
     }
     fn le(&self, p: &TVec3<f32>, v: &TVec3<f32>) -> RGB {
         let normal = p - self.sphere.center;
-        let theta_area = angle(&normal, &v);
-        return self.color * theta_area.cos() * self.intensity;
+        let theta_area = angle(&normal, v);
+        self.color * theta_area.cos() * self.intensity
     }
 
     fn bounds(&self) -> BoundingBox {
-        return self.sphere.bounds();
+        self.sphere.bounds()
     }
 }

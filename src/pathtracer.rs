@@ -50,7 +50,7 @@ fn generate_chunk(p: &mut PathTracer, chunk_start_idx: usize, buf: &mut [RGB], b
 }
 
 fn importance_sample_weight(pdf_a: f32, pdf_b: f32) -> f32 {
-    return pdf_a.powi(2) / (pdf_a.powi(2) + pdf_b.powi(2));
+    pdf_a.powi(2) / (pdf_a.powi(2) + pdf_b.powi(2))
 }
 
 #[derive(Debug)]
@@ -71,15 +71,15 @@ impl PathTracer<'_> {
         scene: Scene<'a>,
         camera: Camera,
     ) -> PathTracer<'a> {
-        return PathTracer {
-            xres: xres,
-            yres: yres,
-            n_samples: n_samples,
-            chunk_size: chunk_size,
-            roulette_threshold: roulette_threshold,
-            camera: camera,
-            scene: scene,
-        };
+        PathTracer {
+            xres,
+            yres,
+            n_samples,
+            chunk_size,
+            roulette_threshold,
+            camera,
+            scene,
+        }
     }
 
     pub fn generate(&mut self) -> Vec<RGB> {
@@ -111,12 +111,12 @@ impl PathTracer<'_> {
         //For debugging
         let mid_idx = ((self.xres / 2) * self.yres + self.yres / 2) as usize;
         buf[mid_idx] = RGB::create(255.0, 0.0, 0.0);
-        return buf;
+        buf
     }
     //TODO: Special value for infinite intersection?
     //Mult by angle for first
     fn check_intersection(&self, r: &Ray) -> Option<BVHIntersectionResult> {
-        return self.scene.bvh_root.intersection(r);
+        self.scene.bvh_root.intersection(r)
     }
 
     fn is_point_visible_from_light(
@@ -146,7 +146,7 @@ impl PathTracer<'_> {
         let visible =
             self.is_point_visible_from_light(ray_intersection.point, light_vector, light_distance);
         if visible {
-            let (brdf, brdf_pdf) = primitive.brdf_eval(&ray_intersection, &light_vector);
+            let (brdf, brdf_pdf) = primitive.brdf_eval(ray_intersection, &light_vector);
             Some(SamplingInfo {
                 color: prev_path_total * brdf * light_color * (1.0 / light_pdf), // TODO: extract this out into a function
                 light_pdf,
@@ -191,7 +191,7 @@ impl PathTracer<'_> {
         let mut prev_path_total = RGB::create(255.0, 255.0, 255.0);
         let mut running_sum = emitted_radiance;
         let mut prev_intersection: Option<BVHIntersectionResult> = None;
-        let mut current_ray = r.clone();
+        let mut current_ray = r;
         let mut n_iterations = 0;
 
         loop {
@@ -294,7 +294,7 @@ impl PathTracer<'_> {
                     //running_sum = (running_sum) / (1.0-self.roulette_threshold);
                     break;
                 } else {
-                    path_total = path_total / (1.0 - self.roulette_threshold);
+                    path_total /= 1.0 - self.roulette_threshold;
                     //debug!("Clamping path");
                     path_total = clamp_rgb(path_total, -255.0, 510.0);
                 }
@@ -355,6 +355,6 @@ impl PathTracer<'_> {
             //prev_min_index = min_index
         }
         //            //debug!("Final running sum: {:?}", running_sum);
-        return clamp_rgb(running_sum, -255.0, 255.0);
+        clamp_rgb(running_sum, -255.0, 255.0)
     }
 }

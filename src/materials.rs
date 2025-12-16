@@ -24,13 +24,13 @@ where
     T: 'static + Material + Clone,
 {
     fn clone_material(&self) -> Box<dyn Material + Send> {
-        return Box::new(self.clone());
+        Box::new(self.clone())
     }
 }
 
 impl Clone for Box<dyn Material> {
     fn clone(&self) -> Box<dyn Material> {
-        return self.clone_material();
+        self.clone_material()
     }
 }
 
@@ -41,7 +41,7 @@ pub struct DiffuseMaterial {
 
 impl DiffuseMaterial {
     pub fn create(f: RGB) -> Self {
-        return DiffuseMaterial { fraction: f };
+        DiffuseMaterial { fraction: f }
     }
 }
 
@@ -54,7 +54,7 @@ impl Material for DiffuseMaterial {
         let rad_angle = (PI / 180.0) * degree_angle;
         let direction = get_vec_at_angle(&r.normal, &r.perp, rad_angle);
 
-        return (self.fraction, Ray::create(r.point, direction), 1.0);
+        (self.fraction, Ray::create(r.point, direction), 1.0)
     }
     fn brdf_eval(&self, _: &RayIntersection, _: &TVec3<f32>) -> (RGB, f32) {
         //TODO: fill in
@@ -64,7 +64,7 @@ impl Material for DiffuseMaterial {
         //return RGB::black();
     }
     fn is_delta(&self) -> bool {
-        return false;
+        false
     }
 }
 
@@ -73,7 +73,7 @@ pub struct SpecularMaterial {}
 
 impl SpecularMaterial {
     pub fn create() -> Self {
-        return SpecularMaterial {};
+        SpecularMaterial {}
     }
 }
 
@@ -81,16 +81,16 @@ impl Material for SpecularMaterial {
     fn brdf(&self, r: RayIntersection, _: TVec3<f32>) -> (RGB, Ray, f32) {
         //TODO: extract out the reflection
         let ray = Ray::create(r.point, r.reflection);
-        return (RGB::create(255.0, 255.0, 255.0), ray, 1.0);
+        (RGB::create(255.0, 255.0, 255.0), ray, 1.0)
     }
     fn brdf_eval(&self, r: &RayIntersection, v: &TVec3<f32>) -> (RGB, f32) {
-        let ang = angle(&r.normal, &v);
+        let ang = angle(&r.normal, v);
         let err = 1e-5; //TODO: make error more global, new float class?
                         // TODO: fix pdf here
         if (ang - r.normal_angle).abs() < err {
-            return (RGB::create(255.0, 255.0, 255.0), 1.0);
+            (RGB::create(255.0, 255.0, 255.0), 1.0)
         } else {
-            return (RGB::black(), 1.0);
+            (RGB::black(), 1.0)
         }
     }
     fn is_delta(&self) -> bool {
@@ -110,28 +110,27 @@ pub struct DisneyBRDFMaterial {
 
 impl DisneyBRDFMaterial {
     pub fn create(base_color: RGB, metallic: f32, specular: f32, roughness: f32) -> Self {
-        return DisneyBRDFMaterial {
-            base_color: base_color,
-            metallic: metallic,
-            specular: specular,
-            roughness: roughness,
-        };
+        DisneyBRDFMaterial {
+            base_color,
+            metallic,
+            specular,
+            roughness,
+        }
     }
     fn diffuse(&self, theta_d: f32, theta_l: f32, theta_v: f32) -> RGB {
         let fd_90 = 0.5 + 2.0 * (theta_d).cos().powi(2) * self.roughness;
         let const_l = 1.0 + (fd_90 - 1.0) * (1.0 - theta_l.cos()).powi(5);
         let const_r = 1.0 + (fd_90 - 1.0) * (1.0 - theta_v.cos()).powi(5);
         let const_c = (const_l * const_r) / PI;
-        let f_d = self.base_color * const_c;
+        
         ////debug!("theta_d: {}, theta_l: {}, theta_v: {}, res: {:?}", theta_d, theta_l, theta_v, f_d);
         //debug!("fd90: {}, const_l: {}, const_r: {}, const_c: {}", fd_90, const_l, const_r, const_c);
-        return f_d;
+        self.base_color * const_c
     }
 
     fn specular_d(&self, alpha: f32, theta_h: f32) -> f32 {
-        let res =
-            alpha.powi(2) / (PI * (1.0 + (alpha.powi(2) - 1.0) * theta_h.cos().powi(2)).powi(2));
-        return res; //TODO: have to use normalized form?
+        
+        alpha.powi(2) / (PI * (1.0 + (alpha.powi(2) - 1.0) * theta_h.cos().powi(2)).powi(2))//TODO: have to use normalized form?
     }
 
     fn specular_f(&self, theta_d: f32) -> RGB {
@@ -143,24 +142,24 @@ impl DisneyBRDFMaterial {
             + (self.base_color * self.metallic / 255.0);
         let res = f0 + (f0 - 1.0) * (-1.0) * (1.0 - theta_d.cos()).powi(5);
 
-        return res * 255.0;
+        res * 255.0
     }
 
     fn g1(&self, theta_m: f32, theta_n: f32, alpha_g: f32) -> f32 {
         //TODO: check positive term
         let r_term = 2.0 / (1.0 + (1.0 + alpha_g.powi(2) * theta_n.tan().powi(2)).sqrt());
         let l_term = (theta_m.cos()) / (theta_n.cos());
-        let res = l_term * r_term;
-        return res;
+        
+        l_term * r_term
     }
     fn specular_g(&self, theta_l: f32, theta_v: f32, theta_d: f32) -> f32 {
         //ggx
         let alpha_g = (0.5 + self.roughness / 2.0).powi(2);
         let l_term = self.g1(theta_d, theta_l, alpha_g);
         let r_term = self.g1(theta_d, theta_v, alpha_g);
-        let res = l_term * r_term;
+        
         ////debug!("l_term: {}, r_term: {}, res: {}", l_term, r_term, res);
-        return res;
+        l_term * r_term
     }
 
     fn sample_from_specular_d(&self, alpha: f32) -> (f32, f32) {
@@ -175,7 +174,7 @@ impl DisneyBRDFMaterial {
             .clamp(-1.0, 1.0);
 
         //debug!("{} {}", cos_theta_h, alt_value_n);
-        return (cos_theta_h, phi);
+        (cos_theta_h, phi)
     }
 
     fn eval(&self, theta_d: f32, theta_h: f32, theta_l: f32, theta_v: f32) -> (RGB, f32) {
@@ -201,7 +200,7 @@ impl DisneyBRDFMaterial {
         ////debug!("Specular color is: {:?}", specular);
         ////debug!("specular_d: {}, theta_h.cos(): {}, theta_d.cos(): {}", specular_d, theta_h.cos(), theta_d.cos());
         //debug!("Diffuse: {:?}, Specular_D: {}, Specular f: {:?}, Specular g: {}", diffuse, specular_d, specular_f, specular_g);
-        return (res_color, pdf);
+        (res_color, pdf)
     }
 
     //Where to get theta_h? Sample from D(theta_h), for anisotropic, phi = 1/2pi. Use it to find
@@ -257,7 +256,7 @@ impl Material for DisneyBRDFMaterial {
         if res_color.is_nan() {
             //panic!("Res Color is NaN");
         }
-        return (res_color, ray, pdf);
+        (res_color, ray, pdf)
     }
     //TODO: refactor into just i, o
     fn brdf_eval(&self, r: &RayIntersection, l: &TVec3<f32>) -> (RGB, f32) {
@@ -267,8 +266,8 @@ impl Material for DisneyBRDFMaterial {
 
         //debug!("l: {}, v: {}", l, v);
         let h = normalize(&(l + v));
-        let theta_d = angle(&l, &h);
-        let theta_l = angle(&l, &r.normal);
+        let theta_d = angle(l, &h);
+        let theta_l = angle(l, &r.normal);
         let theta_h = angle(&h, &r.normal);
         let theta_v = angle(&v, &r.normal);
         //debug!("Ray origin: {:?}, Ray Point: {:?}, Ray: {:?}", r.origin, r.point, r.origin - r.point);

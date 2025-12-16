@@ -50,7 +50,7 @@ pub fn parse<P: AsRef<Path>>(_: TVec3<f32>, path: P) -> TriangleMesh {
                 ));
             }
         }
-    } else if let Err(_) = parsed_obj {
+    } else if parsed_obj.is_err() {
         // The normals aren't present in the object file
         let input_buf_reader = BufReader::new(File::open(&path).unwrap());
         let parsed_obj: Obj<Position, u16> = load_obj(input_buf_reader).unwrap();
@@ -74,5 +74,5 @@ pub fn parse<P: AsRef<Path>>(_: TVec3<f32>, path: P) -> TriangleMesh {
     }
 
     //debug!("Normals are: {:?}", normals);
-    return TriangleMesh::create_from(triangles);
+    TriangleMesh::create_from(triangles)
 }

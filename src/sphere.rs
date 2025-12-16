@@ -37,27 +37,27 @@ impl Sphere {
             1.0,
             0.0,
             0.0,
-            center.x as f32,
+            center.x,
             0.0,
             1.0,
             0.0,
-            center.y as f32,
+            center.y,
             0.0,
             0.0,
             1.0,
-            center.z as f32,
+            center.z,
             0.0,
             0.0,
             0.0,
             1.0,
         ]);
         //debug!("{:?} {:?}", object_to_world, inverse(&object_to_world));
-        return Sphere {
-            center: center,
+        Sphere {
+            center,
             r: radius,
-            object_to_world: object_to_world,
+            object_to_world,
             world_to_object: inverse(&object_to_world),
-        };
+        }
     }
 }
 impl Object for Sphere {
@@ -81,7 +81,7 @@ impl Object for Sphere {
         // x = rsinthetacosphi, use to find phi
 
         if b * b < 4.0 * a * c {
-            return None;
+            None
         } else {
             //debug!("Original origin: {:?}, Ray origin: {:?}, direction: {}", r.origin,t_origin, t_direction);
             let res: f32 = ((b * b - 4.0 * a * c) as f32).sqrt();
@@ -119,35 +119,35 @@ impl Object for Sphere {
             let world_reflection = normalize(&transform_vec(&self.object_to_world, &reflection));
             let world_point = transform(&self.object_to_world, &point);
             //debug!("reflection: {}, world: {}", reflection, world_reflection);
-            return Some(RayIntersection {
-                origin: r.origin.clone(),
-                t: t,
+            Some(RayIntersection {
+                origin: r.origin,
+                t,
                 point: world_point,
                 normal: world_normal_vec,
                 perp: get_perp_vec(&world_normal_vec),
-                normal_angle: normal_angle,
+                normal_angle,
                 reflection: world_reflection,
                 distance: distance(&world_point, &t_origin),
-            });
+            })
         }
     }
 
     fn color(&self, _: &TVec3<f32>) -> RGB {
-        return RGB::black();
+        RGB::black()
     }
 
     fn le(&self, _: &TVec3<f32>, _: &TVec3<f32>) -> RGB {
-        return RGB::black();
+        RGB::black()
     }
 
     fn bounds(&self) -> BoundingBox {
-        return BoundingBox::create(
+        BoundingBox::create(
             glm::vec4_to_vec3(
                 &(self.object_to_world * glm::make_vec4(&[-self.r, -self.r, -self.r, 1.0])),
             ),
             glm::vec4_to_vec3(
                 &(self.object_to_world * glm::make_vec4(&[self.r, self.r, self.r, 1.0])),
             ),
-        );
+        )
     }
 }

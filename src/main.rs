@@ -80,7 +80,7 @@ fn main() {
     //debug!("perp vec to: {} is: {}, dot is: {}", &v2, get_perp_vec(&v2), dot(&v2, &get_perp_vec(&v2)));
 
     let center = make_vec3(&[0.0, 1.0, 0.0]);
-    let x: Sphere = Sphere::create(1.0, center.clone());
+    let x: Sphere = Sphere::create(1.0, center);
     let r: Ray = Ray::create(make_vec3(&[1.0, 1.0, 1.0]), make_vec3(&[1.0, 1.0, 1.0]));
     x.intersection(&r);
     let v = make_vec3(&[-1.0, 1.0, 0.0]);
@@ -203,19 +203,19 @@ fn main() {
         // Primitive::create_from_mesh(&transformed_suzanne_mesh, Box::new(disney_yellow_diffuse_material.clone())),
         Primitive::create_from_mesh(
             &transformed_dragon_mesh,
-            Box::new(disney_violet_diffuse_material.clone()),
+            Box::new(disney_violet_diffuse_material),
         ),
         // Primitive::create_from_mesh(&transformed_teapot_mesh, Arc::new(disney_glossy_material.clone())),
         //Primitive::create_from_mesh(&transformed_max_planck_mesh, Arc::new(disney_glossy_material.clone()))
         //Primitive::create_from_mesh(&gopher_mesh, Arc::new(disney_glossy_material.clone()))
-        Primitive::create_from_mesh(&cube_mesh, Box::new(disney_diffuse_material.clone())), //Primitive::create_from_mesh(&imported_cube_mesh, Arc::new(disney_diffuse_material.clone()))
+        Primitive::create_from_mesh(&cube_mesh, Box::new(disney_diffuse_material)), //Primitive::create_from_mesh(&imported_cube_mesh, Arc::new(disney_diffuse_material.clone()))
     ];
     let mut other_primitives = vec![
         //Primitive::create(Arc::new(imported_tri_mesh), Arc::new(diffuse_material.clone())),
         // Primitive::create(Arc::new(cube), Arc::new(disney_diffuse_material.clone())),
         Primitive::create(
             Box::new(x),
-            Box::new(disney_violet_diffuse_material.clone()),
+            Box::new(disney_violet_diffuse_material),
         ),
         //  Primitive::create(Box::new(x2), Box::new(disney_white_diffuse_material.clone())),
         //  Primitive::create(Box::new(x3), Box::new(disney_red_diffuse_material.clone())),

@@ -106,8 +106,8 @@ pub fn create_cube(
         * rotate_about_y(ry)
         * scale(side, side, side)
         * translate(location.x, location.y, location.z);
-    let mesh = transform_mesh(&transformation_matrix, &unit_cube_mesh);
-    return mesh;
+    
+    transform_mesh(&transformation_matrix, &unit_cube_mesh)
 }
 
 // impl Object for Cube{
