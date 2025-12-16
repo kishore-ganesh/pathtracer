@@ -127,7 +127,7 @@ impl Object for Sphere {
                 perp: get_perp_vec(&world_normal_vec),
                 normal_angle,
                 reflection: world_reflection,
-                distance: distance(&world_point, &t_origin),
+                distance: distance(&world_point, &r.origin),
             })
         }
     }
