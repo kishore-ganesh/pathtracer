@@ -197,8 +197,11 @@ impl DisneyBRDFMaterial {
         //debug!("Specular check: {:?} {:?}", specular, (specular_f*specular_d*specular_g)/(4.0 * theta_l.cos() * theta_v.cos()));
         //NOTE: for debugging, might be helpful to just check for diffuse
         let res_color = diffuse * (1.0 - self.metallic) + specular;
+        // let res_color = specular;
         //TODO: check if there should be a sine here for solid sngle conversion: https://schuttejoe.github.io/post/ggximportancesamplingpart1/
-        let pdf = specular_d / (4.0 * theta_d.cos());
+        // pdf_h = specular_d * cos_theta
+        // pdf_l = pdf_h / 4 * (l.h)
+        let pdf = specular_d * theta_h.cos().abs() / (4.0 * theta_d.cos().abs());
         ////debug!("Specular color is: {:?}", specular);
         ////debug!("specular_d: {}, theta_h.cos(): {}, theta_d.cos(): {}", specular_d, theta_h.cos(), theta_d.cos());
         //debug!("Diffuse: {:?}, Specular_D: {}, Specular f: {:?}, Specular g: {}", diffuse, specular_d, specular_f, specular_g);
