@@ -135,7 +135,7 @@ fn main() {
         RGB::create(255.0, 255.0, 255.0),
         3.0,
     ));
-    let spherical_area_light = Arc::new(SphericalAreaLight::create(
+    let spherical_area_light = Box::new(SphericalAreaLight::create(
         Sphere::create(10.0, make_vec3(&[0.0, 0.0, 20.0])),
         RGB::create(255.0, 255.0, 255.0),
         10.0,
