@@ -19,9 +19,6 @@ pub struct Sphere {
 }
 
 
-/*impl PartialEq for Option<RayIntersection> {
-    fn eq(&self, other: &self)
-}(/)*/
 //TODO: implement CMP for rayintersection
 // derive debug?
 // Sphere should know where it is in world space.

@@ -30,8 +30,8 @@ fn generate_chunk(p: &mut PathTracer, chunk_start_idx: usize, buf: &mut [RGB], b
             //sample = sampler.generate_sample();
             // debug!("x: {}, y: {}, sample_index: {}", x, y, sample_index);
             let sample = [x as f32, y as f32];
-            let e1 = rng.gen::<f32>();
-            let e2 = rng.gen::<f32>();
+            let e1 = rng.random::<f32>();
+            let e2 = rng.random::<f32>();
             let perturbed_sample = [sample[0] + e1, sample[1] + e2];
             //  debug!("{:?} {:?}", sample, perturbed_sample);
             let ray = p.camera.generate_ray(perturbed_sample);
@@ -288,7 +288,7 @@ impl PathTracer<'_> {
             if n_iterations > 8 {
                 //TODO: Bounce or roulette threshold?
                 break;
-                let rand_value = rand.gen::<f32>();
+                let rand_value = rand.random::<f32>();
                 //debug!("Rand value: {}, threshold: {}", rand_value, self.roulette_threshold);
                 if rand_value <= self.roulette_threshold {
                     //running_sum = (running_sum) / (1.0-self.roulette_threshold);

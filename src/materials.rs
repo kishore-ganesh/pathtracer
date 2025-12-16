@@ -166,8 +166,8 @@ impl DisneyBRDFMaterial {
     fn sample_from_specular_d(&self, alpha: f32) -> (f32, f32) {
         //let mut rand =
         let mut rng = rand::thread_rng();
-        let e1 = rng.gen::<f32>();
-        let e2 = rng.gen::<f32>();
+        let e1 = rng.random::<f32>();
+        let e2 = rng.random::<f32>();
         let phi = 2.0 * PI * e1;
         ////debug!("alpha: {}, e1: {}, e2: {}, numerator: {}, denominator: {}", alpha, e1, e2, numerator, denominator);
         let cos_theta_h = ((1.0 - e2) / (1.0 + ((alpha.powi(2) - 1.0) * e2)))

@@ -2,13 +2,13 @@
 name = "pathtracer"
 version = "0.1.0"
 authors = ["kishore-ganesh <kishore2912000@gmail.com>"]
-edition = "2018"
+edition = "2024"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 nalgebra-glm="0.10.0"
-rand = "0.8.3"
+rand = "0.9.2"
 console = { version = "0.16.0", default-features = false, features = ["std"] }
 indicatif = "0.16.2"
 obj-rs = "0.7.0"
