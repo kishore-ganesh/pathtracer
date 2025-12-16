@@ -139,7 +139,7 @@ fn main() {
         10.0,
     ));
     let n_samples = 256;
-    let chunk_size = 64;
+    let chunk_size = 4096;
     //debug!("Chunk size: {}", chunk_size);
     let roulette_threshold = 0.01;
     let region = Rect::create(
@@ -250,12 +250,7 @@ fn main() {
         scene,
         camera,
     );
-    let grid = pt.generate();
-    for row in 0..grid.len() {
-        for col in 0..grid[row].len() {
-            //  debug!("Value at {} {} is: {:?}", row, col, grid[row][col])
-        }
-    }
-    color::write_ppm(&grid, "test.ppm".to_string()).unwrap();
+    let buf = pt.generate();
+    color::write_ppm(&buf, raster_res as usize, raster_res as usize, "test.ppm".to_string()).unwrap();
     ////debug!("Hello, world!");
 }

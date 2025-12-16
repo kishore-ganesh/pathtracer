@@ -140,26 +140,24 @@ impl Default for RGB {
 
 //TODO: Find more idiomatic way to do this
 //Should give black
-pub fn write_ppm(v: &Vec<Vec<RGB>>, s: String) -> Result<String, Error> {
+pub fn write_ppm(buf: &Vec<RGB>, xres: usize, yres: usize, s: String) -> Result<(), Error> {
     //P6 width height 255 \n
     //R G B
     //TODO: better error handling
     let path = Path::new(&s);
     let mut file = File::create(&path)?;
-    let header = format!("P6 {} {} 255\n", v[0].len(), v.len());
+    let header = format!("P6 {} {} 255\n", xres, yres);
     file.write_all(header.as_bytes())?;
-    for row in v {
-        for col in row {
-            file.write_all(&[col.r as u8])?;
+    for v in buf {
+            file.write_all(&[v.r as u8])?;
             //file.write_all(" ".as_bytes());
-            file.write_all(&[col.g as u8])?;
+            file.write_all(&[v.g as u8])?;
             //file.write_all(" ".as_bytes());
-            file.write_all(&[col.b as u8])?;
+            file.write_all(&[v.b as u8])?;
             //file.write_all(" ".as_bytes());
-        }
         //file.write_all("\n".as_bytes());
     }
-    Ok("Successful".to_string())
+    Ok(())
 }
 
 //Implement Mut

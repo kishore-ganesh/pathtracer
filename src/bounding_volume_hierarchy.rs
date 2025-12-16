@@ -48,7 +48,6 @@ impl BVHNode<'_> {
         debug!("Length of primitives is: {}", primitives.len());
         return BVHNode::recursive_helper(primitives, (0..primitives.len()).collect());
     }
-    //TODO: use move
     pub fn recursive_helper<'a>(
         primitives: &'a Vec<Primitive>,
         primitives_at_level: Vec<usize>,
@@ -286,7 +285,6 @@ impl BVHNode<'_> {
             intersection_time.elapsed()
         );
         debug!("Intersection count: {}", intersection_count);
-        // TODO: this should rally be part of the intersection
         ray_intersection
     }
 

@@ -1,18 +1,12 @@
 use crate::bounding_volume_hierarchy::BVHIntersectionResult;
 use crate::camera::Camera;
 use crate::color::{clamp_rgb, RGB};
-use crate::primitives::Rect;
 use crate::scene::Scene;
 use crate::sphere::{Primitive, Ray, RayIntersection};
-use glm::{angle, make_vec3, TVec3};
+use glm::{angle, TVec3};
 use rand::Rng;
-use std::thread::JoinHandle;
-use std::thread::{self, ScopedJoinHandle};
-
-use crate::materials::Material;
-
 use indicatif::ProgressBar;
-use log::debug;
+use std::thread;
 //TODO: make rng part of pathtracer.
 #[derive(Clone)]
 pub struct PathTracer<'a> {
@@ -20,46 +14,39 @@ pub struct PathTracer<'a> {
     yres: i32,
     n_samples: i32,
     chunk_size: i32,
-    //    grid: Vec<Vec<RGB>>,
     roulette_threshold: f32,
     camera: Camera,
     scene: Scene<'a>,
 }
 
-fn generate_chunk(p: &mut PathTracer, r: Rect, bar: ProgressBar) -> Vec<Vec<RGB>> {
+fn generate_chunk(p: &mut PathTracer, chunk_start_idx: usize, buf: &mut [RGB], bar: ProgressBar) {
     let mut rng = rand::thread_rng();
-    let mut grid = vec![vec![RGB::black(); p.chunk_size as usize]; p.chunk_size as usize];
-    for yindex in 0..p.chunk_size {
-        for xindex in 0..p.chunk_size {
-            //Average it out
-            //
-            let y = yindex + (r.top.y as i32);
-            let x = xindex + (r.bottom.x as i32);
-            let mut radiance = RGB::black();
-            // debug!("x: {}, y: {}", x, y);
-            for _ in 0..p.n_samples {
-                //sample = sampler.generate_sample();
-                // debug!("x: {}, y: {}, sample_index: {}", x, y, sample_index);
-                let sample = [x as f32, y as f32];
-                let e1 = rng.gen::<f32>();
-                let e2 = rng.gen::<f32>();
-                let perturbed_sample = [sample[0] + e1, sample[1] + e2];
-                //  debug!("{:?} {:?}", sample, perturbed_sample);
-                let ray = p.camera.generate_ray(perturbed_sample);
-                radiance += p.li(ray, &mut rng, 2);
+    for idx in chunk_start_idx..chunk_start_idx + buf.len() {
+        let y = idx / (p.xres as usize);
+        let x = idx % (p.xres as usize);
+        let mut radiance = RGB::black();
+        // debug!("x: {}, y: {}", x, y);
+        for _ in 0..p.n_samples {
+            //sample = sampler.generate_sample();
+            // debug!("x: {}, y: {}, sample_index: {}", x, y, sample_index);
+            let sample = [x as f32, y as f32];
+            let e1 = rng.gen::<f32>();
+            let e2 = rng.gen::<f32>();
+            let perturbed_sample = [sample[0] + e1, sample[1] + e2];
+            //  debug!("{:?} {:?}", sample, perturbed_sample);
+            let ray = p.camera.generate_ray(perturbed_sample);
+            radiance += p.li(ray, &mut rng, 2);
 
-                //have closest intersection
-                //toss to find whether to stop
-                //if stop, sample light source and reutrn radiance
-                //else if not stop, sample BRDF and cast ray. brdf * Li(ray) + Le
-            }
-            //TODO fix here
-            radiance /= p.n_samples as f32;
-            grid[yindex as usize][xindex as usize] = radiance;
+            //have closest intersection
+            //toss to find whether to stop
+            //if stop, sample light source and reutrn radiance
+            //else if not stop, sample BRDF and cast ray. brdf * Li(ray) + Le
         }
+        //TODO fix here
+        radiance /= p.n_samples as f32;
+        buf[idx - chunk_start_idx] = radiance;
     }
-    bar.inc((p.chunk_size * p.chunk_size * p.n_samples) as u64);
-    return grid;
+    bar.inc((p.chunk_size * p.n_samples) as u64);
 }
 
 fn importance_sample_weight(pdf_a: f32, pdf_b: f32) -> f32 {
@@ -84,96 +71,47 @@ impl PathTracer<'_> {
         scene: Scene<'a>,
         camera: Camera,
     ) -> PathTracer<'a> {
-        //let grid = vec![vec![RGB::black(); xres as usize]; yres as usize];
         return PathTracer {
             xres: xres,
             yres: yres,
             n_samples: n_samples,
             chunk_size: chunk_size,
-            //            grid: grid,
             roulette_threshold: roulette_threshold,
             camera: camera,
             scene: scene,
         };
     }
 
-    pub fn generate(&mut self) -> Vec<Vec<RGB>> {
-        //panic!("Generate called");
+    pub fn generate(&mut self) -> Vec<RGB> {
         let progress_bar = ProgressBar::new((self.xres * self.yres * self.n_samples) as u64);
-        let mut grid = vec![vec![RGB::black(); self.xres as usize]; self.yres as usize];
+        let mut buf = vec![RGB::black(); (self.xres * self.yres) as usize];
         log::warn!(
             "Launching {} threads",
-            (self.yres / self.chunk_size) * (self.xres / self.chunk_size)
+            ((self.xres * self.yres) / self.chunk_size)
         );
 
         thread::scope(|s| {
-            let mut thread_handles: Vec<Vec<Option<ScopedJoinHandle<Vec<Vec<RGB>>>>>> = vec![];
-            // Cannot use vec! initialization since JoinHandle is not cloneable
-            for _ in 0..self.yres / self.chunk_size {
-                let mut v: Vec<Option<ScopedJoinHandle<Vec<Vec<RGB>>>>> = vec![];
-                for _ in 0..self.xres / self.chunk_size {
-                    v.push(None);
-                }
-
-                thread_handles.push(v);
-            }
-
-            for y in 0..((self.yres / self.chunk_size) as i32) {
-                for x in 0..((self.xres / self.chunk_size) as i32) {
+            buf.chunks_mut(self.chunk_size as _)
+                .enumerate()
+                .for_each(|(chunk_idx, chunk)| {
                     let mut pt = self.clone();
                     let progress_bar_new = progress_bar.clone();
-                    thread_handles[y as usize][x as usize] = Some(s.spawn(move || {
-                        let region = Rect {
-                            bottom: make_vec3(&[
-                                (x * pt.chunk_size) as f32,
-                                (y * pt.chunk_size + pt.chunk_size - 1) as f32,
-                                0.0,
-                            ]),
-                            top: make_vec3(&[
-                                (x * pt.chunk_size + pt.chunk_size - 1) as f32,
-                                (y * pt.chunk_size) as f32,
-                                0.0,
-                            ]),
-                        };
-                        return generate_chunk(&mut pt, region, progress_bar_new);
-                    }));
-                }
-            }
-
-            for ychunk in 0..self.yres / self.chunk_size {
-                for xchunk in 0..self.xres / self.chunk_size {
-                    let thread_result = thread_handles[ychunk as usize][xchunk as usize]
-                        .take()
-                        .map(ScopedJoinHandle::join);
-                    match thread_result {
-                        Some(result) => {
-                            //let result = handle.join();
-                            match result {
-                                Ok(grid_section) => {
-                                    for yindex in 0..self.chunk_size {
-                                        for xindex in 0..self.chunk_size {
-                                            let y = ychunk * self.chunk_size + yindex;
-                                            let x = xchunk * self.chunk_size + xindex;
-                                            grid[y as usize][x as usize] =
-                                                grid_section[yindex as usize][xindex as usize];
-                                        }
-                                    }
-                                }
-
-                                Err(_) => panic!("Thread result unavailable"),
-                            };
-                        }
-
-                        None => {}
-                    }
-                }
-            }
+                    let chunk_size = pt.chunk_size;
+                    s.spawn(move || {
+                        generate_chunk(
+                            &mut pt,
+                            chunk_idx * chunk_size as usize,
+                            chunk,
+                            progress_bar_new,
+                        );
+                    });
+                });
         });
 
         //For debugging
-        grid[(self.yres / 2) as usize][(self.xres / 2) as usize] = RGB::create(255.0, 0.0, 0.0);
-
-        return grid;
+        let mid_idx = ((self.xres / 2) * self.yres + self.yres / 2) as usize;
+        buf[mid_idx] = RGB::create(255.0, 0.0, 0.0);
+        return buf;
     }
     //TODO: Special value for infinite intersection?
     //Mult by angle for first
