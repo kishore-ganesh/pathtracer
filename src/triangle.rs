@@ -1,9 +1,7 @@
 use crate::bounding_box::BoundingBox;
 use crate::color::RGB;
-use crate::primitives::{get_perp_vec, reflect_about_vec};
-use crate::sphere::{Object, Ray, RayIntersection};
+use crate::primitives::{get_perp_vec, reflect_about_vec, Object, Ray, RayIntersection};
 use glm::{angle, cross, distance, dot, length, normalize, TVec3};
-use log::debug;
 
 #[derive(Debug, Copy, Clone)]
 pub enum NormalType {

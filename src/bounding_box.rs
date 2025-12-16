@@ -1,4 +1,4 @@
-use crate::sphere::Ray;
+use crate::primitives::Ray;
 use glm::{abs, make_vec3, TVec3};
 use log::debug;
 

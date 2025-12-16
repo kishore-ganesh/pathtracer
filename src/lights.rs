@@ -1,9 +1,8 @@
 use crate::bounding_box::BoundingBox;
 use crate::color::RGB;
-use crate::primitives::get_perp_vec;
-use crate::sphere::{Object, Ray, RayIntersection, Sphere};
+use crate::primitives::{get_perp_vec, Object, Ray, RayIntersection};
+use crate::sphere::Sphere;
 use glm::{angle, cross, distance, normalize, TVec3};
-use log::debug;
 use rand::Rng;
 use std::f32::consts::PI;
 

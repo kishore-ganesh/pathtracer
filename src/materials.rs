@@ -1,9 +1,7 @@
 //
 use crate::color::RGB;
-use crate::primitives::{get_vec_at_angle, reflect_about_vec};
-use crate::sphere::{Ray, RayIntersection};
-use glm::{angle, cross, length, normalize, TVec3};
-use log::debug;
+use crate::primitives::{get_vec_at_angle, reflect_about_vec, Ray, RayIntersection};
+use glm::{angle, cross, normalize, TVec3};
 use rand::Rng;
 use std::f32::consts::PI;
 pub trait Material: Send + Sync + MaterialClone {

@@ -1,10 +1,6 @@
 use crate::bounding_box::BoundingBox;
-use crate::color::RGB;
-use crate::materials::Material;
-use crate::sphere::{min_intersection, Primitive, Ray, RayIntersection};
-use glm::TVec3;
+use crate::primitives::{min_intersection, Primitive, Ray, RayIntersection};
 use std::cmp::{self, Ordering};
-use std::mem::swap;
 const MIN_PRIMITIVES: usize = 5;
 use log::{debug, info};
 

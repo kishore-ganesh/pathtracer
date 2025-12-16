@@ -4,86 +4,11 @@
 //Implement cube
 use crate::bounding_box::BoundingBox;
 use crate::color::RGB;
-use crate::materials::Material;
-use crate::primitives::{get_perp_vec, reflect_about_vec, transform, transform_vec};
-use crate::triangle_mesh::TriangleMesh;
+use crate::primitives::{Object, Ray, RayIntersection, get_perp_vec, reflect_about_vec, transform, transform_vec};
 use glm::{
-    angle, comp_add, distance, dot, inverse, length2, make_mat4x4, make_vec3, matrix_comp_mult,
+    angle, distance, dot, inverse, length2, make_mat4x4, make_vec3,
     normalize, TMat4, TVec3,
 };
-use log::debug;
-use std::cmp::Ordering;
-use std::sync::Arc;
-
-pub trait Object: Send + Sync + ObjectClone {
-    fn intersection(&self, r: &Ray) -> Option<RayIntersection>;
-    fn color(&self, p: &TVec3<f32>) -> RGB;
-    fn le(&self, p: &TVec3<f32>, v: &TVec3<f32>) -> RGB;
-    fn bounds(&self) -> BoundingBox;
-}
-
-/*
- * The following is a trick to get clone to work on dyn from:
- * https://stackoverflow.com/questions/30353462/how-to-clone-a-struct-storing-a-boxed-trait-object/30353928
- * */
-pub trait ObjectClone {
-    fn clone_object(&self) -> Box<dyn Object>;
-}
-impl<T> ObjectClone for T
-where
-    T: 'static + Object + Clone,
-{
-    fn clone_object(&self) -> Box<dyn Object> {
-        return Box::new(self.clone());
-    }
-}
-
-impl Clone for Box<dyn Object> {
-    fn clone(&self) -> Box<dyn Object> {
-        return self.clone_object();
-    }
-}
-
-pub struct Primitive {
-    pub object: Box<dyn Object>,
-    pub material: Box<dyn Material>,
-}
-
-impl Primitive {
-    pub fn create(o: Box<dyn Object>, m: Box<dyn Material>) -> Self {
-        return Primitive {
-            object: o,
-            material: m,
-        };
-    }
-
-    pub fn create_from_mesh(o: &TriangleMesh, m: Box<dyn Material>) -> Vec<Self> {
-        let mut v: Vec<Self> = vec![];
-        for t in &o.mesh {
-            v.push(Self::create(Box::new(t.clone()), m.clone()));
-        }
-        return v;
-    }
-
-    pub fn bounds(&self) -> BoundingBox {
-        return self.object.bounds();
-    }
-
-    pub fn le(&self, p: &TVec3<f32>, v: &TVec3<f32>) -> RGB {
-        return self.object.le(p, v);
-    }
-
-    pub fn brdf(&self, r: RayIntersection, v: TVec3<f32>) -> (RGB, Ray, f32) {
-        return self.material.brdf(r, v);
-    }
-    pub fn brdf_eval(&self, r: &RayIntersection, v: &TVec3<f32>) -> (RGB, f32) {
-        return self.material.brdf_eval(r, v);
-    }
-
-    pub fn color(&self, p: &TVec3<f32>) -> RGB {
-        return self.object.color(p);
-    }
-}
 
 #[derive(Debug, Copy, Clone)]
 pub struct Sphere {
@@ -93,74 +18,7 @@ pub struct Sphere {
     pub world_to_object: TMat4<f32>,
 }
 
-#[derive(Debug, Clone, Copy)]
-pub struct Ray {
-    pub origin: TVec3<f32>,
-    pub direction: TVec3<f32>,
-    pub inv_direction: TVec3<f32>,
-}
 
-impl Ray {
-    pub fn create(origin: TVec3<f32>, direction: TVec3<f32>) -> Self {
-        return Ray {
-            origin: origin,
-            direction: direction,
-            inv_direction: make_vec3(&[1.0, 1.0, 1.0]).component_div(&direction),
-        };
-    }
-
-    pub fn create_empty() -> Self {
-        return Ray {
-            origin: make_vec3(&[0.0, 0.0, 0.0]),
-            direction: make_vec3(&[0.0, 0.0, 0.0]),
-            inv_direction: make_vec3(&[f32::INFINITY, f32::INFINITY, f32::INFINITY]),
-        };
-    }
-}
-
-#[derive(Debug, Clone, Copy)]
-pub struct RayIntersection {
-    pub t: f32,
-    pub origin: TVec3<f32>,
-    pub point: TVec3<f32>,
-    pub normal: TVec3<f32>,
-    pub perp: TVec3<f32>,
-    pub normal_angle: f32,
-    pub reflection: TVec3<f32>,
-    pub distance: f32,
-}
-
-impl PartialEq<RayIntersection> for RayIntersection {
-    fn eq(&self, other: &RayIntersection) -> bool {
-        return self.distance == other.distance;
-    }
-}
-
-impl PartialOrd<RayIntersection> for RayIntersection {
-    fn partial_cmp(&self, other: &RayIntersection) -> Option<Ordering> {
-        self.distance.partial_cmp(&other.distance)
-    }
-}
-
-pub fn min_intersection<T: PartialOrd>(
-    min_intersection_v: Option<T>,
-    b: Option<T>,
-) -> (Option<T>, bool) {
-    match min_intersection_v.as_ref() {
-        None => {
-            return (b, true);
-        }
-        Some(i) => match b.as_ref() {
-            Some(j) => {
-                if j < i {
-                    return (b, true);
-                }
-            }
-            None => {}
-        },
-    };
-    return (min_intersection_v, false);
-}
 /*impl PartialEq for Option<RayIntersection> {
     fn eq(&self, other: &self)
 }(/)*/

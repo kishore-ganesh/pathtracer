@@ -30,9 +30,11 @@ use materials::{DiffuseMaterial, DisneyBRDFMaterial, SpecularMaterial};
 use obj_parser::parse;
 use pathtracer::PathTracer;
 use plane::Plane;
-use primitives::{reflect_about_vec, scale, transform, transform_mesh, translate, Rect};
+use primitives::{
+    reflect_about_vec, scale, transform, transform_mesh, translate, Object, Primitive, Ray, Rect,
+};
 use scene::Scene;
-use sphere::{Object, Primitive, Ray, Sphere};
+use sphere::Sphere;
 use std::f32::consts::PI;
 use std::sync::Arc;
 use triangle::{NormalType, Triangle};
@@ -251,6 +253,12 @@ fn main() {
         camera,
     );
     let buf = pt.generate();
-    color::write_ppm(&buf, raster_res as usize, raster_res as usize, "test.ppm".to_string()).unwrap();
+    color::write_ppm(
+        &buf,
+        raster_res as usize,
+        raster_res as usize,
+        "test.ppm".to_string(),
+    )
+    .unwrap();
     ////debug!("Hello, world!");
 }

@@ -2,7 +2,7 @@ use crate::bounding_volume_hierarchy::BVHIntersectionResult;
 use crate::camera::Camera;
 use crate::color::{clamp_rgb, RGB};
 use crate::scene::Scene;
-use crate::sphere::{Primitive, Ray, RayIntersection};
+use crate::primitives::{Primitive, Ray, RayIntersection};
 use glm::{angle, TVec3};
 use rand::Rng;
 use indicatif::ProgressBar;
@@ -191,7 +191,7 @@ impl PathTracer<'_> {
         let mut prev_path_total = RGB::create(255.0, 255.0, 255.0);
         let mut running_sum = emitted_radiance;
         let mut prev_intersection: Option<BVHIntersectionResult> = None;
-        let mut r_c = r.clone();
+        let mut current_ray = r.clone();
         let mut n_iterations = 0;
 
         loop {
@@ -301,7 +301,7 @@ impl PathTracer<'_> {
             }
 
             //NOTE: this should be after prev_intersection since we need the previous cached result within BVHNode
-            let min_intersection = self.check_intersection(&r_c);
+            let min_intersection = self.check_intersection(&current_ray);
             match min_intersection {
                 Some(bvh_intersection) => {
                     //TODO: pass incoming direction
@@ -311,8 +311,8 @@ impl PathTracer<'_> {
                     //debug!("Ray intersection point: {:?}", ray_intersection.point);
                     //Light radiance to point then multiply by cos theta
 
-                    let view_vector = r_c.origin - bvh_intersection.intersection.point;
-                    // debug!("Origin: {}, point: {}, view_vector: {}", r_c.origin, ray_intersection.point, view_vector);
+                    let view_vector = current_ray.origin - bvh_intersection.intersection.point;
+                    // debug!("Origin: {}, point: {}, view_vector: {}", current_ray.origin, ray_intersection.point, view_vector);
                     let primitive = self
                         .scene
                         .bvh_root
@@ -337,7 +337,7 @@ impl PathTracer<'_> {
                     //return path_total;
                     //debug!("PDF is: {}", pdf);
                     //debug!("Path total: {:?} brdf: {:?} cos: {} pdf: {}", path_total, brdf, ray_angle.cos(), pdf);
-                    r_c = ray;
+                    current_ray = ray;
                 }
                 None => {
                     //TODO: check this, maybe we can sample another direction?
