@@ -1,9 +1,7 @@
 use glm::{TMat4, make_mat4x4, inverse, cross, normalize, TVec3, make_vec3};
 
-use crate::sphere::Ray;
-use crate::primitives::{Rect,scale, translate, transform};
+use crate::primitives::{Rect,scale, translate, transform, Ray};
 use std::f32::consts::PI;
-use log::debug;
 #[derive(Debug, Copy, Clone)]
 pub struct Camera {
     camera_to_world: TMat4<f32>,
