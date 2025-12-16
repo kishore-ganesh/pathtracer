@@ -25,19 +25,19 @@ pub struct Rect {
 
 impl Rect{
     pub fn create(bottom: TVec3<f32>, top: TVec3<f32>) ->Self {
-        return Rect{bottom: bottom, top: top};
+        Rect{bottom, top}
     }
 }
 
 pub fn scale(scalex: f32, scaley: f32, scalez: f32) -> TMat4<f32> {
-    return make_mat4x4(&[scalex, 0.0,0.0,0.0,
+    make_mat4x4(&[scalex, 0.0,0.0,0.0,
                        0.0,scaley,0.0,0.0,
                        0.0,0.0,scalez,0.0,
-                       0.0,0.0,0.0,1.0]);
+                       0.0,0.0,0.0,1.0])
 }
 
 pub fn translate(tx: f32, ty: f32, tz: f32) -> TMat4<f32> {
-    return make_mat4x4(&[
+    make_mat4x4(&[
                        1.0,0.0,0.0,tx,
                        0.0,1.0,0.0,ty,
                        0.0,0.0,1.0,tz,
@@ -46,15 +46,15 @@ pub fn translate(tx: f32, ty: f32, tz: f32) -> TMat4<f32> {
 }
 
 pub fn rotate_about_x(angle: f32) -> TMat4<f32> {
-    return make_mat4x4(&[
+    make_mat4x4(&[
                        1.0,0.0,0.0,0.0,
                        0.0,angle.cos(), angle.sin(), 0.0,
                        0.0,-angle.sin(), angle.cos(), 0.0,
                        0.0,0.0,0.0,1.0
-    ]);
+    ])
 }
 pub fn rotate_about_y(angle: f32) -> TMat4<f32>{
-    return make_mat4x4(&[
+    make_mat4x4(&[
                        angle.cos(), 0.0, angle.sin(), 0.0,
                        0.0, 1.0, 0.0, 0.0,
                        -angle.sin(), 0.0, angle.cos(), 0.0,
@@ -66,35 +66,35 @@ pub fn rotate_about_y(angle: f32) -> TMat4<f32>{
 //Transform for TVec3<f32> and For Vector
 //TODO: make transform faster
 pub fn transform(transform: &TMat4<f32>, p: &TVec3<f32>) -> TVec3<f32>{
-    let mut v = vec3_to_vec4(&p);
+    let mut v = vec3_to_vec4(p);
     v[3] = 1.0;
     //debug!("{:?} {:?}", transform, v);
     let transformed = transpose(&v) * transform;
     //TODO: check for divide by zero
-    return vec4_to_vec3(&transpose(&(transformed / transformed[3])));
+    vec4_to_vec3(&transpose(&(transformed / transformed[3])))
 }
 
 
 pub fn transform_vec(transform: &TMat4<f32>, v: &TVec3<f32>) -> TVec3<f32> {
-    let transform3 = mat4_to_mat3(&transform);
-    let transformed = transpose(&v) * transform3;
-    let transformed_vec = transpose(&transformed);
-    return transformed_vec;
+    let transform3 = mat4_to_mat3(transform);
+    let transformed = transpose(v) * transform3;
+    
+    transpose(&transformed)
 }
 
 pub fn transform_triangle(m: &TMat4<f32>, t: &Triangle) -> Triangle {
-    let mut points = t.points.clone();
-    for (index, point) in (&t.points).iter().enumerate() {
+    let mut points = t.points;
+    for (index, point) in t.points.iter().enumerate() {
         points[index] = transform(m, point);
     }
     //iter().map(|x| transform(M, x)).collect();
     match t.normal_direction {
         NormalType::FaceNormal(n) => {
-            return Triangle::create(points, NormalType::FaceNormal(transform_vec(m, &n)));
+            Triangle::create(points, NormalType::FaceNormal(transform_vec(m, &n)))
         }
         NormalType::VertexNormals(v) => {
             //TODO: correct
-            return Triangle::create(points, NormalType::VertexNormals(v));
+            Triangle::create(points, NormalType::VertexNormals(v))
         }
         NormalType::Inferred => unimplemented!(),
     }
@@ -102,25 +102,25 @@ pub fn transform_triangle(m: &TMat4<f32>, t: &Triangle) -> Triangle {
 pub fn transform_mesh(transform: &TMat4<f32>, m: &TriangleMesh) -> TriangleMesh {
     //TODO: make this better
     let mut mesh = m.mesh.clone();
-    for (index, triangle) in (&m.mesh).iter().enumerate() {
+    for (index, triangle) in m.mesh.iter().enumerate() {
         mesh[index] = transform_triangle(transform, triangle);
     }
 
-    return TriangleMesh::create_from(mesh);
+    TriangleMesh::create_from(mesh)
 }
 
 pub fn reflect_about_vec(v: &TVec3<f32>, about: &TVec3<f32>) -> TVec3<f32> {
     //NOTE: this assumes both rooted in same point
     //v is pointing in same direction of normal
-    let normalized_about = normalize(&about);
-    let about_parallel = dot(&normalized_about, &v) * normalized_about;
+    let normalized_about = normalize(about);
+    let about_parallel = dot(&normalized_about, v) * normalized_about;
 
     //debug!("Cosine angle is: {}", 57.29 * (dot(&normalized_about, &normalized_v)).acos());
-    return 2.0 * about_parallel - v;
+    2.0 * about_parallel - v
 }
 
 pub fn get_perp_vec(n: &TVec3<f32>) -> TVec3<f32> {
-    if is_null(&n, 0.0) {
+    if is_null(n, 0.0) {
         // debug!("All zero in perp");
         panic!("All zero in perp");
     }
@@ -144,7 +144,7 @@ pub fn get_perp_vec(n: &TVec3<f32>) -> TVec3<f32> {
     perp_n[second_nz] = 0.0;
     perp_n[first_nz] = n[third_nz];
     perp_n[third_nz] = -n[first_nz];
-    return make_vec3(&perp_n);
+    make_vec3(&perp_n)
 }
 
 pub fn get_vec_at_angle(n: &TVec3<f32>, h: &TVec3<f32>, angle: f32) -> TVec3<f32> {
@@ -152,7 +152,7 @@ pub fn get_vec_at_angle(n: &TVec3<f32>, h: &TVec3<f32>, angle: f32) -> TVec3<f32
     //Make coord system with n being the y axis, rotate by angle, get it back to our coordinat
     //esystemi
     //
-    return n * angle.cos() + h * angle.sin();
+    n * angle.cos() + h * angle.sin()
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -164,19 +164,19 @@ pub struct Ray {
 
 impl Ray {
     pub fn create(origin: TVec3<f32>, direction: TVec3<f32>) -> Self {
-        return Ray {
-            origin: origin,
-            direction: direction,
+        Ray {
+            origin,
+            direction,
             inv_direction: make_vec3(&[1.0, 1.0, 1.0]).component_div(&direction),
-        };
+        }
     }
 
     pub fn create_empty() -> Self {
-        return Ray {
+        Ray {
             origin: make_vec3(&[0.0, 0.0, 0.0]),
             direction: make_vec3(&[0.0, 0.0, 0.0]),
             inv_direction: make_vec3(&[f32::INFINITY, f32::INFINITY, f32::INFINITY]),
-        };
+        }
     }
 }
 
@@ -195,7 +195,7 @@ pub struct RayIntersection {
 
 impl PartialEq<RayIntersection> for RayIntersection {
     fn eq(&self, other: &RayIntersection) -> bool {
-        return self.distance == other.distance;
+        self.distance == other.distance
     }
 }
 
@@ -213,16 +213,12 @@ pub fn min_intersection<T: PartialOrd>(
         None => {
             return (b, true);
         }
-        Some(i) => match b.as_ref() {
-            Some(j) => {
-                if j < i {
-                    return (b, true);
-                }
-            }
-            None => {}
-        },
+        Some(i) => if let Some(j) = b.as_ref()
+            && j < i {
+                return (b, true);
+            },
     };
-    return (min_intersection_v, false);
+    (min_intersection_v, false)
 }
 
 
@@ -245,13 +241,13 @@ where
     T: 'static + Object + Clone,
 {
     fn clone_object(&self) -> Box<dyn Object> {
-        return Box::new(self.clone());
+        Box::new(self.clone())
     }
 }
 
 impl Clone for Box<dyn Object> {
     fn clone(&self) -> Box<dyn Object> {
-        return self.clone_object();
+        self.clone_object()
     }
 }
 
@@ -262,37 +258,37 @@ pub struct Primitive {
 
 impl Primitive {
     pub fn create(o: Box<dyn Object>, m: Box<dyn Material>) -> Self {
-        return Primitive {
+        Primitive {
             object: o,
             material: m,
-        };
+        }
     }
 
     pub fn create_from_mesh(o: &TriangleMesh, m: Box<dyn Material>) -> Vec<Self> {
         let mut v: Vec<Self> = vec![];
         for t in &o.mesh {
-            v.push(Self::create(Box::new(t.clone()), m.clone()));
+            v.push(Self::create(Box::new(*t), m.clone()));
         }
-        return v;
+        v
     }
 
     pub fn bounds(&self) -> BoundingBox {
-        return self.object.bounds();
+        self.object.bounds()
     }
 
     pub fn le(&self, p: &TVec3<f32>, v: &TVec3<f32>) -> RGB {
-        return self.object.le(p, v);
+        self.object.le(p, v)
     }
 
     pub fn brdf(&self, r: RayIntersection, v: TVec3<f32>) -> (RGB, Ray, f32) {
-        return self.material.brdf(r, v);
+        self.material.brdf(r, v)
     }
     pub fn brdf_eval(&self, r: &RayIntersection, v: &TVec3<f32>) -> (RGB, f32) {
-        return self.material.brdf_eval(r, v);
+        self.material.brdf_eval(r, v)
     }
 
     pub fn color(&self, p: &TVec3<f32>) -> RGB {
-        return self.object.color(p);
+        self.object.color(p)
     }
 }
 

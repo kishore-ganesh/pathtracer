@@ -10,16 +10,16 @@ pub struct Plane {
 
 impl Plane {
     pub fn create_point_normal(point: TVec3<f32>, normal: TVec3<f32>) -> Self {
-        return Plane {
-            normal: normal,
-            point: point,
-        };
+        Plane {
+            normal,
+            point,
+        }
     }
 
     pub fn create_three_point(p1: TVec3<f32>, p2: TVec3<f32>, p3: TVec3<f32>) -> Self {
         let (p1_v, p2_v, p3_v) = (p1, p2, p3);
         let normal = cross(&(p2_v - p1_v), &(p3_v - p1_v));
-        return Self::create_point_normal(p1, normal);
+        Self::create_point_normal(p1, normal)
     }
 }
 
@@ -35,24 +35,24 @@ impl Object for Plane {
         let p_v = r.origin + t * r.direction;
         let normal_angle = angle(&self.normal, &incoming_vector);
         let reflection = reflect_about_vec(&incoming_vector, &self.normal);
-        return Some(RayIntersection {
-            origin: r.origin.clone(),
-            t: t,
+        Some(RayIntersection {
+            origin: r.origin,
+            t,
             point: p_v,
-            normal: self.normal.clone(),
-            normal_angle: normal_angle,
-            reflection: reflection,
+            normal: self.normal,
+            normal_angle,
+            reflection,
             perp: get_perp_vec(&self.normal),
             distance: distance(&p_v, &r.origin),
-        });
+        })
     }
 
     fn color(&self, _: &TVec3<f32>) -> RGB {
-        return RGB::black();
+        RGB::black()
     }
 
     fn le(&self, _: &TVec3<f32>, _: &TVec3<f32>) -> RGB {
-        return RGB::black();
+        RGB::black()
     }
 
     fn bounds(&self) -> BoundingBox {

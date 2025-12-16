@@ -16,9 +16,9 @@ impl Scene<'_> {
     }*/
 
     pub fn create<'a>(bvh_root: BVHNode<'a>, light: Arc<dyn Light + Send + Sync>) -> Scene<'a> {
-        return Scene {
-            bvh_root: bvh_root,
-            light: light,
-        };
+        Scene {
+            bvh_root,
+            light,
+        }
     }
 }

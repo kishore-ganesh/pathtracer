@@ -26,10 +26,10 @@ impl Triangle {
                 normal_direction: NormalType::FaceNormal(normal_vec),
             };
         }
-        return Triangle {
-            points: points,
-            normal_direction: normal_direction,
-        };
+        Triangle {
+            points,
+            normal_direction,
+        }
     }
 }
 
@@ -98,18 +98,18 @@ impl Object for Triangle {
             let reflection = reflect_about_vec(&origin_vector, &normal);
             //TODO: check when changing to triangle coordinates
             return Some(RayIntersection {
-                origin: r.origin.clone(),
-                t: t,
-                point: point,
-                normal: normal,
+                origin: r.origin,
+                t,
+                point,
+                normal,
                 perp: get_perp_vec(&normal),
-                normal_angle: normal_angle,
-                reflection: reflection,
+                normal_angle,
+                reflection,
                 distance: distance(&point, &origin),
             });
             //Reflection
         }
-        return None;
+        None
     }
 
     fn color(&self, p: &TVec3<f32>) -> RGB {
@@ -128,22 +128,22 @@ impl Object for Triangle {
         let b_color = RGB::create(0.0, 255.0, 0.0);
         let c_color = RGB::create(0.0, 0.0, 255.0);
 
-        return a_color * w + b_color * u + c_color * v;
+        a_color * w + b_color * u + c_color * v
     }
 
     fn le(&self, _: &TVec3<f32>, _: &TVec3<f32>) -> RGB {
-        return RGB::black();
+        RGB::black()
     }
 
     fn bounds(&self) -> BoundingBox {
-        let result = BoundingBox::union_point(
+        
+        // debug!("Bounding box for triangle with points: {:?} is {:?}", self.points, result);
+        BoundingBox::union_point(
             BoundingBox::union_point(
                 BoundingBox::create(self.points[0], self.points[0]),
                 self.points[1],
             ),
             self.points[2],
-        );
-        // debug!("Bounding box for triangle with points: {:?} is {:?}", self.points, result);
-        return result;
+        )
     }
 }
