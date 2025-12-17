@@ -32,18 +32,9 @@ impl RGB {
     }
 }
 
-fn clamp(x: f32, l: f32, r: f32) -> f32 {
-    if x < l {
-        return l;
-    }
-    if x > r {
-        return r;
-    }
-    x
-}
 
 pub fn clamp_rgb(x: RGB, l: f32, r: f32) -> RGB {
-    RGB::create(clamp(x.r, l, r), clamp(x.g, l, r), clamp(x.b, l, r))
+    RGB::create(x.r.clamp(l, r), x.g.clamp(l, r), x.b.clamp(l, r))
 }
 impl Add for RGB {
     type Output = RGB;
