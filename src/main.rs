@@ -138,7 +138,7 @@ fn main() {
     let spherical_area_light = Box::new(SphericalAreaLight::create(
         Sphere::create(10.0, make_vec3(&[0.0, 0.0, 20.0])),
         RGB::create(255.0, 255.0, 255.0),
-        10.0,
+        100.0,
     ));
     let n_samples = 256;
     let chunk_size = 4096;

@@ -1,11 +1,12 @@
 use crate::bounding_volume_hierarchy::BVHIntersectionResult;
 use crate::camera::Camera;
-use crate::color::{clamp_rgb, RGB};
-use crate::scene::Scene;
+use crate::color::{RGB, clamp_rgb};
 use crate::primitives::{Primitive, Ray, RayIntersection};
-use glm::{angle, TVec3};
-use rand::Rng;
+use crate::scene::Scene;
+use glm::{TVec3, angle};
 use indicatif::ProgressBar;
+use log::debug;
+use rand::Rng;
 use std::thread;
 //TODO: make rng part of pathtracer.
 #[derive(Clone)]
@@ -43,7 +44,7 @@ fn generate_chunk(p: &mut PathTracer, chunk_start_idx: usize, buf: &mut [RGB], b
             //else if not stop, sample BRDF and cast ray. brdf * Li(ray) + Le
         }
         //TODO fix here
-        radiance /= p.n_samples as f32;
+        radiance = radiance / p.n_samples as f32;
         buf[idx - chunk_start_idx] = radiance;
     }
     bar.inc((p.chunk_size * p.n_samples) as u64);
@@ -113,6 +114,7 @@ impl PathTracer<'_> {
         buf[mid_idx] = RGB::create(255.0, 0.0, 0.0);
         buf
     }
+
     //TODO: Special value for infinite intersection?
     //Mult by angle for first
     fn check_intersection(&self, r: &Ray) -> Option<BVHIntersectionResult> {
@@ -137,7 +139,7 @@ impl PathTracer<'_> {
         &self,
         ray_intersection: &RayIntersection,
         primitive: &Primitive,
-        prev_path_total: RGB,
+        path_total: RGB,
     ) -> Option<SamplingInfo> {
         let (light_color, light_vector, light_distance, light_pdf) = self
             .scene
@@ -148,7 +150,7 @@ impl PathTracer<'_> {
         if visible {
             let (brdf, brdf_pdf) = primitive.brdf_eval(ray_intersection, &light_vector);
             Some(SamplingInfo {
-                color: prev_path_total * brdf * light_color * (1.0 / light_pdf), // TODO: extract this out into a function
+                color: path_total * brdf * light_color * (1.0 / light_pdf), // TODO: extract this out into a function
                 light_pdf,
                 brdf_pdf,
             })
@@ -161,7 +163,7 @@ impl PathTracer<'_> {
         &self,
         ray_intersection: &RayIntersection,
         primitive: &Primitive,
-        prev_path_total: RGB,
+        path_total: RGB,
     ) -> Option<SamplingInfo> {
         let view_vector = ray_intersection.origin - ray_intersection.point;
         let (brdf, ray, brdf_pdf) = primitive.brdf(*ray_intersection, view_vector);
@@ -176,7 +178,7 @@ impl PathTracer<'_> {
         );
         if visible {
             Some(SamplingInfo {
-                color: prev_path_total * brdf * radiance_info.light_color * (1.0 / brdf_pdf),
+                color: path_total * brdf * radiance_info.light_color * (1.0 / brdf_pdf),
                 light_pdf: radiance_info.light_pdf,
                 brdf_pdf,
             })
@@ -184,13 +186,65 @@ impl PathTracer<'_> {
             None
         }
     }
+
+    fn last_bounce_for_path(
+        &self,
+        ray_intersection: &RayIntersection,
+        primitive: &Primitive,
+        path_total: RGB,
+    ) -> RGB {
+        //Here, check dir to light source & do running_sum += path_total * f(light_point
+        //-> prev_point -> prev_point)
+        //Need an evaluate function for that? -> need prev_theta and next_theta
+        //Till we have material: hack: if diffuse -> easy, if specular, just check if same
+        //dir else 0
+
+        if primitive.material.is_delta() {
+            unimplemented!()
+            // Get vector from BRDF
+        } else if self.scene.light.is_delta() {
+            self.sample_light(&ray_intersection, primitive, path_total)
+                .map(|x| x.color)
+                .unwrap_or_default()
+            // Get vector from light source
+        } else {
+            // Importance sample
+            let light_res = self.sample_light(&ray_intersection, primitive, path_total);
+            let brdf_res = self.sample_brdf(&*ray_intersection, primitive, path_total);
+
+            let mut path_sum = RGB::black();
+
+            if light_res.is_some() && brdf_res.is_some() {
+                let light_res = light_res.unwrap();
+                let brdf_res = brdf_res.unwrap();
+                path_sum += light_res.color
+                    * importance_sample_weight(light_res.light_pdf, light_res.brdf_pdf);
+                path_sum +=
+                    brdf_res.color * importance_sample_weight(brdf_res.brdf_pdf, brdf_res.light_pdf)
+            } else {
+                // TODO: confirm if you do importance samplign with weight
+                path_sum += light_res
+                    .map(|light_res| {
+                        light_res.color
+                            * importance_sample_weight(light_res.light_pdf, light_res.brdf_pdf)
+                    })
+                    .unwrap_or_default();
+                path_sum += brdf_res
+                    .map(|brdf_res| {
+                        brdf_res.color
+                            * importance_sample_weight(brdf_res.brdf_pdf, brdf_res.light_pdf)
+                    })
+                    .unwrap_or_default();
+            }
+            path_sum
+            // 1. light
+        }
+    }
+
     fn li(&mut self, r: Ray, rand: &mut impl Rng, _: i32) -> RGB {
         ////debug!("Calculating Li");
-        let emitted_radiance = RGB::black();
         let mut path_total = RGB::create(255.0, 255.0, 255.0);
-        let mut prev_path_total = RGB::create(255.0, 255.0, 255.0);
-        let mut running_sum = emitted_radiance;
-        let mut prev_intersection: Option<BVHIntersectionResult> = None;
+        let mut running_sum = RGB::black();
         let mut current_ray = r;
         let mut n_iterations = 0;
 
@@ -210,85 +264,6 @@ impl PathTracer<'_> {
                     return RGB::black();
                 }
             }*/
-
-            match prev_intersection {
-                //Here, check dir to light source & do running_sum += path_total * f(light_point
-                //-> prev_point -> prev_point)
-                //Need an evaluate function for that? -> need prev_theta and next_theta
-                //Till we have material: hack: if diffuse -> easy, if specular, just check if same
-                //dir else 0
-                Some(bvh_intersection) => {
-                    //Need to check light obstruction here
-                    //debug!("Calculating for light");
-
-                    if self
-                        .scene
-                        .bvh_root
-                        .get_primitive(bvh_intersection.primitive_idx)
-                        .material
-                        .is_delta()
-                    {
-                        unimplemented!()
-                        // Get vector from BRDF
-                    } else if self.scene.light.is_delta()  {
-                        let primitive = self
-                        .scene
-                        .bvh_root
-                        .get_primitive(bvh_intersection.primitive_idx);
-                        running_sum += self.sample_light(&bvh_intersection.intersection, primitive, prev_path_total).map(|x| x.color).unwrap_or_default();
-                        // unimplemented!()
-                        // Get vector from light source
-                    } else {
-                        // Importance sample
-                        let primitive = self
-                            .scene
-                            .bvh_root
-                            .get_primitive(bvh_intersection.primitive_idx);
-                        let light_res = self.sample_light(
-                            &bvh_intersection.intersection,
-                            primitive,
-                            prev_path_total,
-                        );
-                        let brdf_res = self.sample_brdf(
-                            &bvh_intersection.intersection,
-                            primitive,
-                            prev_path_total,
-                        );
-
-                        if light_res.is_some() && brdf_res.is_some() {
-                            let light_res = light_res.unwrap();
-                            let brdf_res = brdf_res.unwrap();
-                            running_sum += light_res.color
-                                * importance_sample_weight(light_res.light_pdf, light_res.brdf_pdf);
-                            running_sum += brdf_res.color
-                                * importance_sample_weight(brdf_res.brdf_pdf, brdf_res.light_pdf)
-                        } else {
-                            // TODO: confirm if you do importance samplign with weight
-                            running_sum += light_res
-                                .map(|light_res| {
-                                    light_res.color
-                                        * importance_sample_weight(
-                                            light_res.light_pdf,
-                                            light_res.brdf_pdf,
-                                        )
-                                })
-                                .unwrap_or_default();
-                            running_sum += brdf_res
-                                .map(|brdf_res| {
-                                    brdf_res.color
-                                        * importance_sample_weight(
-                                            brdf_res.brdf_pdf,
-                                            brdf_res.light_pdf,
-                                        )
-                                })
-                                .unwrap_or_default();
-                        }
-
-                        // 1. light
-                    }
-                }
-                None => {}
-            }
 
             if n_iterations > 8 {
                 //TODO: Bounce or roulette threshold?
@@ -312,12 +287,12 @@ impl PathTracer<'_> {
                     //TODO: pass incoming direction
                     //TODO: return light sampling here.
 
-                    // debug!("Object intersected");
-                    //debug!("Ray intersection point: {:?}", ray_intersection.point);
                     //Light radiance to point then multiply by cos theta
-
                     let view_vector = current_ray.origin - bvh_intersection.intersection.point;
-                    // debug!("Origin: {}, point: {}, view_vector: {}", current_ray.origin, ray_intersection.point, view_vector);
+                    debug!(
+                        "Object intersected: Origin: {}, point: {}, view_vector: {}",
+                        current_ray.origin, bvh_intersection.intersection.point, view_vector
+                    );
                     let primitive = self
                         .scene
                         .bvh_root
@@ -330,18 +305,22 @@ impl PathTracer<'_> {
                     let (brdf, ray, pdf) =
                         primitive.brdf(bvh_intersection.intersection, view_vector);
                     let ray_angle = angle(&bvh_intersection.intersection.normal, &ray.direction);
-                    //debug!("BRDF is: {:?}", brdf);
-                    //debug!("Ray angle: {}", ray_angle);
-                    if ray_angle.cos() < 0.0 {
-                        //debug!("cos is: {}", ray_angle.cos());
-                    }
                     //TODO: make it mul
-                    prev_path_total = path_total;
                     path_total = (path_total * brdf * ray_angle.cos()) / pdf;
+                    running_sum += self.last_bounce_for_path(
+                        &bvh_intersection.intersection,
+                        primitive,
+                        path_total,
+                    );
                     //WARNING: for debugging only. Uncomment if you want to return without bouncing
                     //return path_total;
-                    //debug!("PDF is: {}", pdf);
-                    //debug!("Path total: {:?} brdf: {:?} cos: {} pdf: {}", path_total, brdf, ray_angle.cos(), pdf);
+                    debug!(
+                        "Path total: {:?} brdf: {:?} cos: {} pdf: {}",
+                        path_total,
+                        brdf,
+                        ray_angle.cos(),
+                        pdf
+                    );
                     current_ray = ray;
                 }
                 None => {
@@ -356,10 +335,10 @@ impl PathTracer<'_> {
                 }
             }
             n_iterations += 1;
-            prev_intersection = min_intersection;
             //prev_min_index = min_index
         }
+        // TODO; Investigate why this clamp is needed. It seems that Disney BRDF sometimes produces very large amounts
+        clamp_rgb(running_sum, 0.0, 255.0)
         //            //debug!("Final running sum: {:?}", running_sum);
-        clamp_rgb(running_sum, -255.0, 255.0)
     }
 }
