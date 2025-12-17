@@ -148,15 +148,11 @@ pub fn write_ppm(buf: &Vec<RGB>, xres: usize, yres: usize, s: String) -> Result<
     let mut file = File::create(path)?;
     let header = format!("P6 {} {} 255\n", xres, yres);
     file.write_all(header.as_bytes())?;
-    for v in buf {
-            file.write_all(&[v.r as u8])?;
-            //file.write_all(" ".as_bytes());
-            file.write_all(&[v.g as u8])?;
-            //file.write_all(" ".as_bytes());
-            file.write_all(&[v.b as u8])?;
-            //file.write_all(" ".as_bytes());
-        //file.write_all("\n".as_bytes());
-    }
+    let buf: Vec<u8> = buf
+        .into_iter()
+        .flat_map(|x| [x.r as u8, x.g as u8, x.b as u8])
+        .collect();
+    file.write_all(&buf)?;
     Ok(())
 }
 
