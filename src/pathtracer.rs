@@ -230,8 +230,13 @@ impl PathTracer<'_> {
                     {
                         unimplemented!()
                         // Get vector from BRDF
-                    } else if self.scene.light.is_delta() {
-                        unimplemented!()
+                    } else if self.scene.light.is_delta()  {
+                        let primitive = self
+                        .scene
+                        .bvh_root
+                        .get_primitive(bvh_intersection.primitive_idx);
+                        running_sum += self.sample_light(&bvh_intersection.intersection, primitive, prev_path_total).map(|x| x.color).unwrap_or_default();
+                        // unimplemented!()
                         // Get vector from light source
                     } else {
                         // Importance sample
