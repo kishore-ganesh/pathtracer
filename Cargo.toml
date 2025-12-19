@@ -14,4 +14,5 @@ indicatif = "0.16.2"
 obj-rs = "0.7.0"
 log = {version = "0.4.29"}
 env_logger = "0.11.8"
+gltf = {version = "1.4.1", features = ["names", "KHR_materials_emissive_strength", "KHR_materials_specular", "KHR_lights_punctual"]}
 

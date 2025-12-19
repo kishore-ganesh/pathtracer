@@ -5,18 +5,17 @@ const MIN_PRIMITIVES: usize = 5;
 use log::{debug, info};
 
 #[derive(Clone)]
-pub struct BVHNode<'a> {
-    primitives: &'a Vec<Primitive>,
+struct BVHNode {
     primitives_at_level: Vec<usize>,
     is_terminal: bool,
-    left: Option<Box<BVHNode<'a>>>,
-    right: Option<Box<BVHNode<'a>>>,
+    left: Option<Box<BVHNode>>,
+    right: Option<Box<BVHNode>>,
     left_bounding_box: BoundingBox,
     right_bounding_box: BoundingBox,
 }
 
 #[derive(Clone)]
-pub struct Bucket {
+struct Bucket {
     count: i32,
     bound: BoundingBox,
     cost: f32,
@@ -39,18 +38,45 @@ impl PartialOrd<BVHIntersectionResult> for BVHIntersectionResult {
     }
 }
 
-impl BVHNode<'_> {
-    pub fn create<'a>(primitives: &'a Vec<Primitive>) -> BVHNode<'a> {
+pub struct BVH {
+    root: BVHNode,
+    primitives: Vec<Primitive>
+}
+
+impl BVH {
+    pub fn create(primitives: Vec<Primitive>) -> Self {
+        let root = BVHNode::create(&primitives);
+        BVH {
+            root,
+            primitives
+        }
+    }
+
+    pub fn get_primitive(&self, idx: usize) -> &Primitive {
+        &self.primitives[idx]
+    }
+
+    pub fn intersection(&self, r: &Ray) -> Option<BVHIntersectionResult> {
+        self.root.intersection(&self.primitives, r)
+    }
+
+    pub fn print_traverse(&self) {
+        self.root.print_traverse();
+    }
+
+}
+
+impl BVHNode {
+    pub fn create(primitives: &Vec<Primitive>) -> BVHNode {
         debug!("Length of primitives is: {}", primitives.len());
         BVHNode::recursive_helper(primitives, (0..primitives.len()).collect())
     }
-    pub fn recursive_helper<'a>(
-        primitives: &'a Vec<Primitive>,
+    pub fn recursive_helper(
+        primitives: &Vec<Primitive>,
         primitives_at_level: Vec<usize>,
-    ) -> BVHNode<'a> {
+    ) -> BVHNode {
         if primitives_at_level.len() <= MIN_PRIMITIVES {
             return BVHNode {
-                primitives,
                 primitives_at_level,
                 is_terminal: true,
                 left: None,
@@ -183,7 +209,6 @@ impl BVHNode<'_> {
                 right_primitives
             };
             return BVHNode {
-                primitives,
                 primitives_at_level,
                 is_terminal: true,
                 left: None,
@@ -213,7 +238,6 @@ impl BVHNode<'_> {
             None
         };
         BVHNode {
-            primitives,
             primitives_at_level: vec![],
             is_terminal: false,
             left: left_node,
@@ -223,14 +247,14 @@ impl BVHNode<'_> {
         }
     }
 
-    pub fn intersection_helper(&self, r: &Ray) -> (Option<BVHIntersectionResult>, usize) {
+    pub fn intersection_helper(&self, primitives: &Vec<Primitive>, r: &Ray) -> (Option<BVHIntersectionResult>, usize) {
         let mut intersection_count = 0;
         if self.is_terminal {
             let mut min_intersection_v: Option<BVHIntersectionResult> = None;
             //debug!("Number of primitives at base level: {}", self.primitives.len());
-            intersection_count = self.primitives.len();
+            intersection_count = self.primitives_at_level.len();
             for i in &self.primitives_at_level {
-                let primitive = &self.primitives[*i];
+                let primitive = &primitives[*i];
                 let intersection = primitive.object.intersection(r);
 
                 //TODO: Add generic object type later
@@ -250,7 +274,7 @@ impl BVHNode<'_> {
             if self.left_bounding_box.intersection(r) {
                 debug!("Left box intersected");
                 if let Some(left) = &self.left {
-                    let left_intersection_tuple = left.intersection_helper(r);
+                    let left_intersection_tuple = left.intersection_helper(primitives, r);
                     min_intersection_v = left_intersection_tuple.0;
                     intersection_count += left_intersection_tuple.1;
                 }
@@ -258,7 +282,7 @@ impl BVHNode<'_> {
             if self.right_bounding_box.intersection(r) {
                 debug!("Right box intersected");
                 if let Some(right) = &self.right {
-                    let right_intersection_tuple = right.intersection_helper(r);
+                    let right_intersection_tuple = right.intersection_helper(primitives, r);
                     (min_intersection_v, _) =
                         min_intersection(min_intersection_v, right_intersection_tuple.0);
                     intersection_count += right_intersection_tuple.1;
@@ -268,14 +292,11 @@ impl BVHNode<'_> {
         }
     }
 
-    pub fn get_primitive(&self, idx: usize) -> &Primitive {
-        &self.primitives[idx]
-    }
 
-    pub fn intersection(&self, r: &Ray) -> Option<BVHIntersectionResult> {
+    pub fn intersection(&self, primitives: &Vec<Primitive>, r: &Ray) -> Option<BVHIntersectionResult> {
         debug!("Intersection requested");
         let intersection_time = std::time::Instant::now();
-        let (ray_intersection, intersection_count) = self.intersection_helper(r);
+        let (ray_intersection, intersection_count) = self.intersection_helper(primitives, r);
         info!(
             "Intersection elapsed time: {:?}",
             intersection_time.elapsed()
@@ -321,7 +342,7 @@ mod tests {
         let x: Sphere = Sphere::create(1.0, center.clone());
         let diffuse_material = DiffuseMaterial::create(RGB::create(0.0, 255.0, 127.0));
         let primitives = vec![Primitive::create(Box::new(x), Box::new(diffuse_material))];
-        let mut bvh = BVHNode::create(&primitives);
+        let mut bvh = BVH::create(primitives);
         bvh.print_traverse();
         let ray_origin = make_vec3(&[0.0, 10.0, 0.0]);
         let ray_direction = normalize(&(x.center - ray_origin));

@@ -9,18 +9,18 @@ use log::debug;
 use rand::Rng;
 use std::thread;
 //TODO: make rng part of pathtracer.
-#[derive(Clone)]
-pub struct PathTracer<'a> {
+pub struct PathTracer {
     xres: i32,
     yres: i32,
     n_samples: i32,
     chunk_size: i32,
     roulette_threshold: f32,
+    // TODO: camera should be part of Scene
     camera: Camera,
-    scene: Scene<'a>,
+    scene: Scene,
 }
 
-fn generate_chunk(p: &mut PathTracer, chunk_start_idx: usize, buf: &mut [RGB], bar: ProgressBar) {
+fn generate_chunk(p: &PathTracer, chunk_start_idx: usize, buf: &mut [RGB], bar: ProgressBar) {
     let mut rng = rand::rng();
     for idx in chunk_start_idx..chunk_start_idx + buf.len() {
         let y = idx / (p.xres as usize);
@@ -61,17 +61,17 @@ struct SamplingInfo {
     brdf_pdf: f32,
 }
 
-impl PathTracer<'_> {
+impl PathTracer {
     //Should generate RGB grid
-    pub fn create<'a>(
+    pub fn create (
         xres: i32,
         yres: i32,
         n_samples: i32,
         chunk_size: i32,
         roulette_threshold: f32,
-        scene: Scene<'a>,
+        scene: Scene,
         camera: Camera,
-    ) -> PathTracer<'a> {
+    ) -> PathTracer {
         PathTracer {
             xres,
             yres,
@@ -83,7 +83,7 @@ impl PathTracer<'_> {
         }
     }
 
-    pub fn generate(&mut self) -> Vec<RGB> {
+    pub fn generate(&self) -> Vec<RGB> {
         let progress_bar = ProgressBar::new((self.xres * self.yres * self.n_samples) as u64);
         let mut buf = vec![RGB::black(); (self.xres * self.yres) as usize];
         log::warn!(
@@ -95,12 +95,11 @@ impl PathTracer<'_> {
             buf.chunks_mut(self.chunk_size as _)
                 .enumerate()
                 .for_each(|(chunk_idx, chunk)| {
-                    let mut pt = self.clone();
                     let progress_bar_new = progress_bar.clone();
-                    let chunk_size = pt.chunk_size;
+                    let chunk_size = self.chunk_size;
                     s.spawn(move || {
                         generate_chunk(
-                            &mut pt,
+                            self,
                             chunk_idx * chunk_size as usize,
                             chunk,
                             progress_bar_new,
@@ -118,7 +117,7 @@ impl PathTracer<'_> {
     //TODO: Special value for infinite intersection?
     //Mult by angle for first
     fn check_intersection(&self, r: &Ray) -> Option<BVHIntersectionResult> {
-        self.scene.bvh_root.intersection(r)
+        self.scene.bvh.intersection(r)
     }
 
     fn is_point_visible_from_light(
@@ -149,6 +148,7 @@ impl PathTracer<'_> {
             self.is_point_visible_from_light(ray_intersection.point, light_vector, light_distance);
         if visible {
             let (brdf, brdf_pdf) = primitive.brdf_eval(ray_intersection, &light_vector);
+            // println!("Light: {:?} BRDF: {:?}", light_color, brdf);
             Some(SamplingInfo {
                 color: path_total * brdf * light_color * (1.0 / light_pdf), // TODO: extract this out into a function
                 light_pdf,
@@ -241,12 +241,13 @@ impl PathTracer<'_> {
         }
     }
 
-    fn li(&mut self, r: Ray, rand: &mut impl Rng, _: i32) -> RGB {
+    fn li(&self, r: Ray, rand: &mut impl Rng, _: i32) -> RGB {
         ////debug!("Calculating Li");
         let mut path_total = RGB::create(255.0, 255.0, 255.0);
         let mut running_sum = RGB::black();
         let mut current_ray = r;
         let mut n_iterations = 0;
+        // println!("Current ray: {:?}", r);
 
         loop {
             ////debug!("iterations: {}", n_iterations);
@@ -295,7 +296,7 @@ impl PathTracer<'_> {
                     );
                     let primitive = self
                         .scene
-                        .bvh_root
+                        .bvh
                         .get_primitive(bvh_intersection.primitive_idx);
                     if n_iterations == 0 {
                         running_sum +=
@@ -312,6 +313,11 @@ impl PathTracer<'_> {
                         primitive,
                         path_total,
                     );
+                    // println!("Last bounce for path: {:?}", self.last_bounce_for_path(
+                    //     &bvh_intersection.intersection,
+                    //     primitive,
+                    //     path_total,
+                    // ));
                     //WARNING: for debugging only. Uncomment if you want to return without bouncing
                     //return path_total;
                     debug!(

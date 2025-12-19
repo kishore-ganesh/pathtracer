@@ -21,42 +21,49 @@ impl Camera {
 
 }*/
 
+
+fn get_camera_to_screen(f: f32, n: f32, fov_rad: f32) -> TMat4<f32> {
+    let tangent = (fov_rad/2.0).tan();
+    make_mat4x4(&[
+                                           1.0,0.0,0.0,0.0,
+                                           0.0,1.0,0.0,0.0,
+                                           0.0,0.0,f/(f-n),(-f*n)/(f-n),
+                                           0.0, 0.0, 1.0, 0.0]) * scale(1.0/tangent,1.0/tangent,1.0)
+}
+
 //NOTE: glm already has functions, we are reimplementing some for learning purposes
 impl Camera {
-    pub fn look_at(from: TVec3<f32>, to: TVec3<f32>, f: f32, n: f32, _: f32, raster_res: f32, fov: f32,region: Rect) -> Self{
+    pub fn look_at(from: TVec3<f32>, to: TVec3<f32>, f: f32, n: f32, _: f32, raster_res: f32, fov_deg: f32) -> Self{
         let z = normalize(&(to-from));
         let up = make_vec3(&[ 0.0,1.0,0.0 ]);
         //Should we normalize?
         let x =  cross(&z,  &up);
         let n_up = cross(&x, &z);
-        let tangent = ((PI/180.0) * (fov/2.0)).tan();
+        let fov_rad = fov_deg.to_radians();
         //debug!("{} {} {}", x, n_up, z);
         //debug!("{:?} {:?} {:?}", length(&x), length(&up), length(&z));
         let camera_to_world = make_mat4x4(&[x.x, n_up.x, z.x, from.x, 
                                         x.y, n_up.y, z.y, from.y, 
                                         x.z, n_up.z, z.z, from.z, 
                                         0.0, 0.0, 0.0, 1.0]);
-        let camera_to_screen = make_mat4x4(&[
-                                           1.0,0.0,0.0,0.0,
-                                           0.0,1.0,0.0,0.0,
-                                           0.0,0.0,f/(f-n),(-f*n)/(f-n),
-                                           0.0, 0.0, 1.0, 0.0]) * scale(1.0/tangent,1.0/tangent,1.0);
+        Self::from_transform(camera_to_world, raster_res, f, n, fov_rad)
+    }
+
+    pub fn from_transform(camera_to_world: TMat4<f32>, raster_res: f32, f: f32, n: f32, fov_rad: f32,) -> Self {
+        let camera_to_screen = get_camera_to_screen(f, n, fov_rad);
         let screen_to_camera = inverse(&camera_to_screen);
-       
-        //let (region_min_x, region_max_x, region_min_y, region_max_y) = (-50.0)
+        let region = Rect::create(
+            make_vec3(&[-1.0, -1.0, 0.0]), make_vec3(&[1.0, 1.0, 0.0])
+        );
         let screen_to_raster = translate(-region.bottom.x, -region.top.y, 0.0) * scale(1.0/(region.top.x-region.bottom.x), -1.0/(region.top.y-region.bottom.y), 1.0) * scale(raster_res, raster_res, 1.0);
         let raster_to_screen = inverse(&screen_to_raster);
         //NOTE: If we do vec * Mat, then have to multiply matrices LTR, else RTL
         //Camera -> Screen -> NDC -> Raster 
         let raster_to_world = raster_to_screen * screen_to_camera * camera_to_world;
-
-        //debug!("Raster to world is: {:?}", raster_to_world);
-        //TODO: check nice way to return it correctly
-        Camera{
+        Camera {
             camera_to_world,
             raster_to_world
         }
-
         /*
          * CameraToWorld: x.x x.y x.z 0 
          *                up.x up.y up.z 0 

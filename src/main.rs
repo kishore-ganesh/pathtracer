@@ -6,6 +6,7 @@ mod bounding_volume_hierarchy;
 mod camera;
 mod color;
 mod cube;
+mod gltf;
 mod lights;
 mod materials;
 mod obj_parser;
@@ -19,7 +20,7 @@ mod triangle;
 mod triangle_mesh;
 
 use bounding_box::BoundingBox;
-use bounding_volume_hierarchy::BVHNode;
+use bounding_volume_hierarchy::BVH;
 use camera::Camera;
 use color::RGB;
 use cube::create_cube;
@@ -39,8 +40,11 @@ use std::f32::consts::PI;
 use std::sync::Arc;
 use triangle::{NormalType, Triangle};
 use triangle_mesh::TriangleMesh;
+
+use crate::{gltf::GltfLoader};
 fn main() {
     env_logger::init();
+
     // let imported_cube_mesh = parse(make_vec3(&[0.0,0.0,0.0]), "models/cube.obj");
     //debug!("a: 123.0, b: nan, min(a, b): {}. max(a, b): {}", float_min(123.0, f32::NAN), float_max(123.0, f32::NAN));
     let bounding_box =
@@ -128,7 +132,6 @@ fn main() {
     let screen_res = 512.0;
     let raster_res = 512.0;
     let look_at_point = make_vec3(&[0.0, 0.0, 0.0]);
-    let region_scale = 1.0;
     let fov = 60.0;
     let point_light = Arc::new(PointLight::create(
         make_vec3(&[0.0, 20.0, 2.0]),
@@ -144,10 +147,6 @@ fn main() {
     let chunk_size = 4096;
     //debug!("Chunk size: {}", chunk_size);
     let roulette_threshold = 0.01;
-    let region = Rect::create(
-        make_vec3(&[-region_scale, -region_scale, 0.0]),
-        make_vec3(&[region_scale, region_scale, 0.0]),
-    );
     //    let look_at_point = make_vec3(&[ 0.0,0.0,1.0 ]);
     let camera = Camera::look_at(
         make_vec3(&[0.0, 0.0, 10.0]),
@@ -157,7 +156,6 @@ fn main() {
         screen_res,
         raster_res,
         fov,
-        region,
     );
     let relative_point = transform(&camera.get_camera_to_world(), &make_vec3(&[0.0, 0.0, 50.0]));
     // let x2: Sphere = Sphere::crea te(1.0, make_vec3(&[ 1.0,-1.0,0.0 ]));
@@ -237,13 +235,13 @@ fn main() {
     for mesh_primitive in &mut mesh_primitives {
         other_primitives.append(mesh_primitive);
     }
-    let bvh_root = BVHNode::create(&other_primitives);
+    let bvh = BVH::create(other_primitives);
 
     // bvh_root.print_traverse();
     // panic!("Before scene creation");
-    let scene = Scene::create(bvh_root, spherical_area_light);
+    let scene = Scene::create(bvh, spherical_area_light);
 
-    let mut pt = PathTracer::create(
+    let pt = PathTracer::create(
         raster_res as i32,
         raster_res as i32,
         n_samples,
@@ -252,6 +250,10 @@ fn main() {
         scene,
         camera,
     );
+
+
+    let loader = GltfLoader::new("/home/kishore/blender_projects/dragon_test.gltf").unwrap();
+    let pt = loader.load().unwrap();
     let buf = pt.generate();
     color::write_ppm(
         &buf,

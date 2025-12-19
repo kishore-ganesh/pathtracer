@@ -1,22 +1,20 @@
-use crate::bounding_volume_hierarchy::BVHNode;
+use crate::bounding_volume_hierarchy::BVH;
 use crate::lights::Light;
-#[derive(Clone)]
-pub struct Scene<'a> {
-    //pub primitives: Vec<Primitive>,
-    pub bvh_root: BVHNode<'a>,
+pub struct Scene  {
+    pub bvh: BVH,
     pub light: Box<dyn Light>,
 }
 //Why did Box<dyn Object> not work
-impl Scene<'_> {
+impl Scene {
     /*pub fn create(primitives: Vec<Primitive>, light: Box<dyn Light + Send>) -> Self{
 
         return Scene{primitives: primitives, light: light};
 
     }*/
 
-    pub fn create<'a>(bvh_root: BVHNode<'a>, light: Box<dyn Light + Send + Sync>) -> Scene<'a> {
+    pub fn create<'a>(bvh: BVH, light: Box<dyn Light + Send + Sync>) -> Scene {
         Scene {
-            bvh_root,
+            bvh,
             light,
         }
     }
